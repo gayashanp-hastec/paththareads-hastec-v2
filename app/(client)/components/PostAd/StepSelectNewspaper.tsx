@@ -18,13 +18,16 @@ export default function StepSelectNewspaper({
 }: StepSelectNewspaperProps) {
   const [activeTab, setActiveTab] = useState<"daily" | "sunday">("daily");
   const [newspapers, setNewspapers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   // ✅ Fetch newspapers from DB via API
   useEffect(() => {
     const fetchNewspapers = async () => {
+      setLoading(true);
       const res = await fetch("/api/newspapers");
       const data = await res.json();
       setNewspapers(data);
+      setLoading(false);
     };
 
     fetchNewspapers();
@@ -37,7 +40,6 @@ export default function StepSelectNewspaper({
   });
 
   const handleSelectNewspaper = (paper: any) => {
-    // ✅ id, name, type come from DB
     updateFormData({
       selectedNewspaper: {
         id: paper.id,
@@ -97,39 +99,45 @@ export default function StepSelectNewspaper({
 
       {/* ================= GRID ================= */}
       <div className="grid grid-cols-2 gap-4 px-4 sm:grid-cols-3 md:grid-cols-4">
-        {filteredNewspapers.map((paper: any) => {
-          const isSelected = formData.selectedNewspaper?.id === paper.id;
-
-          return (
-            <button
-              key={paper.id}
-              type="button"
-              onClick={() => handleSelectNewspaper(paper)}
-              aria-pressed={isSelected}
-              className={`relative flex aspect-[3/2] items-center justify-center 
-                overflow-hidden rounded-lg bg-white shadow-sm transition
-                hover:scale-[1.03] focus:outline-none focus:ring-2 
-                focus:ring-primary-accent
-                ${isSelected ? "ring-4 ring-primary-accent" : ""}
-              `}
-            >
+        {loading
+          ? Array.from({ length: 4 }).map((_, idx) => (
               <div
-                className={`flex items-center justify-center w-full h-full p-4 text-center 
-    rounded-xl 
-    shadow-lg shadow-gray-400/20 font-bold text-gray-800 text-lg md:text-xl lg:text-2xl
-    uppercase tracking-wide select-none
-    transition-transform transform hover:scale-105
-  `}
-                style={{
-                  background:
-                    "linear-gradient(to bottom right, #fff, #fff, var(--color-primary))",
-                }}
-              >
-                {paper.name}
-              </div>
-            </button>
-          );
-        })}
+                key={idx}
+                className="relative flex aspect-[3/2] items-center justify-center 
+                  overflow-hidden rounded-lg bg-[var(--color-orange-accent)] animate-pulse shadow-sm"
+              />
+            ))
+          : filteredNewspapers.map((paper: any) => {
+              const isSelected = formData.selectedNewspaper?.id === paper.id;
+
+              return (
+                <button
+                  key={paper.id}
+                  type="button"
+                  onClick={() => handleSelectNewspaper(paper)}
+                  aria-pressed={isSelected}
+                  className={`relative flex aspect-[3/2] items-center justify-center 
+                    overflow-hidden rounded-lg bg-white shadow-sm transition
+                    hover:scale-[1.03] focus:outline-none focus:ring-2 
+                    focus:ring-primary-accent
+                    ${isSelected ? "ring-4 ring-primary-accent" : ""}
+                  `}
+                >
+                  <div
+                    className={`flex items-center justify-center w-full h-full p-4 text-center 
+                      rounded-xl shadow-lg shadow-gray-400/20 font-bold text-gray-800 text-lg md:text-xl lg:text-2xl
+                      uppercase tracking-wide select-none transition-transform transform hover:scale-105
+                    `}
+                    style={{
+                      background:
+                        "linear-gradient(to bottom right, #fff, #fff, var(--color-primary))",
+                    }}
+                  >
+                    {paper.name}
+                  </div>
+                </button>
+              );
+            })}
       </div>
     </section>
   );
