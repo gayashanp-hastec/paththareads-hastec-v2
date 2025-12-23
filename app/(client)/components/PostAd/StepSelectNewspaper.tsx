@@ -1,9 +1,7 @@
-// app/components/PostAd/StepSelectNewspaper.tsx
 "use client";
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import newspaperData from "../../../../data/newspaper_data.json";
 
 interface StepSelectNewspaperProps {
   formData: any;
@@ -19,9 +17,18 @@ export default function StepSelectNewspaper({
   setIsNextEnabled,
 }: StepSelectNewspaperProps) {
   const [activeTab, setActiveTab] = useState<"daily" | "sunday">("daily");
+  const [newspapers, setNewspapers] = useState<any[]>([]);
 
-  // Convert JSON object → array
-  const newspapers = Object.values(newspaperData as any);
+  // ✅ Fetch newspapers from DB via API
+  useEffect(() => {
+    const fetchNewspapers = async () => {
+      const res = await fetch("/api/newspapers");
+      const data = await res.json();
+      setNewspapers(data);
+    };
+
+    fetchNewspapers();
+  }, []);
 
   // Filter newspapers by tab
   const filteredNewspapers = newspapers.filter((paper: any) => {
@@ -30,9 +37,10 @@ export default function StepSelectNewspaper({
   });
 
   const handleSelectNewspaper = (paper: any) => {
+    // ✅ id, name, type come from DB
     updateFormData({
       selectedNewspaper: {
-        id: paper.id, // ✅ ONLY ID is stored
+        id: paper.id,
         name: paper.name,
         type: paper.type,
       },
@@ -105,13 +113,20 @@ export default function StepSelectNewspaper({
                 ${isSelected ? "ring-4 ring-primary-accent" : ""}
               `}
             >
-              <Image
-                src={`/newspaper-images/${paper.newspaperimg}`}
-                alt={paper.name}
-                fill
-                className="object-contain p-2"
-                sizes="(max-width: 768px) 50vw, 25vw"
-              />
+              <div
+                className={`flex items-center justify-center w-full h-full p-4 text-center 
+    rounded-xl 
+    shadow-lg shadow-gray-400/20 font-bold text-gray-800 text-lg md:text-xl lg:text-2xl
+    uppercase tracking-wide select-none
+    transition-transform transform hover:scale-105
+  `}
+                style={{
+                  background:
+                    "linear-gradient(to bottom right, #fff, #fff, var(--color-primary))",
+                }}
+              >
+                {paper.name}
+              </div>
             </button>
           );
         })}
