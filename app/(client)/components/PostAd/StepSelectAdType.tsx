@@ -74,7 +74,7 @@ export default function StepSelectAdType({
   const isSunday = activeTab === "sunday";
 
   console.log(formData.selectedNewspaper);
-  console.log(formData.selectedNewspaperCode);
+  console.log(selectedNewsPaperCode);
 
   // Build adTypes from JSON for the selected newspaper (one tile per child of typeofAd)
   const adTypesFromJson = useMemo(() => {
