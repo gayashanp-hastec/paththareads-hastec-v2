@@ -60,8 +60,8 @@ export async function POST(req: Request) {
       data: {
         reference_number: referenceNumber,
         advertiser_id: advertiserRecord.advertiser_id,
-        // newspaper_name: advertisement.newspaper_name,
-        newspaper_name: "Change this later",
+        newspaper_name: advertisement.newspaper_name,
+        // newspaper_name: "Change this later",
         ad_type: advertisement.ad_type,
         classified_category: advertisement.classified_category || null,
         subcategory: advertisement.subcategory || null,

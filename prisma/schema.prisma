@@ -229,6 +229,7 @@ model ad_types {
   is_upload_image       Boolean
   extra_notes1          String?
   extra_notes2          String?
+  priority_price        Int?
   ad_type_categories    ad_type_categories[]
   ad_type_color_options ad_type_color_options[]
   newspapers            newspapers              @relation(fields: [newspaper_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_ad_types_newspaper")

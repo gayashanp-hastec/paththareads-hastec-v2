@@ -24,6 +24,7 @@ interface FormData {
   adText: string;
   backgroundColor: boolean;
   combinedAd: boolean;
+  priorityPrice: boolean;
   specialNotes: string;
   deathCertificate: File | null;
   photoCategory: string | null;
@@ -62,6 +63,7 @@ export default function PostAdPage() {
     adText: "",
     backgroundColor: false,
     combinedAd: false,
+    priorityPrice: false,
     specialNotes: "",
     deathCertificate: null,
     photoCategory: null,
