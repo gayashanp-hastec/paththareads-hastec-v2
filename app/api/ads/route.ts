@@ -11,6 +11,7 @@ export async function GET() {
       created_at: true,
       status: true,
       advertisement_text: true,
+      upload_image: true,
     },
     orderBy: { created_at: "desc" },
   });

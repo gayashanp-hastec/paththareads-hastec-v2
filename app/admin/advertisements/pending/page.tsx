@@ -12,6 +12,7 @@ interface AdminAdvertisementsPending {
   created_at: string;
   status: string;
   advertisement_text: string;
+  upload_image: string;
 }
 
 export default function AdminAdvertisementsPending() {
@@ -27,6 +28,7 @@ export default function AdminAdvertisementsPending() {
   const [loading, setLoading] = useState(false);
   const [editedText, setEditedText] = useState("");
   const [originalText, setOriginalText] = useState("");
+  const [requestImageChange, setRequestImageChange] = useState(false);
 
   // Fetch ads
   useEffect(() => {
@@ -39,7 +41,8 @@ export default function AdminAdvertisementsPending() {
       const pendingAds = data.filter(
         (ad: AdminAdvertisementsPending) =>
           ad.status.toLowerCase() === "pending" ||
-          ad.status.toLowerCase() === "resubmitted"
+          ad.status.toLowerCase() === "resubmitted" ||
+          ad.status.toLowerCase() === "updateimage"
       );
 
       setAds(pendingAds);
@@ -103,13 +106,14 @@ export default function AdminAdvertisementsPending() {
     alert("Advertisement updated successfully!");
     closeModal();
 
-    // Refresh list after update (still only show pending)
+    // Refresh list after update
     const refreshed = await fetch("/api/ads");
     const data = await refreshed.json();
     const pendingAds = data.filter(
       (ad: AdminAdvertisementsPending) =>
         ad.status.toLowerCase() === "pending" ||
-        ad.status.toLowerCase() === "resubmitted"
+        ad.status.toLowerCase() === "resubmitted" ||
+        ad.status.toLowerCase() === "updateimage"
     );
     setAds(pendingAds);
   };
@@ -240,6 +244,28 @@ export default function AdminAdvertisementsPending() {
                 className="w-full border rounded-xl p-4 h-48 focus:ring-2 focus:ring-blue-300 outline-none text-gray-800 resize-none"
               />
 
+              {selectedAd?.upload_image && (
+                <div className="flex py-2">
+                  <a
+                    href={selectedAd.upload_image}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[var(--color-primary-dark)] no-underline hover:underline my-2 mr-5 border-2 px-6 border-[var(--color-primary)] rounded-lg"
+                  >
+                    View image
+                  </a>
+                  <div className="flex py-2">
+                    <label>Request Image Change </label>
+                    <input
+                      className="m-2"
+                      type="checkbox"
+                      checked={requestImageChange}
+                      onChange={(e) => setRequestImageChange(e.target.checked)}
+                    />
+                  </div>
+                </div>
+              )}
+
               <div className="flex justify-end gap-3 mt-6">
                 <button
                   onClick={() => updateStatus("Declined")}
@@ -248,16 +274,20 @@ export default function AdminAdvertisementsPending() {
                   Decline
                 </button>
 
-                {isTextChanged && (
+                {(isTextChanged || requestImageChange) && (
                   <button
-                    onClick={() => updateStatus("Revision")}
+                    onClick={() =>
+                      updateStatus(
+                        requestImageChange ? "UpdateImage" : "Revision"
+                      )
+                    }
                     className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2.5 rounded-lg shadow transition"
                   >
                     Request Revision
                   </button>
                 )}
 
-                {!isTextChanged && (
+                {!isTextChanged && !requestImageChange && (
                   <button
                     onClick={() => updateStatus("Approved")}
                     className="bg-green-500 hover:bg-green-600 text-white px-6 py-2.5 rounded-lg shadow transition"

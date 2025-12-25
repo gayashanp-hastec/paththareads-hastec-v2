@@ -10,6 +10,7 @@ type AdData = {
   advertisement_text: string;
   attempts: number;
   review_history: any[];
+  upload_image: string;
 };
 
 export default function TrackAdClient({ reference }: { reference: string }) {
@@ -21,6 +22,7 @@ export default function TrackAdClient({ reference }: { reference: string }) {
 
   // UI state for edits
   const [editableText, setEditableText] = useState("");
+  const [newImage, setNewImage] = useState("");
   const [isEdited, setIsEdited] = useState(false);
   const [maxWords, setMaxWords] = useState<number | null>(null);
   const [expiry, setExpiry] = useState<string | null>(null);
@@ -106,11 +108,18 @@ export default function TrackAdClient({ reference }: { reference: string }) {
   }
 
   async function handleResubmit() {
-    if (!isEdited) return alert("Edit the text before resubmitting.");
+    if (!isEdited && !newImage) {
+      return alert("Edit the text or upload a new image before resubmitting.");
+    }
+
     const res = await fetch(`/api/ads/${reference}/resubmit`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token, newText: editableText }),
+      body: JSON.stringify({
+        token,
+        newText: editableText !== ad?.advertisement_text ? editableText : null,
+        upload_image: newImage || null,
+      }),
     });
     const data = await res.json();
     if (data.ok) {
@@ -166,6 +175,29 @@ export default function TrackAdClient({ reference }: { reference: string }) {
     // } else {
     //   alert(data.error || "Failed to proceed with payment.");
     // }
+  }
+
+  async function uploadImageToCloudinary(file: File) {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append(
+      "upload_preset",
+      process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!
+    );
+
+    const res = await fetch(
+      `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
+      {
+        method: "POST",
+        body: formData,
+      }
+    );
+
+    if (!res.ok) {
+      throw new Error("Cloudinary upload failed");
+    }
+
+    return res.json();
   }
 
   if (loading) return <div className="p-8">Loading...</div>;
@@ -230,11 +262,43 @@ export default function TrackAdClient({ reference }: { reference: string }) {
         <textarea
           className="w-full border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 rounded-xl p-3 text-gray-800 transition-all resize-y min-h-[180px]"
           value={editableText}
-          disabled={!["Pending", "Revision", "Resubmitted"].includes(ad.status)}
+          disabled={
+            !["Pending", "Revision", "Resubmitted", "UpdateImage"].includes(
+              ad.status
+            )
+          }
           onChange={(e) => onTextChange(e.target.value)}
           rows={8}
           placeholder="Edit your advertisement text here..."
         />
+
+        {ad.status === "UpdateImage" && (
+          <div>
+            <label className="block font-medium mb-1">
+              Upload Image <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="file"
+              accept="image/*"
+              required
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+
+                try {
+                  const data = await uploadImageToCloudinary(file);
+
+                  setNewImage(data.secure_url);
+                  setIsEdited(true); // 🔑 allow resubmit even if text unchanged
+                } catch (error) {
+                  console.error(error);
+                  alert("Image upload failed. Please try again.");
+                }
+              }}
+              className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-primary-accent"
+            />
+          </div>
+        )}
 
         <div>
           <p id="placeholder_" className="text-sm text-center">
@@ -266,7 +330,9 @@ export default function TrackAdClient({ reference }: { reference: string }) {
 
       {/* Action Buttons */}
       <div className="flex flex-wrap justify-center gap-3 mt-8">
-        {["Pending", "Revision", "Resubmitted"].includes(ad.status) && (
+        {["Pending", "Revision", "Resubmitted", "UpdateImage"].includes(
+          ad.status
+        ) && (
           <button
             onClick={handleResubmit}
             disabled={!isEdited}
@@ -295,9 +361,13 @@ export default function TrackAdClient({ reference }: { reference: string }) {
           </button>
         )}
 
-        {["Revision", "Pending", "Approved", "Resubmitted"].includes(
-          ad.status
-        ) && (
+        {[
+          "Revision",
+          "Pending",
+          "Approved",
+          "Resubmitted",
+          "UpdateImage",
+        ].includes(ad.status) && (
           <button
             onClick={handleCancel}
             disabled={ad.status === "Cancelled"}
@@ -329,6 +399,7 @@ export default function TrackAdClient({ reference }: { reference: string }) {
           "Cancelled",
           "Print",
           "PaymentPending",
+          "UpdateImage",
         ].includes(ad.status) && (
           <button
             onClick={() => window.close()}

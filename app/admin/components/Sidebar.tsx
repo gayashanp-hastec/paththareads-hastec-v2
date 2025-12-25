@@ -45,8 +45,8 @@ export default function Sidebar() {
       ],
     },
     { name: "Newspapers", href: "/admin/newspapers" },
-    { name: "Users", href: "/admin" },
-    { name: "Reports", href: "/admin" },
+    // { name: "Users", href: "/admin" },
+    // { name: "Reports", href: "/admin" },
   ];
 
   // Auto-open the submenu if current route matches any subpage

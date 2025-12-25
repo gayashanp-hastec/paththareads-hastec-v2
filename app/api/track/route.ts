@@ -73,6 +73,7 @@ export async function GET(req: Request) {
         reference_number: ad.reference_number,
         status: ad.status,
         publish_date: ad.publish_date,
+        upload_image: ad.upload_image,
         created_at: ad.created_at,
         advertisement_text: ad.advertisement_text,
         attempts,

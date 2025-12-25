@@ -12,6 +12,7 @@ interface Advertisement {
   created_at: string;
   status: string;
   advertisement_text: string;
+  upload_image: string;
 }
 
 export default function AdminAdvertisements() {
@@ -24,6 +25,8 @@ export default function AdminAdvertisements() {
   const [loading, setLoading] = useState(false);
   const [editedText, setEditedText] = useState("");
   const [originalText, setOriginalText] = useState("");
+
+  const [requestImageChange, setRequestImageChange] = useState(false);
 
   // Fetch ads
   useEffect(() => {
@@ -248,15 +251,20 @@ export default function AdminAdvertisements() {
               <h3 className="text-2xl font-semibold mb-6 text-gray-800">
                 Advertisement Details
               </h3>
+              <div className="flex justify-between">
+                <p className="mb-3">
+                  Reference:{" "}
+                  <span className="font-mono text-gray-800">
+                    {selectedAd.reference_number}
+                  </span>
+                </p>
+                <p>Advertisement type: {selectedAd.ad_type}</p>
+                <p>
+                  Status: <span className="font-bold">{selectedAd.status}</span>
+                </p>
+              </div>
 
-              <p className="mb-3 text-sm text-gray-600">
-                Reference:{" "}
-                <span className="font-mono text-gray-800">
-                  {selectedAd.reference_number}
-                </span>
-              </p>
-
-              {["Pending", "Revision", "Resubmitted"].includes(
+              {["Pending", "Revision", "Resubmitted", "UpdateImage"].includes(
                 selectedAd.status
               ) && (
                 <textarea
@@ -266,8 +274,41 @@ export default function AdminAdvertisements() {
                 />
               )}
 
+              {["Approved", "Cancelled", "Declined", "PaymentPending"].includes(
+                selectedAd.status
+              ) && (
+                <textarea
+                  value={editedText}
+                  readOnly
+                  onChange={(e) => setEditedText(e.target.value)}
+                  className="w-full border rounded-xl p-4 h-48 focus:ring-2 focus:ring-blue-300 outline-none text-gray-800 resize-none"
+                />
+              )}
+
+              {selectedAd?.upload_image && (
+                <div className="flex py-2">
+                  <a
+                    href={selectedAd.upload_image}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[var(--color-primary-dark)] no-underline hover:underline my-2 mr-5 border-2 px-6 border-[var(--color-primary)] rounded-lg"
+                  >
+                    View image
+                  </a>
+                  <div className="flex py-2">
+                    <label>Request Image Change </label>
+                    <input
+                      className="m-2"
+                      type="checkbox"
+                      checked={requestImageChange}
+                      onChange={(e) => setRequestImageChange(e.target.checked)}
+                    />
+                  </div>
+                </div>
+              )}
+
               <div className="flex justify-end gap-3 mt-6">
-                {["Pending", "Revision", "Resubmitted"].includes(
+                {["Pending", "Revision", "Resubmitted", "UpdateImage"].includes(
                   selectedAd.status
                 ) && (
                   <button
@@ -278,10 +319,10 @@ export default function AdminAdvertisements() {
                   </button>
                 )}
 
-                {["Pending", "Revision", "Resubmitted"].includes(
+                {["Pending", "Revision", "Resubmitted", "UpdateImage"].includes(
                   selectedAd.status
                 ) &&
-                  isTextChanged && (
+                  (isTextChanged || requestImageChange) && (
                     <button
                       onClick={() => updateStatus("Revision")}
                       className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2.5 rounded-lg shadow transition"
@@ -290,18 +331,11 @@ export default function AdminAdvertisements() {
                     </button>
                   )}
 
-                {["Pending", "Resubmitted"].includes(selectedAd.status) &&
-                  !isTextChanged && (
-                    <button
-                      onClick={() => updateStatus("Approved")}
-                      className="bg-green-500 hover:bg-green-600 text-white px-6 py-2.5 rounded-lg shadow transition"
-                    >
-                      Approve
-                    </button>
-                  )}
-
-                {["Pending", "Resubmitted"].includes(selectedAd.status) &&
-                  !isTextChanged && (
+                {["Pending", "Resubmitted", "UpdateImage"].includes(
+                  selectedAd.status
+                ) &&
+                  !isTextChanged &&
+                  !requestImageChange && (
                     <button
                       onClick={() => updateStatus("Approved")}
                       className="bg-green-500 hover:bg-green-600 text-white px-6 py-2.5 rounded-lg shadow transition"

@@ -9,23 +9,27 @@ export async function POST(
   req: Request,
   context: { params: Promise<{ reference: string }> }
 ) {
-  // ✅ await params because in Next.js 14.2+ params is now a Promise
   const { reference } = await context.params;
 
   try {
-    const { token, newText } = await req.json();
+    const { token, newText, upload_image } = await req.json();
 
-    if (!token || !newText) {
+    // ✅ must have token AND at least text OR image
+    if (!token || (!newText && !upload_image)) {
       return NextResponse.json(
         { ok: false, error: "missing_parameters" },
         { status: 400 }
       );
     }
 
-    // Verify tracking token
+    // 🔐 verify token
     const tokenHash = hashToken(token);
     const tokenRow = await prisma.tracking_tokens.findFirst({
-      where: { reference, token_hash: tokenHash, revoked: false },
+      where: {
+        reference,
+        token_hash: tokenHash,
+        revoked: false,
+      },
     });
 
     if (!tokenRow) {
@@ -42,7 +46,7 @@ export async function POST(
       );
     }
 
-    // Fetch the ad and its review history
+    // 📦 fetch ad + history
     const ad = await prisma.advertisements.findUnique({
       where: { reference_number: reference },
       include: { ad_review_history: true },
@@ -55,35 +59,43 @@ export async function POST(
       );
     }
 
-    // Compute the next review attempt number
+    // 🔢 next attempt number
     const nextAttempt =
       (ad.ad_review_history.length
         ? Math.max(...ad.ad_review_history.map((r) => r.attempt))
         : 0) + 1;
 
-    // ✅ Perform updates as a transaction
+    // 🧠 decide next status
+    const isImageOnly = !!upload_image && !newText;
+    const nextStatus = isImageOnly ? "Resubmitted" : "Resubmitted";
+
+    // ✅ transaction
     await prisma.$transaction([
       prisma.advertisements.update({
         where: { reference_number: reference },
         data: {
-          advertisement_text: newText,
-          status: "Resubmitted",
+          ...(newText && { advertisement_text: newText }),
+          ...(upload_image && { upload_image }),
+          status: nextStatus,
           updated_at: new Date(),
         },
       }),
+
       prisma.ad_review_history.create({
         data: {
           reference_number: reference,
           attempt: nextAttempt,
-          advertisement_text: newText,
+          advertisement_text: newText ?? ad.advertisement_text,
           requested_revision_text: null,
-          status_now: "Resubmitted",
+          // upload_image: upload_image ?? null,
+          status_now: nextStatus,
         },
       }),
+
       prisma.ad_status_history.create({
         data: {
           reference_number: reference,
-          status: "Resubmitted",
+          status: nextStatus,
         },
       }),
     ]);
