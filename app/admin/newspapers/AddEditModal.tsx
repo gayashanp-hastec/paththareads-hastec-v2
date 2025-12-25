@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 
 const DEFAULT_AD_TYPE = {
@@ -12,6 +12,7 @@ const DEFAULT_AD_TYPE = {
   additionalWordPrice: 0,
   colorOptions: [],
   tintColorPrice: 0,
+  priorityPrice: 0,
   isAllowCombined: false,
   maxWords: 0,
   categories: "",
@@ -33,13 +34,13 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
     item || {
       name: "",
       type: "Daily",
+      nameSinhala: "",
       noColPerPage: 0,
       colWidth: 0,
       colHeight: 0,
       minAdHeight: 0,
       tintAdditionalCharge: 0,
-      newspaperimg: "",
-      typeofAd: {},
+      newspaperimg: "", // kept but unused
     }
   );
 
@@ -53,39 +54,37 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
   ];
 
   const [typeError, setTypeError] = useState(false);
-
-  const [errors, setErrors] = useState<{
-    name?: string;
-    // newspaperimg?: string;
-  }>({});
+  const [errors, setErrors] = useState<{ name?: string }>({});
 
   const validate = () => {
     const newErrors: any = {};
-
-    if (!form.name?.trim()) {
-      newErrors.name = "Newspaper name is required";
-    }
-
-    // if (!form.newspaperimg) {
-    //   newErrors.newspaperimg = "Newspaper image is required";
-    // }
-
+    if (!form.name?.trim()) newErrors.name = "Newspaper name is required";
     setErrors(newErrors);
-
     return Object.keys(newErrors).length === 0;
   };
 
-  const [adTypes, setAdTypes] = useState(
-    item
-      ? Object.entries(item.typeofAd).map(([key, value]: any) => ({
-          typeKey: key,
-          ...value,
-          categories: value.categories?.join(", ") || "",
-        }))
-      : []
-  );
+  const [adTypes, setAdTypes] = useState<any[]>(() => {
+    if (!item || !Array.isArray(item.ad_types)) return [];
 
-  const [uploadingImage, setUploadingImage] = useState(false);
+    return item.ad_types.map((t: any) => ({
+      typeKey: t.key,
+      name: t.name,
+      baseType: t.base_type,
+      countFirstWords: t.count_first_words,
+      basePrice: t.base_price,
+      priorityPrice: t.priority_price,
+      additionalWordPrice: t.additional_word_price,
+      tintColorPrice: t.tint_color_price,
+      isAllowCombined: t.is_allow_combined,
+      maxWords: t.max_words,
+      imgUrl: t.img_url || "",
+      isUploadImage: t.is_upload_image,
+      extraNotes1: t.extra_notes1 || "",
+      extraNotes2: t.extra_notes2 || "",
+      categories: "",
+      colorOptions: [],
+    }));
+  });
 
   const addNewAdType = () => {
     setAdTypes([...adTypes, { ...DEFAULT_AD_TYPE }]);
@@ -97,21 +96,21 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
     setAdTypes(updated);
   };
 
-  // ---------------- Handle newspaper image upload ----------------
+  /* --------------------------------------------------
+     IMAGE UPLOAD (COMMENTED FOR NOW)
+  -------------------------------------------------- */
+
+  /*
   const handleNewspaperImage = async (e: any) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    setUploadingImage(true);
-
-    // Generate unique filename
     const randomNum = Math.floor(10000 + Math.random() * 90000);
     const ext = file.name.split(".").pop();
     const fileName = `${form.type
       .replace(/\s+/g, "")
       .toLowerCase()}${randomNum}.${ext}`;
 
-    // Upload to API
     const formData = new FormData();
     formData.append("file", new File([file], fileName));
 
@@ -120,68 +119,131 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
         method: "POST",
         body: formData,
       });
-
       const data = await res.json();
-      if (data.fileName) {
-        setForm({ ...form, newspaperimg: data.fileName });
-      }
+      if (data.fileName) setForm({ ...form, newspaperimg: data.fileName });
     } catch (err) {
-      console.error("Image upload failed", err);
+      console.error(err);
     }
-
-    setUploadingImage(false);
   };
+  */
 
+  /* ---------------- SAVE ---------------- */
   const save = async () => {
     if (!validate()) return;
 
     if (adTypes.length === 0) {
       setTypeError(true);
-      console.log("type no!");
-      toast.error("At least one type must be added!");
-    } else {
-      setTypeError(false);
-      const formattedTypes: any = {};
+      toast.error("At least one ad type must be added");
+      return;
+    }
 
-      adTypes.forEach((t) => {
-        formattedTypes[t.typeKey] = {
-          name: t.name,
-          baseType: t.baseType,
-          countFirstWords: Number(t.countFirstWords),
-          basePrice: Number(t.basePrice),
-          additionalWordPrice: Number(t.additionalWordPrice),
-          colorOptions: t.colorOptions,
-          tintColorPrice: Number(t.tintColorPrice),
-          isAllowCombined: Boolean(t.isAllowCombined),
-          maxWords: Number(t.maxWords),
-          categories: t.categories
-            ? t.categories.split(",").map((c: string) => c.trim())
-            : [],
-          imgUrl: t.imgUrl,
-          isUploadImage: Boolean(t.isUploadImage),
-          extraNotes1: t.extraNotes1,
-          extraNotes2: t.extraNotes2,
-        };
-      });
+    setTypeError(false);
 
-      const finalPayload = {
-        ...form,
-        typeofAd: formattedTypes,
-      };
+    const payload = {
+      id: item?.id || form.name.replace(/\s+/g, "_").toUpperCase(),
+      name: form.name,
+      nameSinhala: form.nameSinhala,
+      type: form.type,
+      no_col_per_page: Number(form.noColPerPage),
+      col_width: Number(form.colWidth),
+      col_height: Number(form.colHeight),
+      min_ad_height: Number(form.minAdHeight),
+      tint_additional_charge: Number(form.tintAdditionalCharge),
+      newspaper_img: null, // image upload disabled
+      ad_types: adTypes.map((t) => ({
+        key: t.typeKey,
+        name: t.name,
+        base_type: t.baseType,
+        count_first_words: Number(t.countFirstWords),
+        base_price: Number(t.basePrice),
+        additional_word_price: Number(t.additionalWordPrice),
+        tint_color_price: Number(t.tintColorPrice),
+        is_allow_combined: Boolean(t.isAllowCombined),
+        max_words: Number(t.maxWords),
+        img_url: t.imgUrl || null,
+        priority_price: Number(t.priorityPrice),
+        is_upload_image: Boolean(t.isUploadImage),
+        extra_notes1: t.extraNotes1 || null,
+        extra_notes2: t.extraNotes2 || null,
+      })),
+    };
 
-      const method = item ? "PUT" : "POST";
-      const url = item ? `/api/newspapers/${item.id}` : "/api/newspapers";
-
-      await fetch(url, {
-        method,
+    try {
+      const res = await fetch("/api/newspapers", {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(finalPayload),
+        body: JSON.stringify(payload),
       });
 
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Failed to save newspaper");
+      }
+
+      toast.success("Newspaper saved successfully");
       onSaved();
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Something went wrong");
     }
   };
 
+  useEffect(() => {
+    if (!item?.id) return;
+
+    const loadForEdit = async () => {
+      try {
+        const res = await fetch(`/api/newspapers/${item.id}`);
+        if (!res.ok) throw new Error("Failed to load newspaper");
+
+        const data = await res.json();
+
+        // 1️⃣ Populate newspaper form (EXACT prisma → frontend mapping)
+        setForm({
+          name: data.name,
+          nameSinhala: data.name_sinhala,
+          type: data.type,
+          noColPerPage: data.no_col_per_page,
+          colWidth: data.col_width,
+          colHeight: data.col_height,
+          minAdHeight: data.min_ad_height,
+          tintAdditionalCharge: data.tint_additional_charge,
+          newspaperimg: data.newspaper_img || "",
+        });
+
+        // 2️⃣ Populate ad types
+        if (Array.isArray(data.ad_types)) {
+          setAdTypes(
+            data.ad_types.map((t: any) => ({
+              typeKey: t.key,
+              name: t.name,
+              baseType: t.base_type,
+              countFirstWords: t.count_first_words,
+              basePrice: t.base_price,
+              additionalWordPrice: t.additional_word_price,
+              tintColorPrice: t.tint_color_price,
+              priorityPrice: t.priority_price ?? 0,
+              isAllowCombined: t.is_allow_combined,
+              maxWords: t.max_words,
+              imgUrl: t.img_url || "",
+              isUploadImage: t.is_upload_image,
+              extraNotes1: t.extra_notes1 || "",
+              extraNotes2: t.extra_notes2 || "",
+              categories: "",
+              colorOptions: [],
+            }))
+          );
+        }
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to load newspaper data");
+      }
+    };
+
+    loadForEdit();
+  }, [item?.id]);
+
+  /* ---------------- UI ---------------- */
   return (
     <div className="fixed inset-0 bg-black/40 flex justify-center items-start p-10 overflow-auto z-50">
       <div className="bg-white rounded-xl p-6 w-[900px] shadow-xl space-y-6">
@@ -214,6 +276,21 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
               {errors.name && (
                 <p className="text-sm text-red-600 mt-1">{errors.name}</p>
               )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium">
+                Newspaper Sinhala Name
+              </label>
+
+              <input
+                type="text"
+                className={`w-full border p-2 rounded`}
+                value={form.nameSinhala}
+                onChange={(e) => {
+                  setForm({ ...form, nameSinhala: e.target.value });
+                }}
+              />
             </div>
 
             <div>
@@ -512,14 +589,32 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                   />
                 </div>
 
+                <div>
+                  <label className="block text-sm font-medium">
+                    Priority Price
+                  </label>
+                  <input
+                    type="number"
+                    className="w-full border p-2 rounded"
+                    value={t.priorityPrice}
+                    onChange={(e) =>
+                      updateAdType(
+                        index,
+                        "priorityPrice",
+                        Number(e.target.value)
+                      )
+                    }
+                  />
+                </div>
+
                 {/* Categories */}
                 <div className="col-span-2">
-                  <label className="block text-sm font-medium">
+                  {/* <label className="block text-sm font-medium">
                     Categories (comma separated)
-                  </label>
+                  </label> */}
 
                   {/* Input */}
-                  <input
+                  {/* <input
                     key={t.categories} // 👈 forces animation & re-render if needed
                     className="w-full border p-2 rounded"
                     value={t.categories}
@@ -527,10 +622,10 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                     onChange={(e) =>
                       updateAdType(index, "categories", e.target.value)
                     }
-                  />
+                  /> */}
 
                   {/* Picker chips */}
-                  <div className="flex flex-wrap gap-2 mt-2">
+                  {/* <div className="flex flex-wrap gap-2 mt-2">
                     {CATEGORY_SUGGESTIONS.map((cat) => {
                       const selected = t.categories
                         .split(",")
@@ -566,7 +661,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                         </button>
                       );
                     })}
-                  </div>
+                  </div> */}
                 </div>
 
                 {/* Upload Image */}

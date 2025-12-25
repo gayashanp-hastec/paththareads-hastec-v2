@@ -45,6 +45,7 @@ export default function StepSelectNewspaper({
         id: paper.id,
         name: paper.name,
         type: paper.type,
+        name_sinhala: paper.name_sinhala,
       },
     });
 
@@ -125,7 +126,7 @@ export default function StepSelectNewspaper({
                 >
                   <div
                     className={`flex items-center justify-center w-full h-full p-4 text-center 
-                      rounded-xl shadow-lg shadow-gray-400/20 font-bold text-gray-800 text-lg md:text-xl lg:text-2xl
+                      rounded-xl shadow-lg shadow-gray-400/20 font-bold text-gray-800 text-lg md:text-2xl lg:text-2xl
                       uppercase tracking-wide select-none transition-transform transform hover:scale-105
                     `}
                     style={{
@@ -133,7 +134,7 @@ export default function StepSelectNewspaper({
                         "linear-gradient(to bottom right, #fff, #fff, var(--color-primary))",
                     }}
                   >
-                    {paper.name}
+                    {paper.name_sinhala}
                   </div>
                 </button>
               );

@@ -192,6 +192,7 @@ model newspapers {
   tint_additional_charge Int
   newspaper_img          String?
   created_at             DateTime?  @default(now()) @db.Timestamptz(6)
+  name_sinhala           String?
   ad_types               ad_types[]
 }
 

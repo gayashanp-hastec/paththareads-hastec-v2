@@ -37,6 +37,7 @@ export default function StepSelectAdType({
   updateFormData,
 }: StepSelectAdTypeProps) {
   const [adTypes, setAdTypes] = useState<AdType[]>([]);
+  const [loading, setLoading] = useState(false);
   const [selectedAdType, setSelectedAdType] = useState<AdType | null>(null);
   const [wordCount, setWordCount] = useState<number>(
     formData.adText?.split(" ").filter(Boolean).length || 0
@@ -54,10 +55,14 @@ export default function StepSelectAdType({
   // Fetch ad types for selected newspaper
   useEffect(() => {
     if (!selectedNewspaperId) return;
+    setLoading(true);
     fetch(`/api/ad-types/${selectedNewspaperId}`)
       .then((res) => res.json())
       .then((data: AdType[]) => setAdTypes(data))
-      .catch((err) => console.error(err));
+      .catch((err) => console.error(err))
+      .finally(() => {
+        setLoading(false);
+      });
   }, [selectedNewspaperId]);
 
   const handleAdTypeSelect = (adType: AdType) => {
@@ -82,10 +87,17 @@ export default function StepSelectAdType({
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     if (!selectedAdType) return;
 
-    const inputText = e.target.value;
+    let inputText = e.target.value;
 
     // Count words without trimming spaces
     const words = inputText.split(/\s+/).filter(Boolean);
+
+    // If priority ad, enforce leading 0
+    if (formData.priorityPrice) {
+      if (!inputText.startsWith("0")) {
+        inputText = "0" + inputText.replace(/^0+/, "");
+      }
+    }
 
     if (words.length > selectedAdType.max_words) {
       // Limit the text to max_words
@@ -143,6 +155,20 @@ export default function StepSelectAdType({
       total += selectedAdType.priority_price;
     }
 
+    if (formData.priorityPrice) {
+      if (!formData.adText?.startsWith("0")) {
+        updateFormData({
+          adText: `0${formData.adText || ""}`,
+        });
+      }
+    } else {
+      if (formData.adText?.startsWith("0")) {
+        updateFormData({
+          adText: formData.adText.slice(1),
+        });
+      }
+    }
+
     setPriceBreakdown(breakdown);
     setTotalPrice(total);
     updateFormData({ totalPrice: total });
@@ -156,43 +182,60 @@ export default function StepSelectAdType({
 
   const today = new Date().toISOString().split("T")[0];
 
+  function AdTypeSkeleton() {
+    return (
+      <div className="border rounded-lg p-4 flex flex-col items-center animate-pulse">
+        <div className="w-28 h-28 bg-gray-300 rounded mb-3" />
+        <div className="h-4 w-24 bg-gray-300 rounded mb-2" />
+        <div className="h-3 w-32 bg-gray-200 rounded" />
+      </div>
+    );
+  }
+
+  const adTypeImages: Record<string, string> = {
+    classified: "/classified.png",
+    photo_classified: "/photo-classified.png",
+    casual: "/casual.png",
+  };
+
+  const getAdTypeImage = (adKey: string) => {
+    return adTypeImages[adKey] || "/default_ad_icon.png";
+  };
+
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-center">Select Ad Type</h2>
 
       {/* Ad Types Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-        {(Array.isArray(adTypes) ? adTypes : []).map((ad) => (
-          <div
-            key={ad.key}
-            className={`border rounded-lg p-4 flex flex-col items-center cursor-pointer transition ${
-              selectedAdType?.key === ad.key
-                ? "ring-2 ring-primary-accent"
-                : "hover:ring-2 hover:ring-primary-accent"
-            }`}
-            onClick={() => handleAdTypeSelect(ad)}
-          >
-            {ad.img_url ? (
-              <Image
-                src={ad.img_url}
-                alt={ad.name}
-                width={120}
-                height={120}
-                className="object-contain mb-2"
-              />
-            ) : (
-              <div className="w-28 h-28 bg-gray-200 mb-2 flex items-center justify-center">
-                No Image
+        {loading
+          ? // show 6 skeletons
+            Array.from({ length: 6 }).map((_, i) => <AdTypeSkeleton key={i} />)
+          : (Array.isArray(adTypes) ? adTypes : []).map((ad) => (
+              <div
+                key={ad.key}
+                className={`border rounded-lg p-4 flex flex-col items-center cursor-pointer transition ${
+                  selectedAdType?.key === ad.key
+                    ? "ring-2 ring-primary-accent"
+                    : "hover:ring-2 hover:ring-primary-accent"
+                }`}
+                onClick={() => handleAdTypeSelect(ad)}
+              >
+                <Image
+                  src={getAdTypeImage(ad.key)}
+                  alt={ad.name}
+                  width={120}
+                  height={120}
+                  className="object-contain mb-2"
+                />
+                <h3 className="font-semibold text-center">{ad.name}</h3>
+                {ad.extra_notes1 && (
+                  <p className="text-xs text-gray-500 text-center">
+                    {ad.extra_notes1}
+                  </p>
+                )}
               </div>
-            )}
-            <h3 className="font-semibold text-center">{ad.name}</h3>
-            {ad.extra_notes1 && (
-              <p className="text-xs text-gray-500 text-center">
-                {ad.extra_notes1}
-              </p>
-            )}
-          </div>
-        ))}
+            ))}
       </div>
 
       {selectedAdType && (
@@ -284,6 +327,18 @@ export default function StepSelectAdType({
               required
               className="border border-gray-300 rounded-lg p-3 w-full focus:ring-2 focus:ring-primary-accent resize-none"
             />
+            <p className="text-sm">
+              To type in sinhala, go to{" "}
+              <a
+                href="https://ucsc.cmb.ac.lk/ltrl/services/feconverter/t1.html"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-800 hover:text-blue-600"
+              >
+                Sinhala typing
+              </a>
+              , type your advertisement, copy and then paste it here.
+            </p>
           </div>
 
           {/* Image Upload */}
@@ -329,6 +384,7 @@ export default function StepSelectAdType({
                   updateFormData({ priorityPrice: e.target.checked })
                 }
               />
+
               <span>Priority (LKR {selectedAdType.priority_price})</span>
             </label>
             {selectedAdType.tint_color_price > 0 && (
