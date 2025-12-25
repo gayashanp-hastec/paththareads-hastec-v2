@@ -202,36 +202,16 @@ export default function StepSelectAdType({
     return adTypeImages[adKey] || "/default_ad_icon.png";
   };
 
-  // async function uploadImageToCloudinary(file: File) {
-  //   const formData = new FormData();
-  //   formData.append("file", file);
-  //   formData.append(
-  //     "upload_preset",
-  //     process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!
-  //   );
-
-  //   const res = await fetch(
-  //     `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
-  //     {
-  //       method: "POST",
-  //       body: formData,
-  //     }
-  //   );
-
-  //   if (!res.ok) {
-  //     throw new Error("Cloudinary upload failed");
-  //   }
-
-  //   return res.json();
-  // }
-
   async function uploadImageToCloudinary(file: File) {
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("upload_preset", process.env.CLOUDINARY_UPLOAD_PRESET!);
+    formData.append(
+      "upload_preset",
+      process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!
+    );
 
     const res = await fetch(
-      `https://api.cloudinary.com/v1_1/${process.env.CLOUDINARY_CLOUD_NAME}/image/upload`,
+      `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
       {
         method: "POST",
         body: formData,
@@ -244,6 +224,26 @@ export default function StepSelectAdType({
 
     return res.json();
   }
+
+  // async function uploadImageToCloudinary(file: File) {
+  //   const formData = new FormData();
+  //   formData.append("file", file);
+  //   formData.append("upload_preset", process.env.CLOUDINARY_UPLOAD_PRESET!);
+
+  //   const res = await fetch(
+  //     `https://api.cloudinary.com/v1_1/${process.env.CLOUDINARY_CLOUD_NAME}/image/upload`,
+  //     {
+  //       method: "POST",
+  //       body: formData,
+  //     }
+  //   );
+
+  //   if (!res.ok) {
+  //     throw new Error("Cloudinary upload failed");
+  //   }
+
+  //   return res.json();
+  // }
 
   return (
     <div className="space-y-6">
