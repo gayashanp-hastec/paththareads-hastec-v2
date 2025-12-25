@@ -284,7 +284,7 @@ export default function StepSelectAdType({
       {selectedAdType && (
         <div className="space-y-4 md:w-2/3 mx-auto">
           {/* Publish Date */}
-          <div>
+          <div className="w-full">
             <label className="block font-medium mb-1">
               Publish Date <span className="text-red-500">*</span>
             </label>
@@ -294,7 +294,7 @@ export default function StepSelectAdType({
               value={formData.publishDate || ""}
               onChange={(e) => updateFormData({ publishDate: e.target.value })}
               required
-              className="border border-gray-300 rounded-lg p-2 w-full focus:ring-2 focus:ring-primary-accent"
+              className="border border-gray-300 rounded-lg p-2 w-full md:w-1/5 focus:ring-2 focus:ring-primary-accent"
             />
           </div>
 
@@ -424,6 +424,11 @@ export default function StepSelectAdType({
                 }}
                 className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-primary-accent"
               />
+              {formData.uploading && (
+                <div className="my-2">
+                  <p className="text-sm">Uploading image please wait...</p>
+                </div>
+              )}
 
               {formData.uploadedImage && (
                 <img
