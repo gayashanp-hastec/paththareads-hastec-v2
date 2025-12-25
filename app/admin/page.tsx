@@ -31,10 +31,18 @@ export default function AdminDashboard() {
   }, []);
 
   const tiles = [
-    { name: "Advertisements", icon: <Newspaper size={26} /> },
-    { name: "Users", icon: <Users size={26} /> },
-    { name: "Reports", icon: <BarChart3 size={26} /> },
-    { name: "Settings", icon: <Settings size={26} /> },
+    {
+      name: "Advertisements",
+      icon: <Newspaper size={26} />,
+      redlink: "admin/",
+    },
+    {
+      name: "Manage Newspapers",
+      icon: <Newspaper size={26} />,
+      redlink: "admin/newspapers/",
+    },
+    // { name: "Reports", icon: <BarChart3 size={26} /> },
+    // { name: "Settings", icon: <Settings size={26} /> },
   ];
 
   return (
@@ -120,7 +128,7 @@ export default function AdminDashboard() {
               ) : (
                 tile.name !== "Advertisements" && (
                   <button className="mt-5 w-full bg-gray-900 text-white rounded-xl py-2 hover:bg-gray-800 transition">
-                    View {tile.name}
+                    <Link href={tile.redlink}>View {tile.name}</Link>
                   </button>
                 )
               )}

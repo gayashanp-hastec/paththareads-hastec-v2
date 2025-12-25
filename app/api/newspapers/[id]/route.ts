@@ -70,6 +70,7 @@ export async function PUT(
       min_ad_height,
       tint_additional_charge,
       newspaper_img,
+      name_sinhala,
       ad_types = [],
     } = body;
 
@@ -94,6 +95,7 @@ export async function PUT(
           min_ad_height,
           tint_additional_charge,
           newspaper_img,
+          name_sinhala,
         },
       });
 

@@ -43,6 +43,7 @@ export async function POST(req: Request) {
       min_ad_height,
       tint_additional_charge,
       newspaper_img,
+      name_sinhala,
       ad_types = [], // optional
     } = body;
 
@@ -77,6 +78,7 @@ export async function POST(req: Request) {
           min_ad_height,
           tint_additional_charge,
           newspaper_img,
+          name_sinhala,
         },
       });
 

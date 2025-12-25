@@ -2,8 +2,8 @@
 import "./globals.css";
 
 export const metadata = {
-  title: "My Next.js App",
-  description: "A default Next.js layout",
+  title: "PaththareAds Admin Panel",
+  description: "PaththareAds Admin Panel",
 };
 
 export default function RootLayout({

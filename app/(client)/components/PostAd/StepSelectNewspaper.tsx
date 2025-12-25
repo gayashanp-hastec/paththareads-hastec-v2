@@ -134,7 +134,9 @@ export default function StepSelectNewspaper({
                         "linear-gradient(to bottom right, #fff, #fff, var(--color-primary))",
                     }}
                   >
-                    {paper.name_sinhala}
+                    {paper.name_sinhala === null
+                      ? paper.name
+                      : paper.name_sinhala}
                   </div>
                 </button>
               );

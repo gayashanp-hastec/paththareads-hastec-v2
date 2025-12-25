@@ -34,7 +34,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
     item || {
       name: "",
       type: "Daily",
-      nameSinhala: "",
+      name_sinhala: "",
       noColPerPage: 0,
       colWidth: 0,
       colHeight: 0,
@@ -142,7 +142,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
     const payload = {
       id: item?.id || form.name.replace(/\s+/g, "_").toUpperCase(),
       name: form.name,
-      nameSinhala: form.nameSinhala,
+      name_sinhala: form.name_sinhala,
       type: form.type,
       no_col_per_page: Number(form.noColPerPage),
       col_width: Number(form.colWidth),
@@ -169,18 +169,25 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
     };
 
     try {
-      const res = await fetch("/api/newspapers", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      const res = await fetch(
+        item?.id ? `/api/newspapers/${item.id}` : "/api/newspapers",
+        {
+          method: item?.id ? "PUT" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
 
       if (!res.ok) {
         const err = await res.json();
         throw new Error(err.message || "Failed to save newspaper");
       }
 
-      toast.success("Newspaper saved successfully");
+      toast.success(
+        item?.id
+          ? "Newspaper updated successfully"
+          : "Newspaper created successfully"
+      );
       onSaved();
     } catch (err: any) {
       console.error(err);
@@ -201,7 +208,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
         // 1️⃣ Populate newspaper form (EXACT prisma → frontend mapping)
         setForm({
           name: data.name,
-          nameSinhala: data.name_sinhala,
+          name_sinhala: data.name_sinhala,
           type: data.type,
           noColPerPage: data.no_col_per_page,
           colWidth: data.col_width,
@@ -286,9 +293,9 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
               <input
                 type="text"
                 className={`w-full border p-2 rounded`}
-                value={form.nameSinhala}
+                value={form.name_sinhala}
                 onChange={(e) => {
-                  setForm({ ...form, nameSinhala: e.target.value });
+                  setForm({ ...form, name_sinhala: e.target.value });
                 }}
               />
             </div>
