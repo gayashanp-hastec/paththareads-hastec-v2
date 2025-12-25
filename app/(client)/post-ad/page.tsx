@@ -18,10 +18,33 @@ interface Newspaper {
   id: string;
 }
 
+interface AdType {
+  id: number;
+  newspaper_id: string;
+  key: string;
+  name: string;
+  base_type: string;
+  count_first_words: number;
+  base_price: number;
+  additional_word_price: number;
+  priority_price: number;
+  tint_color_price: number;
+  is_allow_combined: boolean;
+  max_words: number;
+  img_url?: string;
+  is_upload_image: boolean;
+  extra_notes1?: string;
+  extra_notes2?: string;
+  categories: {
+    category: string;
+    subCategories: { name: string }[];
+  }[];
+}
+
 interface FormData {
   selectedNewspaper: Newspaper | null;
   adType: string | null;
-  adTypeObject?: any | null;
+  adTypeObject?: AdType | null;
   classifiedCategory: string | null;
   subCategory?: string;
   publishDate: string;
@@ -62,6 +85,7 @@ export default function PostAdPage() {
   const [formData, setFormData] = useState<FormData>({
     selectedNewspaper: null,
     adType: null,
+    adTypeObject: null,
     classifiedCategory: null,
     publishDate: "",
     adText: "",
