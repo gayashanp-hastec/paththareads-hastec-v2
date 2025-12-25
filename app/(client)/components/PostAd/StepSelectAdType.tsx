@@ -260,7 +260,9 @@ export default function StepSelectAdType({
             selectedAdType.key === "photo_classified" ||
             selectedAdType.key === "casual") && (
             <div>
-              <label className="block font-medium mb-1">Category</label>
+              <label className="block font-medium mb-1">
+                Category <span className="text-red-500">*</span>
+              </label>
               <select
                 value={selectedCategory}
                 onChange={(e) => {
