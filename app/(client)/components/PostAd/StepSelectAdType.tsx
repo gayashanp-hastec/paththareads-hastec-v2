@@ -38,8 +38,7 @@ export default function StepSelectAdType({
 }: StepSelectAdTypeProps) {
   const [adTypes, setAdTypes] = useState<AdType[]>([]);
   const [loading, setLoading] = useState(false);
-  // const [selectedAdType, setSelectedAdType] = useState<AdType | null>(null);
-  const selectedAdType = formData.adTypeObject || null;
+  const [selectedAdType, setSelectedAdType] = useState<AdType | null>(null);
   const [wordCount, setWordCount] = useState<number>(
     formData.adText?.split(" ").filter(Boolean).length || 0
   );
@@ -48,10 +47,8 @@ export default function StepSelectAdType({
   >([]);
   const [totalPrice, setTotalPrice] = useState<number>(0);
 
-  // const [selectedCategory, setSelectedCategory] = useState<string>("");
-  const selectedCategory = formData.classifiedCategory || "";
-  // const [selectedSubCategory, setSelectedSubCategory] = useState<string>("");
-  const selectedSubCategory = formData.subCategory || "";
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [selectedSubCategory, setSelectedSubCategory] = useState<string>("");
 
   const selectedNewspaperId = formData.selectedNewspaper?.id;
 
@@ -69,10 +66,9 @@ export default function StepSelectAdType({
   }, [selectedNewspaperId]);
 
   const handleAdTypeSelect = (adType: AdType) => {
-    // setSelectedAdType(adType);
+    setSelectedAdType(adType);
     updateFormData({
       adType: adType.key,
-      adTypeObject: adType,
       adText: "",
       backgroundColor: false,
       combinedAd: false,
@@ -83,8 +79,8 @@ export default function StepSelectAdType({
       subCategory: "",
     });
     setWordCount(0);
-    // setSelectedCategory("");
-    // setSelectedSubCategory("");
+    setSelectedCategory("");
+    setSelectedSubCategory("");
   };
 
   // Word count & price calculation
@@ -268,9 +264,9 @@ export default function StepSelectAdType({
               <select
                 value={selectedCategory}
                 onChange={(e) => {
-                  // setSelectedCategory(e.target.value);
+                  setSelectedCategory(e.target.value);
                   updateFormData({ classifiedCategory: e.target.value });
-                  // setSelectedSubCategory("");
+                  setSelectedSubCategory("");
                   console.log(formData.classifiedCategory);
                 }}
                 className="border border-gray-300 rounded-lg p-2 w-full focus:ring-2 focus:ring-primary-accent"
@@ -297,9 +293,9 @@ export default function StepSelectAdType({
             <div>
               <label className="block font-medium mb-1">Sub Category</label>
               <select
-                value={formData.subCategory || ""}
+                value={selectedSubCategory}
                 onChange={(e) => {
-                  // setSelectedSubCategory(e.target.value);
+                  setSelectedSubCategory(e.target.value);
                   updateFormData({ subCategory: e.target.value });
                   console.log(formData.subCategory);
                 }}
