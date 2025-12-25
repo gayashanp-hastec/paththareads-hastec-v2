@@ -45,6 +45,7 @@ interface FormData {
   selectedNewspaper: Newspaper | null;
   adType: string | null;
   adTypeObject?: AdType | null;
+  uploading: boolean;
   classifiedCategory: string | null;
   subCategory?: string;
   publishDate: string;
@@ -86,6 +87,7 @@ export default function PostAdPage() {
     selectedNewspaper: null,
     adType: null,
     adTypeObject: null,
+    uploading: false,
     classifiedCategory: null,
     publishDate: "",
     adText: "",

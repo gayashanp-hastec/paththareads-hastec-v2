@@ -202,6 +202,49 @@ export default function StepSelectAdType({
     return adTypeImages[adKey] || "/default_ad_icon.png";
   };
 
+  // async function uploadImageToCloudinary(file: File) {
+  //   const formData = new FormData();
+  //   formData.append("file", file);
+  //   formData.append(
+  //     "upload_preset",
+  //     process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!
+  //   );
+
+  //   const res = await fetch(
+  //     `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
+  //     {
+  //       method: "POST",
+  //       body: formData,
+  //     }
+  //   );
+
+  //   if (!res.ok) {
+  //     throw new Error("Cloudinary upload failed");
+  //   }
+
+  //   return res.json();
+  // }
+
+  async function uploadImageToCloudinary(file: File) {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", process.env.CLOUDINARY_UPLOAD_PRESET!);
+
+    const res = await fetch(
+      `https://api.cloudinary.com/v1_1/${process.env.CLOUDINARY_CLOUD_NAME}/image/upload`,
+      {
+        method: "POST",
+        body: formData,
+      }
+    );
+
+    if (!res.ok) {
+      throw new Error("Cloudinary upload failed");
+    }
+
+    return res.json();
+  }
+
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-center">Select Ad Type</h2>
@@ -353,21 +396,43 @@ export default function StepSelectAdType({
                 type="file"
                 accept="image/*"
                 required
-                onChange={(e) => {
+                onChange={async (e) => {
                   const file = e.target.files?.[0];
-                  if (file) {
-                    const timestamp = Date.now();
-                    const ext = file.name.split(".").pop();
-                    const nameWithoutExt = file.name
-                      .split(".")
-                      .slice(0, -1)
-                      .join(".");
-                    const uniqueName = `${nameWithoutExt}_${timestamp}.${ext}`;
-                    updateFormData({ uploadedImage: uniqueName });
+                  if (!file) return;
+
+                  try {
+                    // optional UI loading state
+                    updateFormData({ uploading: true });
+
+                    const data = await uploadImageToCloudinary(file);
+
+                    /*
+                      data.secure_url  -> public image URL
+                      data.public_id   -> cloudinary internal ID
+                    */
+
+                    updateFormData({
+                      uploadedImage: data.secure_url,
+                      // uploadedImagePublicId: data.public_id,
+                      uploading: false,
+                    });
+                  } catch (error) {
+                    console.error(error);
+                    updateFormData({ uploading: false });
+                    alert("Image upload failed. Please try again.");
                   }
                 }}
                 className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-primary-accent"
               />
+
+              {formData.uploadedImage && (
+                <img
+                  src={formData.uploadedImage}
+                  alt="Uploaded preview"
+                  className="mt-4 w-48 rounded-lg border"
+                />
+              )}
+
               {selectedAdType.extra_notes1 && (
                 <p className="text-xs text-gray-500">
                   {selectedAdType.extra_notes1}
