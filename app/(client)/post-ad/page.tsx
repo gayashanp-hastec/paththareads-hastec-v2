@@ -21,7 +21,9 @@ interface Newspaper {
 interface FormData {
   selectedNewspaper: Newspaper | null;
   adType: string | null;
+  adTypeObject?: any | null;
   classifiedCategory: string | null;
+  subCategory?: string;
   publishDate: string;
   adText: string;
   backgroundColor: boolean;
