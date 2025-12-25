@@ -200,9 +200,52 @@ export default function TrackAdClient({ reference }: { reference: string }) {
     return res.json();
   }
 
-  if (loading) return <div className="p-8">Loading...</div>;
   if (error) return <div className="p-8 text-red-600">{error}</div>;
   if (!ad) return <div className="p-8">No ad found</div>;
+
+  function TrackAdSkeleton() {
+    return (
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-10 py-10 my-12 bg-white rounded-2xl shadow-lg border border-gray-100 animate-pulse">
+        {/* Title */}
+        <div className="h-8 w-2/3 mx-auto bg-gray-200 rounded mb-12" />
+
+        {/* Details grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 mb-6">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="h-4 bg-gray-200 rounded w-full" />
+          ))}
+          <div className="h-4 bg-gray-200 rounded w-3/4 sm:col-span-2" />
+        </div>
+
+        {/* Textarea */}
+        <div className="mb-6">
+          <div className="flex justify-between mb-2">
+            <div className="h-4 w-32 bg-gray-200 rounded" />
+            <div className="h-3 w-20 bg-gray-200 rounded" />
+          </div>
+          <div className="h-44 bg-gray-200 rounded-xl" />
+          <div className="h-3 w-3/4 bg-gray-200 rounded mt-4 mx-auto" />
+        </div>
+
+        {/* Admin revision block */}
+        <div className="mb-6 p-4 rounded-lg bg-gray-100">
+          <div className="h-4 w-1/2 bg-gray-200 rounded mb-3" />
+          <div className="h-3 w-full bg-gray-200 rounded mb-2" />
+          <div className="h-3 w-5/6 bg-gray-200 rounded mb-4" />
+          <div className="h-9 w-48 bg-gray-200 rounded-lg" />
+        </div>
+
+        {/* Buttons */}
+        <div className="flex flex-wrap justify-center gap-3 mt-8">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="h-10 w-36 bg-gray-200 rounded-lg" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) return <TrackAdSkeleton />;
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-10 py-10 my-12 bg-white rounded-2xl shadow-lg border border-gray-100 transition-all">
