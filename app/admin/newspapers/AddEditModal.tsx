@@ -27,6 +27,7 @@ const AD_TYPE_OPTIONS = [
   "photo_classified",
   "casual",
   "death_notice",
+  "marriage",
 ];
 
 export default function AddEditModal({ item, onClose, onSaved }: any) {

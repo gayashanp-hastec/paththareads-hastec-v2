@@ -9,11 +9,13 @@ import StepSelectNewspaper from "../components/PostAd/StepSelectNewspaper";
 import StepSelectAdType from "../components/PostAd/StepSelectAdType";
 import StepAdvertiserDetails from "../components/PostAd/StepAdvertiserDetails";
 import StepSubmittedForReview from "../components/PostAd/StepSubmittedForReview";
+import { checkProfanity } from "@/lib/profanity";
 
 // ---------------- Types ----------------
 interface Newspaper {
   code: string;
   name: string;
+  id: string;
 }
 
 interface FormData {
@@ -90,7 +92,7 @@ export default function PostAdPage() {
   );
 
   // ---------------- Step Validation ----------------
-  const validateStep = (): boolean => {
+  const validateStep = async (): Promise<boolean> => {
     switch (currentStep) {
       case 1:
         if (!formData.selectedNewspaper) {
@@ -104,11 +106,17 @@ export default function PostAdPage() {
           return false;
         }
         if (!formData.publishDate) {
+          console.log(formData.selectedNewspaper);
           toast.error("Publish date is required.");
           return false;
         }
         if (!formData.adText.trim()) {
           toast.error("Advertisement text cannot be empty.");
+          return false;
+        }
+        const hasProfanity = await checkProfanity(formData.adText);
+        if (hasProfanity) {
+          toast.error("Advertisement text contains inappropriate words.");
           return false;
         }
         if (formData.adType === "classified" && !formData.classifiedCategory) {
@@ -162,8 +170,9 @@ export default function PostAdPage() {
   };
 
   // ---------------- Step Navigation ----------------
-  const nextStep = () => {
-    if (!validateStep()) return;
+  const nextStep = async () => {
+    const isValid = await validateStep();
+    if (!isValid) return;
     if (currentStep < 3) setCurrentStep((prev) => prev + 1);
   };
 
@@ -191,7 +200,7 @@ export default function PostAdPage() {
           address: formData.advertiserAddress.trim(),
         },
         advertisement: {
-          newspaper_name: formData.selectedNewspaper.code,
+          newspaper_name: formData.selectedNewspaper.id,
           ad_type: formData.adType || "",
           classified_category: formData.classifiedCategory || null,
           subcategory: formData.photoCategory || null,
