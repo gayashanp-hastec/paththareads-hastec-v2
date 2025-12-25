@@ -27,6 +27,8 @@ export default function AdminAdvertisementsApproved() {
   const [loading, setLoading] = useState(false);
   const [editedText, setEditedText] = useState("");
   const [originalText, setOriginalText] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
 
   // Fetch ads
   useEffect(() => {
@@ -66,6 +68,13 @@ export default function AdminAdvertisementsApproved() {
     );
     setFilteredAds(updated);
   }, [search, ads, sortKey]);
+
+  const totalPages = Math.ceil(filteredAds.length / ITEMS_PER_PAGE);
+
+  const paginatedAds = filteredAds.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   const openModal = (ad: AdminAdvertisementsApproved) => {
     setSelectedAd(ad);
@@ -160,7 +169,7 @@ export default function AdminAdvertisementsApproved() {
             </thead>
             <tbody>
               {!loading &&
-                filteredAds.map((ad) => (
+                paginatedAds.map((ad) => (
                   <tr
                     key={ad.reference_number}
                     onClick={() => openModal(ad)}
@@ -189,6 +198,29 @@ export default function AdminAdvertisementsApproved() {
               )}
             </tbody>
           </table>
+        </div>
+        <div className="flex justify-between items-center mt-4">
+          <span className="text-sm text-gray-600">
+            Page {currentPage} of {totalPages}
+          </span>
+
+          <div className="flex gap-2">
+            <button
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+              className="px-3 py-1 border rounded disabled:opacity-50"
+            >
+              Previous
+            </button>
+
+            <button
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+              className="px-3 py-1 border rounded disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
         </div>
 
         {/* Modal */}
