@@ -57,41 +57,71 @@ export default function AdminNewspapers() {
         </div>
 
         {/* Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
           {list.map((paper) => (
-            <div key={paper.id} className="bg-white rounded-2xl p-6 shadow">
-              <h3 className="text-xl font-bold">{paper.name}</h3>
-              <p className="text-gray-500 capitalize">Type: {paper.type}</p>
-
-              <div className="text-sm mt-3 space-y-1">
-                <p>
-                  <strong>Columns:</strong> {paper.noColPerPage}
-                </p>
-                <p>
-                  <strong>Size:</strong> {paper.colWidth} × {paper.colHeight}
-                </p>
-                <p>
-                  <strong>Min Ad Height:</strong> {paper.minAdHeight} cm
-                </p>
-                <p>
-                  <strong>Tint Charge:</strong> Rs. {paper.tintAdditionalCharge}
+            <div
+              key={paper.id}
+              className="group relative flex flex-col rounded-2xl border border-[rgba(0,0,0,0.05)] bg-white p-6 transition
+                 hover:-translate-y-0.5 hover:shadow-lg"
+            >
+              {/* Header */}
+              <div className="mb-4">
+                <h3 className="text-lg font-semibold text-[var(--color-primary-dark)]">
+                  {paper.name}
+                </h3>
+                <p className="mt-0.5 text-sm capitalize text-[var(--color-text-highlight)]">
+                  {paper.type}
                 </p>
               </div>
 
-              <div className="flex gap-2 mt-4">
+              {/* Divider */}
+              <div className="mb-4 h-px w-full bg-[var(--color-orange-accent)] opacity-40" />
+
+              {/* Meta Info */}
+              {/* <div className="flex flex-col gap-2 text-sm text-[var(--color-text)]">
+                <div className="flex justify-between">
+                  <span className="opacity-70">Columns</span>
+                  <span className="font-medium">{paper.noColPerPage}</span>
+                </div>
+
+                <div className="flex justify-between">
+                  <span className="opacity-70">Size</span>
+                  <span className="font-medium">
+                    {paper.colWidth} × {paper.colHeight}
+                  </span>
+                </div>
+
+                <div className="flex justify-between">
+                  <span className="opacity-70">Min Ad Height</span>
+                  <span className="font-medium">{paper.minAdHeight} cm</span>
+                </div>
+
+                <div className="flex justify-between">
+                  <span className="opacity-70">Tint Charge</span>
+                  <span className="font-medium">
+                    Rs. {paper.tintAdditionalCharge}
+                  </span>
+                </div>
+              </div> */}
+
+              {/* Actions */}
+              <div className="mt-6 grid grid-cols-2 gap-3">
                 <button
                   onClick={() => {
                     setEditItem(paper);
                     setModalOpen(true);
                   }}
-                  className="flex-1 bg-yellow-400 hover:bg-yellow-500 text-black py-2 rounded-lg"
+                  className="rounded-lg border border-[var(--color-primary)] px-4 py-2 text-sm font-medium
+                     text-[var(--color-primary-dark)] transition
+                     hover:bg-[var(--color-primary-accent)] hover:text-white"
                 >
                   Edit
                 </button>
 
                 <button
                   onClick={() => deleteItem(paper.id)}
-                  className="flex-1 bg-red-500 hover:bg-red-600 text-white py-2 rounded-lg"
+                  className="rounded-lg bg-[var(--color-primary-dark)] px-4 py-2 text-sm font-medium
+                     text-white transition hover:bg-[var(--color-primary)]"
                 >
                   Delete
                 </button>

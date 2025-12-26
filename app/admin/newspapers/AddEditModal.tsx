@@ -253,59 +253,71 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
 
   /* ---------------- UI ---------------- */
   return (
-    <div className="fixed inset-0 bg-black/40 flex justify-center items-start p-10 overflow-auto z-50">
-      <div className="bg-white rounded-xl p-6 w-[900px] shadow-xl space-y-6">
-        <h2 className="text-2xl font-bold">
-          {item ? "Edit Newspaper" : "Add Newspaper"}
-        </h2>
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-auto bg-black/40 p-6 md:p-10">
+      <div className="w-full max-w-[900px] space-y-8 rounded-2xl bg-white p-6 md:p-8 shadow-2xl">
+        {/* Header */}
+        <div className="border-b pb-4">
+          <h2 className="text-2xl font-semibold text-[var(--color-primary-dark)]">
+            {item ? "Edit Newspaper" : "Add Newspaper"}
+          </h2>
+          <p className="mt-1 text-sm text-[var(--color-text-highlight)]">
+            Configure newspaper properties and advertisement types
+          </p>
+        </div>
 
         {/* Newspaper Details */}
-        <div className="border p-4 rounded-xl bg-gray-50">
-          <h3 className="text-lg font-semibold mb-4">Newspaper Details</h3>
+        <div className="rounded-2xl border bg-[var(--color-orange-accent)]/10 p-5">
+          <h3 className="mb-4 text-lg font-semibold text-[var(--color-primary-dark)]">
+            Newspaper Details
+          </h3>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {/* Name */}
             <div>
-              <label className="block text-sm font-medium">
+              <label className="block text-sm font-medium text-[var(--color-text)]">
                 Newspaper Name
               </label>
-
               <input
                 type="text"
-                className={`w-full border p-2 rounded ${
-                  errors.name ? "border-red-500 animate-shake" : ""
-                }`}
+                className={`mt-1 w-full rounded-lg border px-3 py-2 text-sm focus:border-[var(--color-primary)] focus:outline-none
+              ${
+                errors.name ? "border-red-500 animate-shake" : "border-gray-300"
+              }
+            `}
                 value={form.name}
                 onChange={(e) => {
                   setForm({ ...form, name: e.target.value });
                   setErrors({ ...errors, name: undefined });
                 }}
               />
-
               {errors.name && (
-                <p className="text-sm text-red-600 mt-1">{errors.name}</p>
+                <p className="mt-1 text-sm text-red-600">{errors.name}</p>
               )}
             </div>
 
+            {/* Sinhala Name */}
             <div>
-              <label className="block text-sm font-medium">
+              <label className="block text-sm font-medium text-[var(--color-text)]">
                 Newspaper Sinhala Name
               </label>
-
               <input
                 type="text"
-                className={`w-full border p-2 rounded`}
+                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[var(--color-primary)] focus:outline-none"
                 value={form.name_sinhala}
-                onChange={(e) => {
-                  setForm({ ...form, name_sinhala: e.target.value });
-                }}
+                onChange={(e) =>
+                  setForm({ ...form, name_sinhala: e.target.value })
+                }
               />
             </div>
 
+            {/* Type */}
             <div>
-              <label className="block text-sm font-medium">Type</label>
+              <label className="block text-sm font-medium text-[var(--color-text)]">
+                Type
+              </label>
               <select
                 disabled={!!item}
-                className="w-full border p-2 rounded"
+                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[var(--color-primary)] focus:outline-none disabled:bg-gray-100"
                 value={form.type}
                 onChange={(e) => setForm({ ...form, type: e.target.value })}
               >
@@ -314,369 +326,114 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
               </select>
             </div>
 
-            {/* Newspaper Image Upload */}
-            <div className="col-span-2">
-              {/* <label className="block text-sm font-medium">
-                Newspaper Image
-              </label> */}
-
-              {/* <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  handleNewspaperImage(e);
-                  // setErrors({ ...errors, newspaperimg: undefined });
-                }}
-                className={`w-full border p-2 rounded ${
-                  errors.newspaperimg ? "border-red-500 animate-shake" : ""
-                }`}
-              /> */}
-
-              {/* {uploadingImage && (
-                <p className="text-sm text-gray-500">Uploading...</p>
-              )}
-
-              {form.newspaperimg && (
-                <p className="text-sm mt-1 text-green-600">
-                  Uploaded: {form.newspaperimg}
-                </p>
-              )}
-
-              {errors.newspaperimg && (
-                <p className="text-sm text-red-600 mt-1">
-                  {errors.newspaperimg}
-                </p>
-              )} */}
-            </div>
-
-            {/* Other fields */}
-            <div>
-              <label className="block text-sm font-medium">
-                Columns per Page
-              </label>
-              <input
-                type="number"
-                className="w-full border p-2 rounded"
-                value={form.noColPerPage}
-                onChange={(e) =>
-                  setForm({ ...form, noColPerPage: Number(e.target.value) })
-                }
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium">
-                Column Width (cm)
-              </label>
-              <input
-                type="number"
-                className="w-full border p-2 rounded"
-                value={form.colWidth}
-                onChange={(e) =>
-                  setForm({ ...form, colWidth: Number(e.target.value) })
-                }
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium">
-                Column Height (cm)
-              </label>
-              <input
-                type="number"
-                className="w-full border p-2 rounded"
-                value={form.colHeight}
-                onChange={(e) =>
-                  setForm({ ...form, colHeight: Number(e.target.value) })
-                }
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium">
-                Minimum Ad Height (cm)
-              </label>
-              <input
-                type="number"
-                className="w-full border p-2 rounded"
-                value={form.minAdHeight}
-                onChange={(e) =>
-                  setForm({ ...form, minAdHeight: Number(e.target.value) })
-                }
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium">
-                Tint Additional Charge
-              </label>
-              <input
-                type="number"
-                className="w-full border p-2 rounded"
-                value={form.tintAdditionalCharge}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    tintAdditionalCharge: Number(e.target.value),
-                  })
-                }
-              />
-            </div>
+            {/* Metrics */}
+            {[
+              ["Columns per Page", "noColPerPage"],
+              ["Column Width (cm)", "colWidth"],
+              ["Column Height (cm)", "colHeight"],
+              ["Minimum Ad Height (cm)", "minAdHeight"],
+              ["Tint Additional Charge", "tintAdditionalCharge"],
+            ].map(([label, key]) => (
+              <div key={key}>
+                <label className="block text-sm font-medium text-[var(--color-text)]">
+                  {label}
+                </label>
+                <input
+                  type="number"
+                  className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[var(--color-primary)] focus:outline-none"
+                  value={(form as any)[key]}
+                  onChange={(e) =>
+                    setForm({ ...form, [key]: Number(e.target.value) })
+                  }
+                />
+              </div>
+            ))}
           </div>
         </div>
 
-        <div className="text-center">
-          <p className="text-red-600 text-xl">
-            {typeError ? "At least one type should be added!" : ""}
+        {/* Type Error */}
+        {typeError && (
+          <p className="text-center text-sm font-medium text-red-600">
+            At least one type should be added!
           </p>
-        </div>
+        )}
 
         {/* Types of Ads */}
-        <div className="border p-4 rounded-xl bg-gray-50">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold">Types of Ads</h3>
+        <div className="rounded-2xl border bg-gray-50 p-5">
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-[var(--color-primary-dark)]">
+              Types of Ads
+            </h3>
             <button
               onClick={addNewAdType}
-              className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg"
+              className="rounded-lg bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-white transition hover:bg-[var(--color-primary-dark)]"
             >
               + Add Type
             </button>
           </div>
 
           {adTypes.length === 0 && (
-            <p className="text-gray-600 text-sm">No ad types added yet.</p>
+            <p className="text-sm text-gray-500">No ad types added yet.</p>
           )}
 
           {adTypes.map((t, index) => (
-            <div key={index} className="border rounded-xl p-4 mb-4 bg-white">
-              <h4 className="font-bold text-md mb-3">Ad Type #{index + 1}</h4>
+            <div
+              key={index}
+              className="mb-5 rounded-xl border bg-white p-4 shadow-sm"
+            >
+              <h4 className="mb-3 text-sm font-semibold text-[var(--color-primary-dark)]">
+                Ad Type #{index + 1}
+              </h4>
 
-              <div className="grid grid-cols-2 gap-4">
-                {/* Select typeKey */}
-                <div>
-                  <label className="block text-sm font-medium">
-                    Select Type Key
-                  </label>
-                  <select
-                    className="w-full border p-2 rounded"
-                    value={t.typeKey}
-                    onChange={(e) =>
-                      updateAdType(index, "typeKey", e.target.value)
-                    }
-                  >
-                    {AD_TYPE_OPTIONS.map((opt) => (
-                      <option key={opt}>{opt}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium">
-                    Display Name
-                  </label>
-                  <input
-                    className="w-full border p-2 rounded"
-                    value={t.name}
-                    onChange={(e) =>
-                      updateAdType(index, "name", e.target.value)
-                    }
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium">Base Type</label>
-                  <input
-                    className="w-full border p-2 rounded"
-                    value={t.baseType}
-                    onChange={(e) =>
-                      updateAdType(index, "baseType", e.target.value)
-                    }
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium">
-                    First Word Count
-                  </label>
-                  <input
-                    type="number"
-                    className="w-full border p-2 rounded"
-                    value={t.countFirstWords}
-                    onChange={(e) =>
-                      updateAdType(
-                        index,
-                        "countFirstWords",
-                        Number(e.target.value)
-                      )
-                    }
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium">
-                    Base Price
-                  </label>
-                  <input
-                    type="number"
-                    className="w-full border p-2 rounded"
-                    value={t.basePrice}
-                    onChange={(e) =>
-                      updateAdType(index, "basePrice", Number(e.target.value))
-                    }
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium">
-                    Additional Word Price
-                  </label>
-                  <input
-                    type="number"
-                    className="w-full border p-2 rounded"
-                    value={t.additionalWordPrice}
-                    onChange={(e) =>
-                      updateAdType(
-                        index,
-                        "additionalWordPrice",
-                        Number(e.target.value)
-                      )
-                    }
-                  />
-                </div>
-
-                {/* COLOR OPTIONS */}
-                {/* <div className="col-span-2">
-                  <label className="block text-sm font-medium mb-1">
-                    Color Options
-                  </label>
-                  <div className="flex gap-4">
-                    {["blackWhite", "color"].map((color) => (
-                      <label key={color} className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={t.colorOptions.includes(color)}
-                          onChange={(e) => {
-                            const updated = e.target.checked
-                              ? [...t.colorOptions, color]
-                              : t.colorOptions.filter((c) => c !== color);
-                            updateAdType(index, "colorOptions", updated);
-                          }}
-                        />
-                        {color}
-                      </label>
-                    ))}
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                {[
+                  ["Select Type Key", "typeKey", "select"],
+                  ["Display Name", "name", "text"],
+                  ["Base Type", "baseType", "text"],
+                  ["First Word Count", "countFirstWords", "number"],
+                  ["Base Price", "basePrice", "number"],
+                  ["Additional Word Price", "additionalWordPrice", "number"],
+                  ["Tint Color Price", "tintColorPrice", "number"],
+                  ["Max Words", "maxWords", "number"],
+                  ["Priority Price", "priorityPrice", "number"],
+                ].map(([label, key, type]) => (
+                  <div key={key}>
+                    <label className="block text-sm font-medium text-[var(--color-text)]">
+                      {label}
+                    </label>
+                    {type === "select" ? (
+                      <select
+                        className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                        value={(t as any)[key]}
+                        onChange={(e) =>
+                          updateAdType(index, key, e.target.value)
+                        }
+                      >
+                        {AD_TYPE_OPTIONS.map((opt) => (
+                          <option key={opt}>{opt}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        type={type}
+                        className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                        value={(t as any)[key]}
+                        onChange={(e) =>
+                          updateAdType(
+                            index,
+                            key,
+                            type === "number"
+                              ? Number(e.target.value)
+                              : e.target.value
+                          )
+                        }
+                      />
+                    )}
                   </div>
-                </div> */}
+                ))}
 
-                <div>
-                  <label className="block text-sm font-medium">
-                    Tint Color Price
-                  </label>
-                  <input
-                    type="number"
-                    className="w-full border p-2 rounded"
-                    value={t.tintColorPrice}
-                    onChange={(e) =>
-                      updateAdType(
-                        index,
-                        "tintColorPrice",
-                        Number(e.target.value)
-                      )
-                    }
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium">Max Words</label>
-                  <input
-                    type="number"
-                    className="w-full border p-2 rounded"
-                    value={t.maxWords}
-                    onChange={(e) =>
-                      updateAdType(index, "maxWords", Number(e.target.value))
-                    }
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium">
-                    Priority Price
-                  </label>
-                  <input
-                    type="number"
-                    className="w-full border p-2 rounded"
-                    value={t.priorityPrice}
-                    onChange={(e) =>
-                      updateAdType(
-                        index,
-                        "priorityPrice",
-                        Number(e.target.value)
-                      )
-                    }
-                  />
-                </div>
-
-                {/* Categories */}
-                <div className="col-span-2">
-                  {/* <label className="block text-sm font-medium">
-                    Categories (comma separated)
-                  </label> */}
-
-                  {/* Input */}
-                  {/* <input
-                    key={t.categories} // 👈 forces animation & re-render if needed
-                    className="w-full border p-2 rounded"
-                    value={t.categories}
-                    placeholder="e.g. Real Estate, Automobile"
-                    onChange={(e) =>
-                      updateAdType(index, "categories", e.target.value)
-                    }
-                  /> */}
-
-                  {/* Picker chips */}
-                  {/* <div className="flex flex-wrap gap-2 mt-2">
-                    {CATEGORY_SUGGESTIONS.map((cat) => {
-                      const selected = t.categories
-                        .split(",")
-                        .map((c: string) => c.trim())
-                        .filter(Boolean);
-
-                      const isSelected = selected.includes(cat);
-
-                      return (
-                        <button
-                          key={cat}
-                          type="button"
-                          onClick={() => {
-                            const updated = isSelected
-                              ? selected.filter((c: string) => c !== cat)
-                              : [...selected, cat];
-
-                            updateAdType(
-                              index,
-                              "categories",
-                              updated.join(", ")
-                            );
-                          }}
-                          className={`px-3 py-1 rounded-full text-sm border transition
-            ${
-              isSelected
-                ? "bg-blue-600 text-white border-blue-600"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-            }
-          `}
-                        >
-                          {cat}
-                        </button>
-                      );
-                    })}
-                  </div> */}
-                </div>
-
-                {/* Upload Image */}
-                <div>
-                  <label className="block text-sm font-medium">
-                    Require Image Upload?
-                  </label>
+                {/* Toggles */}
+                <div className="flex items-center gap-2">
                   <input
                     type="checkbox"
                     checked={t.isUploadImage}
@@ -684,12 +441,10 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                       updateAdType(index, "isUploadImage", e.target.checked)
                     }
                   />
+                  <span className="text-sm">Require Image Upload</span>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium">
-                    Allow Combined?
-                  </label>
+                <div className="flex items-center gap-2">
                   <input
                     type="checkbox"
                     checked={t.isAllowCombined}
@@ -697,15 +452,16 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                       updateAdType(index, "isAllowCombined", e.target.checked)
                     }
                   />
+                  <span className="text-sm">Allow Combined</span>
                 </div>
 
-                {/* Extra Notes */}
-                <div className="col-span-2">
+                {/* Notes */}
+                <div className="md:col-span-2">
                   <label className="block text-sm font-medium">
                     Extra Notes 1
                   </label>
                   <textarea
-                    className="w-full border p-2 rounded"
+                    className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
                     value={t.extraNotes1}
                     onChange={(e) =>
                       updateAdType(index, "extraNotes1", e.target.value)
@@ -713,12 +469,12 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                   />
                 </div>
 
-                <div className="col-span-2">
+                <div className="md:col-span-2">
                   <label className="block text-sm font-medium">
                     Extra Notes 2
                   </label>
                   <textarea
-                    className="w-full border p-2 rounded"
+                    className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
                     value={t.extraNotes2}
                     onChange={(e) =>
                       updateAdType(index, "extraNotes2", e.target.value)
@@ -728,19 +484,30 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
               </div>
             </div>
           ))}
+
+          {adTypes.length > 0 && (
+            <div className="mb-4 flex justify-center items-center">
+              <button
+                onClick={addNewAdType}
+                className="rounded-lg bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-white transition hover:bg-[var(--color-primary-dark)]"
+              >
+                Add Next Type
+              </button>
+            </div>
+          )}
         </div>
 
-        {/* Buttons */}
-        <div className="flex gap-3 justify-end pt-4">
+        {/* Footer Actions */}
+        <div className="flex justify-end gap-3 border-t pt-4">
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-gray-300 rounded-lg"
+            className="rounded-lg border border-gray-300 px-5 py-2 text-sm transition hover:bg-gray-100"
           >
             Cancel
           </button>
           <button
             onClick={save}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
+            className="rounded-lg bg-[var(--color-primary-dark)] px-5 py-2 text-sm font-medium text-white transition hover:bg-[var(--color-primary)]"
           >
             Save Newspaper
           </button>
