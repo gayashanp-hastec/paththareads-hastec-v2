@@ -173,9 +173,9 @@ export default function HomePage() {
       </section>
 
       {/* ================= NEWSPAPER TABS ================= */}
-      <section className="flex flex-col gap-8">
-        {/* Tabs */}
-        <div className="flex justify-center gap-4">
+      {/* <section className="flex flex-col gap-8"> */}
+      {/* Tabs */}
+      {/* <div className="flex justify-center gap-4">
           {["daily", "sunday"].map((tab) => (
             <button
               key={tab}
@@ -189,10 +189,10 @@ export default function HomePage() {
               {tab === "daily" ? "Daily Newspapers" : "Sunday Newspapers"}
             </button>
           ))}
-        </div>
+        </div> */}
 
-        {/* Tiles */}
-        <div className="flex flex-wrap justify-center gap-4">
+      {/* Tiles */}
+      {/* <div className="flex flex-wrap justify-center gap-4">
           {(activeTab === "daily" ? newspaperTiles : newspaperSundayTiles)
             .slice(0, showAll ? undefined : 5)
             .map((tile, idx) => (
@@ -210,9 +210,9 @@ export default function HomePage() {
                 />
               </button>
             ))}
-        </div>
+        </div> */}
 
-        {!showAll && (
+      {/* {!showAll && (
           <div className="flex justify-center pt-6">
             <Link
               href="/post-ad"
@@ -221,8 +221,8 @@ export default function HomePage() {
               Get Started
             </Link>
           </div>
-        )}
-      </section>
+        )} */}
+      {/* </section> */}
 
       {/* ================= MODAL ================= */}
       <NP1LankadeepaModal
