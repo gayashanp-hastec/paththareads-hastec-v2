@@ -147,13 +147,13 @@ export default function Header() {
             <Link
               href="/post-ad"
               onClick={(e) => handlePostAdClick(e, "/post-ad")}
-              className="rounded-full bg-orange-accent px-6 py-2 text-center text-sm font-medium text-primary-dark"
+              className="rounded-full bg-orange-accent px-6 py-4 text-center text-sm font-medium text-primary-dark"
             >
               Post Your Ad
             </Link>
-            <button className="rounded-full border border-white/40 px-6 py-2 text-sm text-white">
+            {/* <button className="rounded-full border border-white/40 px-6 py-2 text-sm text-white">
               Login / Register
-            </button>
+            </button> */}
           </div>
         </div>
       )}
