@@ -77,6 +77,7 @@ export async function GET(req: Request) {
         created_at: ad.created_at,
         advertisement_text: ad.advertisement_text,
         attempts,
+        price: ad.price,
         review_history: ad.ad_review_history,
         status_history: ad.ad_status_history,
         advertiser: ad.advertisers

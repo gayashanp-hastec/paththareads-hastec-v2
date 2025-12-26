@@ -11,6 +11,7 @@ type AdData = {
   attempts: number;
   review_history: any[];
   upload_image: string;
+  price?: number | null;
 };
 
 export default function TrackAdClient({ reference }: { reference: string }) {
@@ -368,6 +369,15 @@ export default function TrackAdClient({ reference }: { reference: string }) {
           >
             Apply Admin Suggestion
           </button>
+        </div>
+      )}
+
+      {ad.status === "Approved" && ad.price != null && (
+        <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg text-center">
+          <p className="text-sm text-green-700">Advertisement Price</p>
+          <p className="text-2xl font-bold text-green-800">
+            LKR {ad.price.toLocaleString()}
+          </p>
         </div>
       )}
 

@@ -12,6 +12,7 @@ export async function GET() {
       status: true,
       advertisement_text: true,
       upload_image: true,
+      price: true,
     },
     orderBy: { created_at: "desc" },
   });
