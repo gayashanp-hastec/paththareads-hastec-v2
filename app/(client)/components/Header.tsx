@@ -5,10 +5,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { Mail, Menu, X } from "lucide-react";
 import clsx from "clsx";
+import { usePathname, useRouter } from "next/navigation";
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+  const pathname = usePathname();
+  const router = useRouter();
 
   const navLinks = [
     { name: "Home", href: "/" },
@@ -25,8 +29,26 @@ export default function Header() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const handlePostAdClick = (
+    e: React.MouseEvent<HTMLAnchorElement, MouseEvent>,
+    href: string
+  ) => {
+    if (pathname === "/post-ad") {
+      e.preventDefault();
+      setConfirmModalOpen(true);
+    } else {
+      router.push(href);
+    }
+  };
+
+  const confirmLeave = () => {
+    setConfirmModalOpen(false);
+    window.location.href = "/post-ad";
+  };
+
   return (
     <>
+      {/* ================= HEADER ================= */}
       <header
         className={clsx(
           "fixed inset-x-0 top-0 z-50 transition-all duration-300",
@@ -35,7 +57,6 @@ export default function Header() {
         )}
       >
         <div className="mx-auto flex h-full max-w-7xl flex-col px-4 md:px-8">
-          {/* ================= TOP BAR (DESKTOP ONLY) ================= */}
           {!isScrolled && (
             <div className="hidden items-center justify-end py-1 text-xs sm:flex">
               <a
@@ -48,9 +69,7 @@ export default function Header() {
             </div>
           )}
 
-          {/* ================= MAIN HEADER ================= */}
           <div className="flex flex-1 items-center justify-between gap-4">
-            {/* Logo */}
             <Link href="/" className="flex items-center">
               <Image
                 src="/sample-logo-1.png"
@@ -62,7 +81,6 @@ export default function Header() {
               />
             </Link>
 
-            {/* Search (Desktop Only) */}
             {!isScrolled && (
               <div className="hidden flex-1 justify-center md:flex">
                 <input
@@ -73,27 +91,18 @@ export default function Header() {
               </div>
             )}
 
-            {/* Actions (Desktop Only) */}
             {!isScrolled && (
               <div className="hidden items-center gap-3 md:flex">
                 <Link
                   href="/post-ad"
+                  onClick={(e) => handlePostAdClick(e, "/post-ad")}
                   className="rounded-full bg-orange-accent px-4 py-1.5 text-sm font-medium text-primary-dark transition hover:brightness-110"
                 >
                   Post Your Ad
                 </Link>
-
-                {/*<button className="rounded-full px-4 py-1.5 text-sm transition hover:bg-white/10">
-                  Register
-                </button>
-
-                <button className="specialBtn rounded-full px-4 py-1.5 text-sm">
-                  Login
-                </button>*/}
               </div>
             )}
 
-            {/* Mobile Menu Toggle */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="flex items-center md:hidden"
@@ -103,7 +112,6 @@ export default function Header() {
             </button>
           </div>
 
-          {/* ================= NAVIGATION (DESKTOP) ================= */}
           <nav className="hidden justify-center md:flex">
             <ul className="flex gap-8 pb-3 text-base">
               {navLinks.map((item) => (
@@ -138,6 +146,7 @@ export default function Header() {
           <div className="mt-4 flex flex-col gap-3">
             <Link
               href="/post-ad"
+              onClick={(e) => handlePostAdClick(e, "/post-ad")}
               className="rounded-full bg-orange-accent px-6 py-2 text-center text-sm font-medium text-primary-dark"
             >
               Post Your Ad
@@ -145,6 +154,32 @@ export default function Header() {
             <button className="rounded-full border border-white/40 px-6 py-2 text-sm text-white">
               Login / Register
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* ================= CONFIRM MODAL ================= */}
+      {confirmModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="rounded-xl bg-[var(--color-primary-dark)] p-6 w-80 text-white shadow-lg">
+            <h2 className="text-lg font-semibold mb-4">Already Here!</h2>
+            <p className="mb-6 text-sm">
+              You are already on the Post Ad page. Do you want to start over?
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setConfirmModalOpen(false)}
+                className="rounded-full bg-[var(--color-button)] px-4 py-1.5 text-sm font-medium transition hover:bg-[var(--color-button-hover)] text-white"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmLeave}
+                className="rounded-full bg-[var(--color-orange-accent)] px-4 py-1.5 text-sm font-medium text-[var(--color-primary-dark)] transition hover:brightness-110"
+              >
+                Yes, Start Over!
+              </button>
+            </div>
           </div>
         </div>
       )}
