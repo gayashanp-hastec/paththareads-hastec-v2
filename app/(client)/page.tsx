@@ -77,8 +77,15 @@ export default function HomePage() {
             </p>
 
             <p className="max-w-xl text-base leading-relaxed md:text-lg text-[var(--color-text)]">
-              <strong>Paththare Ads</strong> සමඟින් ඔබේ දැන්වීම් පහසුවෙන්
-              නිර්මාණය කර කළමනාකරණය කරන්න
+              <strong>Paththare Ads </strong>
+              <span
+                className="md:text-base"
+                style={{
+                  fontFamily: "var(--font-sinhala), sans-serif",
+                }}
+              >
+                සමඟින් ඔබේ දැන්වීම් පහසුවෙන් නිර්මාණය කර කළමනාකරණය කරන්න
+              </span>
             </p>
 
             {/* CTA Buttons */}
@@ -118,8 +125,16 @@ export default function HomePage() {
             with Paththare Ads.
           </p>
           <p className="max-w-2xl text-sm text-gray-500">
-            Paththare Ads සමඟ ඔබේ දැන්වීම නිර්මාණය කිරීමට, ඉදිරිපත් කිරීමට සහ
-            ප්‍රකාශයට පත් කිරීමට මෙම සරල පියවර අනුගමනය කරන්න.
+            Paththare Ads{" "}
+            <span
+              className="md:text-xs"
+              style={{
+                fontFamily: "var(--font-sinhala), sans-serif",
+              }}
+            >
+              සමඟ ඔබේ දැන්වීම නිර්මාණය කිරීමට, ඉදිරිපත් කිරීමට සහ ප්‍රකාශයට පත්
+              කිරීමට මෙම සරල පියවර අනුගමනය කරන්න.
+            </span>
           </p>
         </header>
 
@@ -132,19 +147,37 @@ export default function HomePage() {
               <span className="text-3xl font-bold text-primary-accent">
                 {i + 1}
               </span>
-
-              <h3 className="text-lg font-semibold">
-                {
-                  [
-                    "Select Your Paper",
-                    "Select Ad Type",
-                    "Create Your Ad",
-                    "Ad Approval",
-                    "Payment Details",
-                    "Ad Publish",
-                  ][i]
-                }
-              </h3>
+              <div>
+                <h3 className="text-lg font-semibold">
+                  {
+                    [
+                      "Select Paper",
+                      "Select Ad Type",
+                      "Create Your Ad",
+                      "Ad Approval",
+                      "Payment Details",
+                      "Ad Publish",
+                    ][i]
+                  }
+                </h3>
+                <h5
+                  style={{
+                    fontFamily: "var(--font-sinhala), sans-serif",
+                  }}
+                  className="text-sm font-semibold md:mt-1"
+                >
+                  {
+                    [
+                      "(පුවත්පත තෝරන්න)",
+                      "(දැන්වීම් වර්ගය තෝරන්න)",
+                      "(දැන්වීමේ විස්තර ඇතුල් කරන්න)",
+                      "(අනුමැතිය ලබාගැනීම)",
+                      "(ගෙවීම් විස්තර)",
+                      "(දැන්වීම පළ කිරීම)",
+                    ][i]
+                  }
+                </h5>
+              </div>
 
               <p className="text-sm leading-relaxed text-gray-600">
                 {

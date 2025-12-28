@@ -225,29 +225,17 @@ export default function StepSelectAdType({
     return res.json();
   }
 
-  // async function uploadImageToCloudinary(file: File) {
-  //   const formData = new FormData();
-  //   formData.append("file", file);
-  //   formData.append("upload_preset", process.env.CLOUDINARY_UPLOAD_PRESET!);
-
-  //   const res = await fetch(
-  //     `https://api.cloudinary.com/v1_1/${process.env.CLOUDINARY_CLOUD_NAME}/image/upload`,
-  //     {
-  //       method: "POST",
-  //       body: formData,
-  //     }
-  //   );
-
-  //   if (!res.ok) {
-  //     throw new Error("Cloudinary upload failed");
-  //   }
-
-  //   return res.json();
-  // }
-
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-center">Select Ad Type</h2>
+      <h2 className="text-2xl font-bold text-center mb-2">Select Ad Type</h2>
+      <h2
+        style={{
+          fontFamily: "var(--font-sinhala), sans-serif",
+        }}
+        className="text-center"
+      >
+        <span>දැන්වීම් වර්ගය තෝරන්න</span>
+      </h2>
 
       {/* Ad Types Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
@@ -264,17 +252,24 @@ export default function StepSelectAdType({
                 }`}
                 onClick={() => handleAdTypeSelect(ad)}
               >
-                <Image
-                  src={getAdTypeImage(ad.key)}
-                  alt={ad.name}
-                  width={120}
-                  height={120}
-                  className="object-contain mb-2"
-                />
+                <div className="w-[120px] h-[120px] flex items-center justify-center mb-2 overflow-hidden">
+                  <Image
+                    src={getAdTypeImage(ad.key)}
+                    alt={ad.name}
+                    width={120}
+                    height={120}
+                    className="object-contain"
+                  />
+                </div>
                 <h3 className="font-semibold text-center">{ad.name}</h3>
                 {ad.extra_notes1 && (
                   <p className="text-xs text-gray-500 text-center">
                     {ad.extra_notes1}
+                  </p>
+                )}
+                {ad.extra_notes2 && (
+                  <p className="text-xs text-gray-500 text-center">
+                    {ad.extra_notes2}
                   </p>
                 )}
               </div>
@@ -282,11 +277,20 @@ export default function StepSelectAdType({
       </div>
 
       {selectedAdType && (
-        <div className="space-y-4 md:w-2/3 mx-auto">
+        <div className="space-y-4 md:w-2/3 mx-auto md:mt-8">
           {/* Publish Date */}
           <div className="w-full">
             <label className="block font-medium mb-1">
-              Publish Date <span className="text-red-500">*</span>
+              Publish Date{" "}
+              <span
+                className="text-sm"
+                style={{
+                  fontFamily: "var(--font-sinhala), sans-serif",
+                }}
+              >
+                (දැන්වීම පළ කරන දිනය)
+              </span>{" "}
+              <span className="text-red-500">*</span>
             </label>
             <input
               type="date"
@@ -303,8 +307,17 @@ export default function StepSelectAdType({
             selectedAdType.key === "photo_classified" ||
             selectedAdType.key === "casual") && (
             <div>
-              <label className="block font-medium mb-1">
-                Category <span className="text-red-500">*</span>
+              <label className="block font-medium mb-1 md:mt-8">
+                Category{" "}
+                <span
+                  className="text-sm"
+                  style={{
+                    fontFamily: "var(--font-sinhala), sans-serif",
+                  }}
+                >
+                  (වර්ගීකරණය)
+                </span>{" "}
+                <span className="text-red-500">*</span>
               </label>
               <select
                 value={selectedCategory}
@@ -335,8 +348,18 @@ export default function StepSelectAdType({
 
           {/* Subcategory Dropdown */}
           {selectedCategory && (
-            <div>
-              <label className="block font-medium mb-1">Sub Category</label>
+            <div className=" md:mt-8">
+              <label className="block font-medium mb-1">
+                Sub Category{" "}
+                <span
+                  className="text-sm"
+                  style={{
+                    fontFamily: "var(--font-sinhala), sans-serif",
+                  }}
+                >
+                  (දැන්වීම් ස්වභාවය)
+                </span>{" "}
+              </label>
               <select
                 value={selectedSubCategory}
                 onChange={(e) => {
@@ -359,8 +382,19 @@ export default function StepSelectAdType({
           )}
 
           {/* Advertisement Text */}
-          <div className="relative">
-            <label className="block font-medium mb-1">Advertisement Text</label>
+          <div className="relative md:mt-8">
+            <label className="block font-medium mb-1">
+              Advertisement Text{" "}
+              <span
+                className="text-sm"
+                style={{
+                  fontFamily: "var(--font-sinhala), sans-serif",
+                }}
+              >
+                (දැන්වීම් විස්තරය)
+              </span>{" "}
+              <span className="text-red-500">*</span>
+            </label>
             <div className="absolute top-0 right-0 text-sm text-gray-500">
               {wordCount}/{selectedAdType.max_words} words
             </div>
@@ -373,24 +407,52 @@ export default function StepSelectAdType({
               className="border border-gray-300 rounded-lg p-3 w-full focus:ring-2 focus:ring-primary-accent resize-none"
             />
             <p className="text-sm">
-              To type in sinhala, go to{" "}
+              To type in Sinhala, go to a{" "}
               <a
                 href="https://ucsc.cmb.ac.lk/ltrl/services/feconverter/t1.html"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-800 hover:text-blue-600"
               >
-                Sinhala typing
+                Sinhala typing tool
               </a>
-              , type your advertisement, copy and then paste it here.
+              , type your advertisement, then copy and paste it here.{" "}
+              <span
+                className="text-sm"
+                style={{
+                  fontFamily: "var(--font-sinhala), sans-serif",
+                }}
+              >
+                (ඡායාරූප ඇතුලත් කරන්න)
+              </span>{" "}
+            </p>
+            <p className="text-sm">
+              <span
+                className="text-xs"
+                style={{
+                  fontFamily: "var(--font-sinhala), sans-serif",
+                }}
+              >
+                (සිංහලෙන් ටයිප් කිරීමට, සිංහල ටයිපින් මෙවලමට පිවිස ඔබේ දැන්වීම
+                ටයිප් කර, පිටපත් කර මෙහි ඇතුළත් කරන්න.)
+              </span>{" "}
             </p>
           </div>
 
           {/* Image Upload */}
           {selectedAdType.is_upload_image && (
-            <div>
+            <div className=" md:mt-8">
               <label className="block font-medium mb-1">
-                Upload Image <span className="text-red-500">*</span>
+                Upload Image{" "}
+                <span
+                  className="text-sm"
+                  style={{
+                    fontFamily: "var(--font-sinhala), sans-serif",
+                  }}
+                >
+                  (ඡායාරූප ඇතුලත් කරන්න)
+                </span>{" "}
+                <span className="text-red-500">*</span>
               </label>
               <input
                 type="file"
@@ -447,7 +509,7 @@ export default function StepSelectAdType({
           )}
 
           {/* Checkboxes */}
-          <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex flex-col md:flex-row gap-4 md:mt-8">
             <label className="flex items-center space-x-2">
               <input
                 type="checkbox"
@@ -457,7 +519,18 @@ export default function StepSelectAdType({
                 }
               />
 
-              <span>Priority (LKR {selectedAdType.priority_price})</span>
+              <span>
+                Priority{" "}
+                <span
+                  className="text-sm"
+                  style={{
+                    fontFamily: "var(--font-sinhala), sans-serif",
+                  }}
+                >
+                  (ප්‍රමුඛ දැන්වීමකි)
+                </span>{" "}
+                {/* (LKR {selectedAdType.priority_price}) */}
+              </span>
             </label>
             {selectedAdType.tint_color_price > 0 && (
               <label className="flex items-center space-x-2">
@@ -469,7 +542,16 @@ export default function StepSelectAdType({
                   }
                 />
                 <span>
-                  Background Color (LKR {selectedAdType.tint_color_price})
+                  Background Color{" "}
+                  <span
+                    className="text-sm"
+                    style={{
+                      fontFamily: "var(--font-sinhala), sans-serif",
+                    }}
+                  >
+                    (පසුබිම වර්ණගන්වන්න)
+                  </span>{" "}
+                  {/* (LKR {selectedAdType.tint_color_price}) */}
                 </span>
               </label>
             )}
@@ -482,14 +564,34 @@ export default function StepSelectAdType({
                     updateFormData({ combinedAd: e.target.checked })
                   }
                 />
-                <span>Post in Website</span>
+                <span>
+                  Post in Website{" "}
+                  <span
+                    className="text-sm"
+                    style={{
+                      fontFamily: "var(--font-sinhala), sans-serif",
+                    }}
+                  >
+                    (වෙබ් අඩවියේ පළකරන්න)
+                  </span>{" "}
+                </span>
               </label>
             )}
           </div>
 
           {/* Special Notes */}
-          <div>
-            <label className="block font-medium mb-1">Special Notes</label>
+          <div className=" md:mt-8">
+            <label className="block font-medium mb-1">
+              Special Notes{" "}
+              <span
+                className="text-sm"
+                style={{
+                  fontFamily: "var(--font-sinhala), sans-serif",
+                }}
+              >
+                (විශේෂ සටහන්)
+              </span>{" "}
+            </label>
             <textarea
               rows={2}
               value={formData.specialNotes}
@@ -499,18 +601,33 @@ export default function StepSelectAdType({
           </div>
 
           {/* Pricing */}
-          <div className="bg-gray-100 p-4 rounded-lg">
-            <h3 className="font-semibold mb-2">Price:</h3>
-            <ul className="list-disc pl-6">
+          <div className="bg-gray-100 p-5 rounded-xl shadow-sm sm:max-w-md w-full mx-auto">
+            <h3 className="text-lg font-semibold mb-3 text-[var(--color-primary-dark)]">
+              Price
+            </h3>
+
+            <ul className="divide-y divide-gray-200">
               {priceBreakdown.map((item, i) => (
-                <li key={i}>
-                  {item.label}: LKR {item.amount.toLocaleString()}
+                <li
+                  key={i}
+                  className="flex justify-between py-2 text-sm text-[var(--color-text)]"
+                >
+                  <span>{item.label}</span>
+                  <span className="font-medium">
+                    LKR {item.amount.toLocaleString()}
+                  </span>
                 </li>
               ))}
             </ul>
-            <p className="font-bold mt-2">
-              Total: LKR {totalPrice.toLocaleString()}
-            </p>
+
+            <div className="mt-4 pt-3 border-t border-gray-300 flex justify-between items-center">
+              <span className="text-base font-semibold text-[var(--color-primary-dark)]">
+                Total
+              </span>
+              <span className="text-base font-bold text-[var(--color-primary)]">
+                LKR {totalPrice.toLocaleString()}
+              </span>
+            </div>
           </div>
         </div>
       )}
