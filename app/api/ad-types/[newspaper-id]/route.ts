@@ -19,6 +19,9 @@ export async function GET(
       include: {
         ad_type_categories: true,
       },
+      orderBy: {
+        key: "asc", // <-- sort ascending by 'key'
+      },
     });
 
     const adTypesWithSubcats = await Promise.all(

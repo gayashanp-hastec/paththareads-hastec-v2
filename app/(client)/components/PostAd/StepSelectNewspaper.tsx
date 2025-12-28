@@ -132,11 +132,14 @@ export default function StepSelectNewspaper({
                     style={{
                       background:
                         "linear-gradient(to bottom right, #fff, #fff, var(--color-primary))",
+                      fontFamily: "var(--font-sinhala), sans-serif",
                     }}
                   >
-                    {paper.name_sinhala === null
-                      ? paper.name
-                      : paper.name_sinhala}
+                    {paper.name_sinhala === null ? (
+                      <h3>{paper.name}</h3>
+                    ) : (
+                      <h3>{paper.name_sinhala}</h3>
+                    )}
                   </div>
                 </button>
               );

@@ -234,7 +234,7 @@ export default function StepSelectAdType({
         }}
         className="text-center"
       >
-        <span>දැන්වීම් වර්ගය තෝරන්න</span>
+        <span>(දැන්වීම් වර්ගය තෝරන්න)</span>
       </h2>
 
       {/* Ad Types Grid */}
