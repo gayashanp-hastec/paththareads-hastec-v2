@@ -417,14 +417,6 @@ export default function StepSelectAdType({
                 Sinhala typing tool
               </a>
               , type your advertisement, then copy and paste it here.{" "}
-              <span
-                className="text-sm"
-                style={{
-                  fontFamily: "var(--font-sinhala), sans-serif",
-                }}
-              >
-                (ඡායාරූප ඇතුලත් කරන්න)
-              </span>{" "}
             </p>
             <p className="text-sm">
               <span
@@ -433,8 +425,16 @@ export default function StepSelectAdType({
                   fontFamily: "var(--font-sinhala), sans-serif",
                 }}
               >
-                (සිංහලෙන් ටයිප් කිරීමට, සිංහල ටයිපින් මෙවලමට පිවිස ඔබේ දැන්වීම
-                ටයිප් කර, පිටපත් කර මෙහි ඇතුළත් කරන්න.)
+                (සිංහලෙන් ටයිප් කිරීමට,{" "}
+                <a
+                  href="https://ucsc.cmb.ac.lk/ltrl/services/feconverter/t1.html"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-800 hover:text-blue-600"
+                >
+                  සිංහල ටයිපින්{" "}
+                </a>
+                මෙවලමට පිවිස ඔබේ දැන්වීම ටයිප් කර, පිටපත් කර මෙහි ඇතුළත් කරන්න.)
               </span>{" "}
             </p>
           </div>
