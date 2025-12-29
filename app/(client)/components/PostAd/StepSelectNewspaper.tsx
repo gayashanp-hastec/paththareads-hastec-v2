@@ -66,7 +66,12 @@ export default function StepSelectNewspaper({
         <h2 className="text-2xl font-bold md:text-3xl">
           Select a newspaper to get started
         </h2>
-        <p className="mt-1 text-gray-700">
+        <p
+          style={{
+            fontFamily: "var(--font-sinhala), sans-serif",
+          }}
+          className="mt-1 text-gray-700"
+        >
           (ඔබේ දැන්වීම පළ කිරීම ආරම්භ කිරීමට පුවත්පතක් තෝරන්න)
         </p>
       </header>
