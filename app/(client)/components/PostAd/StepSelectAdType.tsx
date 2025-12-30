@@ -69,6 +69,7 @@ export default function StepSelectAdType({
     setSelectedAdType(adType);
     updateFormData({
       adType: adType.key,
+      adTypeObject: adType,
       adText: "",
       backgroundColor: false,
       combinedAd: false,
@@ -441,19 +442,18 @@ export default function StepSelectAdType({
 
           {/* Image Upload */}
           {selectedAdType.is_upload_image && (
-            <div className=" md:mt-8">
-              <label className="block font-medium mb-1">
+            <div className="md:mt-8">
+              <label className="block mb-2 font-medium">
                 Upload Image{" "}
                 <span
                   className="text-sm"
-                  style={{
-                    fontFamily: "var(--font-sinhala), sans-serif",
-                  }}
+                  style={{ fontFamily: "var(--font-sinhala), sans-serif" }}
                 >
                   (ඡායාරූප ඇතුලත් කරන්න)
                 </span>{" "}
                 <span className="text-red-500">*</span>
               </label>
+
               <input
                 type="file"
                 accept="image/*"
@@ -463,19 +463,12 @@ export default function StepSelectAdType({
                   if (!file) return;
 
                   try {
-                    // optional UI loading state
                     updateFormData({ uploading: true });
 
                     const data = await uploadImageToCloudinary(file);
 
-                    /*
-                      data.secure_url  -> public image URL
-                      data.public_id   -> cloudinary internal ID
-                    */
-
                     updateFormData({
                       uploadedImage: data.secure_url,
-                      // uploadedImagePublicId: data.public_id,
                       uploading: false,
                     });
                   } catch (error) {
@@ -484,12 +477,25 @@ export default function StepSelectAdType({
                     alert("Image upload failed. Please try again.");
                   }
                 }}
-                className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-primary-accent"
+                className="w-full border border-gray-300 rounded-lg p-3
+               focus:ring-2 focus:ring-primary-accent
+               file:mr-4 file:py-2 file:px-4
+               file:rounded-full file:border-0
+               file:bg-primary-accent file:text-white
+               file:cursor-pointer
+               hover:file:bg-primary-accent/90
+               transition"
               />
+
+              {/* Optional status text (non-breaking, visual only) */}
               {formData.uploading && (
-                <div className="my-2">
-                  <p className="text-sm">Uploading image please wait...</p>
-                </div>
+                <p className="text-sm text-gray-500 mt-2">Uploading image…</p>
+              )}
+
+              {formData.uploadedImage && !formData.uploading && (
+                <p className="text-sm text-green-600 mt-2">
+                  Image uploaded successfully
+                </p>
               )}
 
               {formData.uploadedImage && (

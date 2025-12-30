@@ -121,6 +121,8 @@ export default function PostAdPage() {
 
   // ---------------- Step Validation ----------------
   const validateStep = async (): Promise<boolean> => {
+    const adType_ = formData.adTypeObject;
+    console.log(adType_?.is_upload_image);
     switch (currentStep) {
       case 1:
         if (!formData.selectedNewspaper) {
@@ -147,12 +149,12 @@ export default function PostAdPage() {
           toast.error("Advertisement text contains inappropriate words.");
           return false;
         }
-        if (formData.adType === "classified" && !formData.classifiedCategory) {
-          toast.error("Please select a classified category.");
-          return false;
-        }
-        if (formData.adType === "photo_classified" && !formData.uploadedImage) {
-          toast.error("Please upload an image for photo classified ads.");
+        // if (formData.adType === "classified" && !formData.classifiedCategory) {
+        //   toast.error("Please select a classified category.");
+        //   return false;
+        // }
+        if (adType_?.is_upload_image && !formData.uploadedImage) {
+          toast.error("Please upload an image!");
           return false;
         }
         return true;
