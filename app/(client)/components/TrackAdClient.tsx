@@ -202,7 +202,6 @@ export default function TrackAdClient({ reference }: { reference: string }) {
   }
 
   if (error) return <div className="p-8 text-red-600">{error}</div>;
-  if (!ad) return <div className="p-8">No ad found</div>;
 
   function TrackAdSkeleton() {
     return (
@@ -247,6 +246,7 @@ export default function TrackAdClient({ reference }: { reference: string }) {
   }
 
   if (loading) return <TrackAdSkeleton />;
+  if (!ad) return <div className="p-8"></div>;
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-10 py-10 my-12 bg-white rounded-2xl shadow-lg border border-gray-100 transition-all">
