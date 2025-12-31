@@ -56,7 +56,7 @@ export async function POST(req: Request) {
 
   // Optional: store roles (stringified) for middleware later
   res.cookies.set("admin_roles", JSON.stringify(roles), {
-    httpOnly: true,
+    httpOnly: false,
     sameSite: "strict",
     path: "/",
   });

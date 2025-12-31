@@ -18,6 +18,8 @@ export default function RoleCheck({ allowedRoles, children }: RoleCheckProps) {
     const rolesCookie = document.cookie
       .split("; ")
       .find((row) => row.startsWith("admin_roles="));
+    console.log("here document cookie 1: ", document.cookie);
+    console.log("here roles cookie: ", rolesCookie);
 
     if (!rolesCookie) {
       setHasAccess(false);
