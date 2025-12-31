@@ -49,6 +49,7 @@ export default function StepSelectAdType({
 
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [selectedSubCategory, setSelectedSubCategory] = useState<string>("");
+  const [subCategoryOptions, setSubCategoryOptions] = useState<string[]>([]);
 
   const selectedNewspaperId = formData.selectedNewspaper?.id;
 
@@ -180,6 +181,23 @@ export default function StepSelectAdType({
     formData.priorityPrice,
     selectedAdType,
   ]);
+
+  useEffect(() => {
+    if (!selectedCategory) {
+      setSubCategoryOptions([]);
+      return;
+    }
+
+    fetch(
+      `/api/subcategories?categoryName=${encodeURIComponent(selectedCategory)}`
+    )
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.subcategories) setSubCategoryOptions(data.subcategories);
+        else setSubCategoryOptions([]);
+      })
+      .catch(() => setSubCategoryOptions([]));
+  }, [selectedCategory]);
 
   const today = new Date().toISOString().split("T")[0];
 
@@ -326,7 +344,10 @@ export default function StepSelectAdType({
                   setSelectedCategory(e.target.value);
                   updateFormData({ classifiedCategory: e.target.value });
                   setSelectedSubCategory("");
-                  console.log(formData.classifiedCategory);
+                  // console.log(formData.classifiedCategory);
+                  // console.log("cat: ", selectedCategory);
+                  // console.log("sub: ", selectedSubCategory);
+                  // console.log("type: ", selectedAdType.key);
                 }}
                 className="border border-gray-300 rounded-lg p-2 w-full focus:ring-2 focus:ring-primary-accent"
               >
@@ -349,14 +370,12 @@ export default function StepSelectAdType({
 
           {/* Subcategory Dropdown */}
           {selectedCategory && (
-            <div className=" md:mt-8">
+            <div className="md:mt-8">
               <label className="block font-medium mb-1">
                 Sub Category{" "}
                 <span
                   className="text-sm"
-                  style={{
-                    fontFamily: "var(--font-sinhala), sans-serif",
-                  }}
+                  style={{ fontFamily: "var(--font-sinhala), sans-serif" }}
                 >
                   (දැන්වීම් ස්වභාවය)
                 </span>{" "}
@@ -366,18 +385,15 @@ export default function StepSelectAdType({
                 onChange={(e) => {
                   setSelectedSubCategory(e.target.value);
                   updateFormData({ subCategory: e.target.value });
-                  console.log(formData.subCategory);
                 }}
                 className="border border-gray-300 rounded-lg p-2 w-full focus:ring-2 focus:ring-primary-accent"
               >
                 <option value="">Select Subcategory</option>
-                {selectedAdType.categories
-                  .find((cat) => cat.category === selectedCategory)
-                  ?.subCategories.map((sub) => (
-                    <option key={sub.name} value={sub.name}>
-                      {sub.name}
-                    </option>
-                  ))}
+                {subCategoryOptions.map((sub) => (
+                  <option key={sub} value={sub}>
+                    {sub}
+                  </option>
+                ))}
               </select>
             </div>
           )}
