@@ -60,6 +60,7 @@ export async function POST(req: Request) {
     sameSite: "strict",
     path: "/",
   });
+  console.log("roles", roles);
 
   return res;
 }

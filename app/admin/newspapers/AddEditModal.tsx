@@ -251,268 +251,320 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
     loadForEdit();
   }, [item?.id]);
 
-  /* ---------------- UI ---------------- */
-  return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-auto bg-black/40 p-6 md:p-10">
-      <div className="w-full max-w-[900px] space-y-8 rounded-2xl bg-white p-6 md:p-8 shadow-2xl">
-        {/* Header */}
-        <div className="border-b pb-4">
-          <h2 className="text-2xl font-semibold text-[var(--color-primary-dark)]">
-            {item ? "Edit Newspaper" : "Add Newspaper"}
-          </h2>
-          <p className="mt-1 text-sm text-[var(--color-text-highlight)]">
-            Configure newspaper properties and advertisement types
-          </p>
+  // components/NewspaperSkeleton.tsx
+  function NewspaperSkeleton() {
+    return (
+      <div className="space-y-6 animate-pulse">
+        {/* Newspaper Name */}
+        <div className="h-6 w-3/5 bg-gray-300 rounded"></div>
+        {/* Sinhala Name */}
+        <div className="h-6 w-2/5 bg-gray-300 rounded"></div>
+        {/* Type / Columns */}
+        <div className="h-6 w-1/3 bg-gray-300 rounded"></div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div
+              key={i}
+              className="border border-gray-300 rounded-lg p-4 flex flex-col items-center"
+            >
+              {/* Ad image placeholder */}
+              <div className="w-[120px] h-[120px] bg-gray-300 rounded mb-2"></div>
+              {/* Ad name */}
+              <div className="h-4 w-2/3 bg-gray-300 rounded mb-1"></div>
+              {/* Extra notes */}
+              <div className="h-3 w-1/2 bg-gray-200 rounded mb-1"></div>
+              <div className="h-3 w-1/3 bg-gray-200 rounded"></div>
+            </div>
+          ))}
         </div>
 
-        {/* Newspaper Details */}
-        <div className="rounded-2xl border bg-[var(--color-orange-accent)]/10 p-5">
-          <h3 className="mb-4 text-lg font-semibold text-[var(--color-primary-dark)]">
-            Newspaper Details
-          </h3>
+        {/* Form fields */}
+        <div className="space-y-4 md:w-2/3 mx-auto md:mt-8">
+          <div className="h-6 w-1/3 bg-gray-300 rounded"></div>
+          <div className="h-10 w-full bg-gray-200 rounded"></div>
+          <div className="h-6 w-1/3 bg-gray-300 rounded mt-4"></div>
+          <div className="h-10 w-full bg-gray-200 rounded"></div>
+        </div>
+      </div>
+    );
+  }
 
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            {/* Name */}
-            <div>
-              <label className="block text-sm font-medium text-[var(--color-text)]">
-                Newspaper Name
-              </label>
-              <input
-                type="text"
-                className={`mt-1 w-full rounded-lg border px-3 py-2 text-sm focus:border-[var(--color-primary)] focus:outline-none
+  /* ---------------- UI ---------------- */
+  return (
+    <>
+      {!adTypes ? (
+        <NewspaperSkeleton />
+      ) : (
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-auto bg-black/40 p-6 md:p-10">
+          <div className="w-full max-w-[900px] space-y-8 rounded-2xl bg-white p-6 md:p-8 shadow-2xl">
+            {/* Header */}
+            <div className="border-b pb-4">
+              <h2 className="text-2xl font-semibold text-[var(--color-primary-dark)]">
+                {item ? "Edit Newspaper" : "Add Newspaper"}
+              </h2>
+              <p className="mt-1 text-sm text-[var(--color-text-highlight)]">
+                Configure newspaper properties and advertisement types
+              </p>
+            </div>
+
+            {/* Newspaper Details */}
+            <div className="rounded-2xl border bg-[var(--color-orange-accent)]/10 p-5">
+              <h3 className="mb-4 text-lg font-semibold text-[var(--color-primary-dark)]">
+                Newspaper Details
+              </h3>
+
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                {/* Name */}
+                <div>
+                  <label className="block text-sm font-medium text-[var(--color-text)]">
+                    Newspaper Name
+                  </label>
+                  <input
+                    type="text"
+                    className={`mt-1 w-full rounded-lg border px-3 py-2 text-sm focus:border-[var(--color-primary)] focus:outline-none
               ${
                 errors.name ? "border-red-500 animate-shake" : "border-gray-300"
               }
             `}
-                value={form.name}
-                onChange={(e) => {
-                  setForm({ ...form, name: e.target.value });
-                  setErrors({ ...errors, name: undefined });
-                }}
-              />
-              {errors.name && (
-                <p className="mt-1 text-sm text-red-600">{errors.name}</p>
-              )}
-            </div>
+                    value={form.name}
+                    onChange={(e) => {
+                      setForm({ ...form, name: e.target.value });
+                      setErrors({ ...errors, name: undefined });
+                    }}
+                  />
+                  {errors.name && (
+                    <p className="mt-1 text-sm text-red-600">{errors.name}</p>
+                  )}
+                </div>
 
-            {/* Sinhala Name */}
-            <div>
-              <label className="block text-sm font-medium text-[var(--color-text)]">
-                Newspaper Sinhala Name
-              </label>
-              <input
-                type="text"
-                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[var(--color-primary)] focus:outline-none"
-                value={form.name_sinhala}
-                onChange={(e) =>
-                  setForm({ ...form, name_sinhala: e.target.value })
-                }
-              />
-            </div>
+                {/* Sinhala Name */}
+                <div>
+                  <label className="block text-sm font-medium text-[var(--color-text)]">
+                    Newspaper Sinhala Name
+                  </label>
+                  <input
+                    type="text"
+                    className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[var(--color-primary)] focus:outline-none"
+                    value={form.name_sinhala}
+                    onChange={(e) =>
+                      setForm({ ...form, name_sinhala: e.target.value })
+                    }
+                  />
+                </div>
 
-            {/* Type */}
-            <div>
-              <label className="block text-sm font-medium text-[var(--color-text)]">
-                Type
-              </label>
-              <select
-                disabled={!!item}
-                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[var(--color-primary)] focus:outline-none disabled:bg-gray-100"
-                value={form.type}
-                onChange={(e) => setForm({ ...form, type: e.target.value })}
-              >
-                <option>Daily</option>
-                <option>Sunday</option>
-              </select>
-            </div>
+                {/* Type */}
+                <div>
+                  <label className="block text-sm font-medium text-[var(--color-text)]">
+                    Type
+                  </label>
+                  <select
+                    disabled={!!item}
+                    className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[var(--color-primary)] focus:outline-none disabled:bg-gray-100"
+                    value={form.type}
+                    onChange={(e) => setForm({ ...form, type: e.target.value })}
+                  >
+                    <option>Daily</option>
+                    <option>Sunday</option>
+                  </select>
+                </div>
 
-            {/* Metrics */}
-            {[
-              ["Columns per Page", "noColPerPage"],
-              ["Column Width (cm)", "colWidth"],
-              ["Column Height (cm)", "colHeight"],
-              ["Minimum Ad Height (cm)", "minAdHeight"],
-              ["Tint Additional Charge", "tintAdditionalCharge"],
-            ].map(([label, key]) => (
-              <div key={key}>
-                <label className="block text-sm font-medium text-[var(--color-text)]">
-                  {label}
-                </label>
-                <input
-                  type="number"
-                  className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[var(--color-primary)] focus:outline-none"
-                  value={(form as any)[key]}
-                  onChange={(e) =>
-                    setForm({ ...form, [key]: Number(e.target.value) })
-                  }
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Type Error */}
-        {typeError && (
-          <p className="text-center text-sm font-medium text-red-600">
-            At least one type should be added!
-          </p>
-        )}
-
-        {/* Types of Ads */}
-        <div className="rounded-2xl border bg-gray-50 p-5">
-          <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-[var(--color-primary-dark)]">
-              Types of Ads
-            </h3>
-            <button
-              onClick={addNewAdType}
-              className="rounded-lg bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-white transition hover:bg-[var(--color-primary-dark)]"
-            >
-              + Add Type
-            </button>
-          </div>
-
-          {adTypes.length === 0 && (
-            <p className="text-sm text-gray-500">No ad types added yet.</p>
-          )}
-
-          {adTypes.map((t, index) => (
-            <div
-              key={index}
-              className="mb-5 rounded-xl border bg-white p-4 shadow-sm"
-            >
-              <h4 className="mb-3 text-sm font-semibold text-[var(--color-primary-dark)]">
-                Ad Type #{index + 1}
-              </h4>
-
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                {/* Metrics */}
                 {[
-                  ["Select Type Key", "typeKey", "select"],
-                  ["Display Name", "name", "text"],
-                  ["Base Type", "baseType", "text"],
-                  ["First Word Count", "countFirstWords", "number"],
-                  ["Base Price", "basePrice", "number"],
-                  ["Additional Word Price", "additionalWordPrice", "number"],
-                  ["Tint Color Price", "tintColorPrice", "number"],
-                  ["Max Words", "maxWords", "number"],
-                  ["Priority Price", "priorityPrice", "number"],
-                ].map(([label, key, type]) => (
+                  ["Columns per Page", "noColPerPage"],
+                  ["Column Width (cm)", "colWidth"],
+                  ["Column Height (cm)", "colHeight"],
+                  ["Minimum Ad Height (cm)", "minAdHeight"],
+                  ["Tint Additional Charge", "tintAdditionalCharge"],
+                ].map(([label, key]) => (
                   <div key={key}>
                     <label className="block text-sm font-medium text-[var(--color-text)]">
                       {label}
                     </label>
-                    {type === "select" ? (
-                      <select
-                        className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-                        value={(t as any)[key]}
-                        onChange={(e) =>
-                          updateAdType(index, key, e.target.value)
-                        }
-                      >
-                        {AD_TYPE_OPTIONS.map((opt) => (
-                          <option key={opt}>{opt}</option>
-                        ))}
-                      </select>
-                    ) : (
+                    <input
+                      type="number"
+                      className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[var(--color-primary)] focus:outline-none"
+                      value={(form as any)[key]}
+                      onChange={(e) =>
+                        setForm({ ...form, [key]: Number(e.target.value) })
+                      }
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Type Error */}
+            {typeError && (
+              <p className="text-center text-sm font-medium text-red-600">
+                At least one type should be added!
+              </p>
+            )}
+
+            {/* Types of Ads */}
+            <div className="rounded-2xl border bg-gray-50 p-5">
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-[var(--color-primary-dark)]">
+                  Types of Ads
+                </h3>
+                <button
+                  onClick={addNewAdType}
+                  className="rounded-lg bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-white transition hover:bg-[var(--color-primary-dark)]"
+                >
+                  + Add Type
+                </button>
+              </div>
+
+              {adTypes.length === 0 && (
+                <p className="text-sm text-gray-500">No ad types added yet.</p>
+              )}
+
+              {adTypes.map((t, index) => (
+                <div
+                  key={index}
+                  className="mb-5 rounded-xl border bg-white p-4 shadow-sm"
+                >
+                  <h4 className="mb-3 text-sm font-semibold text-[var(--color-primary-dark)]">
+                    Ad Type #{index + 1}
+                  </h4>
+
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    {[
+                      ["Select Type Key", "typeKey", "select"],
+                      ["Display Name", "name", "text"],
+                      ["Base Type", "baseType", "text"],
+                      ["First Word Count", "countFirstWords", "number"],
+                      ["Base Price", "basePrice", "number"],
+                      [
+                        "Additional Word Price",
+                        "additionalWordPrice",
+                        "number",
+                      ],
+                      ["Tint Color Price", "tintColorPrice", "number"],
+                      ["Max Words", "maxWords", "number"],
+                      ["Priority Price", "priorityPrice", "number"],
+                    ].map(([label, key, type]) => (
+                      <div key={key}>
+                        <label className="block text-sm font-medium text-[var(--color-text)]">
+                          {label}
+                        </label>
+                        {type === "select" ? (
+                          <select
+                            className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                            value={(t as any)[key]}
+                            onChange={(e) =>
+                              updateAdType(index, key, e.target.value)
+                            }
+                          >
+                            {AD_TYPE_OPTIONS.map((opt) => (
+                              <option key={opt}>{opt}</option>
+                            ))}
+                          </select>
+                        ) : (
+                          <input
+                            type={type}
+                            className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                            value={(t as any)[key]}
+                            onChange={(e) =>
+                              updateAdType(
+                                index,
+                                key,
+                                type === "number"
+                                  ? Number(e.target.value)
+                                  : e.target.value
+                              )
+                            }
+                          />
+                        )}
+                      </div>
+                    ))}
+
+                    {/* Toggles */}
+                    <div className="flex items-center gap-2">
                       <input
-                        type={type}
-                        className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-                        value={(t as any)[key]}
+                        type="checkbox"
+                        checked={t.isUploadImage}
+                        onChange={(e) =>
+                          updateAdType(index, "isUploadImage", e.target.checked)
+                        }
+                      />
+                      <span className="text-sm">Require Image Upload</span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={t.isAllowCombined}
                         onChange={(e) =>
                           updateAdType(
                             index,
-                            key,
-                            type === "number"
-                              ? Number(e.target.value)
-                              : e.target.value
+                            "isAllowCombined",
+                            e.target.checked
                           )
                         }
                       />
-                    )}
+                      <span className="text-sm">Allow Combined</span>
+                    </div>
+
+                    {/* Notes */}
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium">
+                        Extra Notes 1
+                      </label>
+                      <textarea
+                        className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                        value={t.extraNotes1}
+                        onChange={(e) =>
+                          updateAdType(index, "extraNotes1", e.target.value)
+                        }
+                      />
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium">
+                        Extra Notes 2
+                      </label>
+                      <textarea
+                        className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                        value={t.extraNotes2}
+                        onChange={(e) =>
+                          updateAdType(index, "extraNotes2", e.target.value)
+                        }
+                      />
+                    </div>
                   </div>
-                ))}
-
-                {/* Toggles */}
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={t.isUploadImage}
-                    onChange={(e) =>
-                      updateAdType(index, "isUploadImage", e.target.checked)
-                    }
-                  />
-                  <span className="text-sm">Require Image Upload</span>
                 </div>
+              ))}
 
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={t.isAllowCombined}
-                    onChange={(e) =>
-                      updateAdType(index, "isAllowCombined", e.target.checked)
-                    }
-                  />
-                  <span className="text-sm">Allow Combined</span>
+              {adTypes.length > 0 && (
+                <div className="mb-4 flex justify-center items-center">
+                  <button
+                    onClick={addNewAdType}
+                    className="rounded-lg bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-white transition hover:bg-[var(--color-primary-dark)]"
+                  >
+                    Add Next Type
+                  </button>
                 </div>
-
-                {/* Notes */}
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium">
-                    Extra Notes 1
-                  </label>
-                  <textarea
-                    className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-                    value={t.extraNotes1}
-                    onChange={(e) =>
-                      updateAdType(index, "extraNotes1", e.target.value)
-                    }
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium">
-                    Extra Notes 2
-                  </label>
-                  <textarea
-                    className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-                    value={t.extraNotes2}
-                    onChange={(e) =>
-                      updateAdType(index, "extraNotes2", e.target.value)
-                    }
-                  />
-                </div>
-              </div>
+              )}
             </div>
-          ))}
 
-          {adTypes.length > 0 && (
-            <div className="mb-4 flex justify-center items-center">
+            {/* Footer Actions */}
+            <div className="flex justify-end gap-3 border-t pt-4">
               <button
-                onClick={addNewAdType}
-                className="rounded-lg bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-white transition hover:bg-[var(--color-primary-dark)]"
+                onClick={onClose}
+                className="rounded-lg border border-gray-300 px-5 py-2 text-sm transition hover:bg-gray-100"
               >
-                Add Next Type
+                Cancel
+              </button>
+              <button
+                onClick={save}
+                className="rounded-lg bg-[var(--color-primary-dark)] px-5 py-2 text-sm font-medium text-white transition hover:bg-[var(--color-primary)]"
+              >
+                Save Newspaper
               </button>
             </div>
-          )}
+          </div>
         </div>
-
-        {/* Footer Actions */}
-        <div className="flex justify-end gap-3 border-t pt-4">
-          <button
-            onClick={onClose}
-            className="rounded-lg border border-gray-300 px-5 py-2 text-sm transition hover:bg-gray-100"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={save}
-            className="rounded-lg bg-[var(--color-primary-dark)] px-5 py-2 text-sm font-medium text-white transition hover:bg-[var(--color-primary)]"
-          >
-            Save Newspaper
-          </button>
-        </div>
-      </div>
-    </div>
+      )}
+    </>
   );
 }
