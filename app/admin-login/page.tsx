@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import toast from "react-hot-toast";
 
 export default function AdminLogin() {
   const router = useRouter();
@@ -24,7 +25,9 @@ export default function AdminLogin() {
 
     if (res.ok) {
       router.push("/admin");
+      toast.success("Welcome!");
     } else {
+      toast.error("The username or password you entered is incorrect!");
       setError("Invalid login");
     }
 
@@ -83,7 +86,7 @@ export default function AdminLogin() {
             />
           </div>
 
-          {error && <p className="text-red-500 text-sm">{error}</p>}
+          {/* {error && <p className="text-red-500 text-sm">{error}</p>} */}
 
           <button
             type="submit"

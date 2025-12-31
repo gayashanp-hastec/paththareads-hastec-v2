@@ -1,4 +1,6 @@
 import "./globals.css";
+import { Toaster } from "react-hot-toast";
+
 export default function AdminLoginLayout({
   children,
 }: {
@@ -6,7 +8,10 @@ export default function AdminLoginLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        {children}
+        <Toaster position="top-center" />
+      </body>
     </html>
   );
 }
