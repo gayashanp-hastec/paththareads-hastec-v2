@@ -1,5 +1,4 @@
 import { cookies } from "next/headers";
-import NoAccessFallback from "./NoAccessFallBack";
 
 interface RoleCheckProps {
   allowedRoles: string[];
@@ -14,7 +13,11 @@ export default async function RoleCheck({
   const rolesCookie = (await cookieStore).get("admin_roles")?.value;
 
   if (!rolesCookie) {
-    return <NoAccessFallback />;
+    return (
+      <div className="flex justify-center items-center min-h-[300px] text-red-600 font-semibold text-lg">
+        You do not have access to this page.
+      </div>
+    );
   }
 
   let roles: string[] = [];
@@ -22,13 +25,21 @@ export default async function RoleCheck({
   try {
     roles = JSON.parse(rolesCookie);
   } catch {
-    return <NoAccessFallback />;
+    return (
+      <div className="flex justify-center items-center min-h-[300px] text-red-600 font-semibold text-lg">
+        You do not have access to this page.
+      </div>
+    );
   }
 
   const hasAccess = roles.some((r) => allowedRoles.includes(r));
 
   if (!hasAccess) {
-    return <NoAccessFallback />;
+    return (
+      <div className="flex justify-center items-center min-h-[300px] text-red-600 font-semibold text-lg">
+        You do not have access to this page.
+      </div>
+    );
   }
 
   return <>{children}</>;
