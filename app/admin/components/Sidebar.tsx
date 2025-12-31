@@ -3,13 +3,14 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { ChevronDown, ChevronUp, LogOut } from "lucide-react";
 
 export default function Sidebar() {
   const pathname = usePathname();
   const [isAdMenuOpen, setIsAdMenuOpen] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
+  const router = useRouter();
 
   // Fetch pending ads count
   useEffect(() => {
@@ -55,6 +56,11 @@ export default function Sidebar() {
       setIsAdMenuOpen(true);
     }
   }, [pathname]);
+
+  async function handleLogout() {
+    await fetch("/api/admin/logout", { method: "POST" });
+    router.push("/admin-login");
+  }
 
   return (
     <aside className="w-64 h-screen p-6 flex flex-col bg-[var(--color-primary)] text-white">
@@ -140,11 +146,23 @@ export default function Sidebar() {
         ))}
       </ul>
 
-      {/* Footer */}
-      <div className="mt-auto text-sm text-primary-dark pt-6 border-t border-gray-700 text-center">
-        &copy; {new Date().getFullYear()} Paththare Ads
-        <br />
-        Powered By Hastec
+      {/* Push bottom content */}
+      <div className="mt-auto flex flex-col gap-4">
+        {/* Logout Button */}
+        <button
+          onClick={handleLogout}
+          className="flex items-center justify-center gap-2 rounded-lg bg-[var(--color-primary-dark)] px-4 py-2 font-semibold text-white transition hover:bg-red-700"
+        >
+          <LogOut size={18} />
+          Logout
+        </button>
+
+        {/* Footer */}
+        <div className="text-sm text-primary-dark pt-4 border-t border-gray-700 text-center">
+          &copy; {new Date().getFullYear()} Paththare Ads
+          <br />
+          Powered By Hastec
+        </div>
       </div>
     </aside>
   );

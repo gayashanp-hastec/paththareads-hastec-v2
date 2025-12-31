@@ -20,11 +20,23 @@ const sinhalaFont = localFont({
   src: [
     {
       path: "../../public/fonts/noto-sans-sinhala-variable.woff2",
-      weight: "100 900",
+      weight: "900",
       style: "normal",
     },
   ],
   variable: "--font-sinhala",
+  display: "swap",
+});
+
+const sinhalaFontB = localFont({
+  src: [
+    {
+      path: "../../public/fonts/NotoSansSinhala-Bold.ttf",
+      weight: "900",
+      style: "normal",
+    },
+  ],
+  variable: "--font-sinhala-b",
   display: "swap",
 });
 
@@ -41,7 +53,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${sinhalaFont.variable} font-raleway bg-white text-[#1F262E]`}
+        className={`${geistSans.variable} ${geistMono.variable} ${sinhalaFont.variable} ${sinhalaFontB.variable} font-raleway bg-white text-[#1F262E]`}
       >
         <Header />
         <main className="pt-[160px] min-h-screen">{children}</main>

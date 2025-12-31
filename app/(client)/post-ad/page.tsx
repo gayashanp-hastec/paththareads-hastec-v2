@@ -82,6 +82,7 @@ export default function PostAdPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [referenceNumber, setReferenceNumber] = useState("");
   const [trackingLink, setTrackingLink] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [formData, setFormData] = useState<FormData>({
     selectedNewspaper: null,
@@ -220,6 +221,8 @@ export default function PostAdPage() {
       return;
     }
 
+    setIsSubmitting(true);
+
     try {
       const payload = {
         advertiser: {
@@ -263,6 +266,8 @@ export default function PostAdPage() {
     } catch (err: any) {
       console.error(err);
       toast.error("Server error while submitting.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -351,9 +356,21 @@ export default function PostAdPage() {
           ) : currentStep === 3 ? (
             <button
               onClick={handleSubmitForReview}
-              className="px-6 py-2 rounded-lg bg-green-600 text-white font-medium hover:bg-green-700 transition"
+              disabled={isSubmitting}
+              className={`px-6 py-2 rounded-lg font-medium transition flex items-center justify-center gap-2 ${
+                isSubmitting
+                  ? "bg-green-400 cursor-not-allowed"
+                  : "bg-green-600 hover:bg-green-700"
+              } text-white`}
             >
-              Submit for Review
+              {isSubmitting ? (
+                <>
+                  <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Submitting...
+                </>
+              ) : (
+                "Submit for Review"
+              )}
             </button>
           ) : null}
         </div>
