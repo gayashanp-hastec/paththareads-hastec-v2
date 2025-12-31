@@ -1,8 +1,13 @@
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { NextRequest } from "next/server";
 
-export async function PUT(req: Request, context: { params: { id: string } }) {
-  const { id } = context.params;
+// PUT /api/users/[id]
+export async function PUT(
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  const { id } = await context.params; // await here!
   const body = await req.json();
 
   let hashedPassword: string | undefined;
@@ -27,11 +32,12 @@ export async function PUT(req: Request, context: { params: { id: string } }) {
   return new Response(JSON.stringify(user), { status: 200 });
 }
 
+// DELETE /api/users/[id]
 export async function DELETE(
-  req: Request,
-  context: { params: { id: string } }
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
 ) {
-  const { id } = context.params;
+  const { id } = await context.params; // await here too!
 
   await prisma.users.delete({ where: { id } });
 
