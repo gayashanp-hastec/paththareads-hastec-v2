@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import { Plus } from "lucide-react";
 import AddEditUserModal from "./AddEditUserModal";
-import RoleCheck from "../components/RoleCheck";
 
 interface UserItem {
   id: string;
@@ -80,7 +79,6 @@ export default function AdminUsers() {
 
   return (
     <div className="flex min-h-screen bg-gray-100">
-      {/* <RoleCheck allowedRoles={["SUPER_ADMIN", "ADMIN"]}> */}
       <Sidebar />
 
       <main className="flex-1 p-8 space-y-6">
@@ -245,7 +243,6 @@ export default function AdminUsers() {
           </div>
         </div>
       )}
-      {/* </RoleCheck> */}
     </div>
   );
 }
