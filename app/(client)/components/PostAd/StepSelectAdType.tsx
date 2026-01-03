@@ -933,12 +933,16 @@ export default function StepSelectAdType({
                     >
                       {option.subLabel}
                     </span>
-                    <span
-                      className="text-xs mt-1"
-                      style={{ fontFamily: "var(--font-sinhala), sans-serif" }}
-                    >
-                      {option.price}
-                    </span>
+                    {formData.adSizeType && (
+                      <span
+                        className="text-xs mt-1"
+                        style={{
+                          fontFamily: "var(--font-sinhala), sans-serif",
+                        }}
+                      >
+                        {option.price} LKR per Column
+                      </span>
+                    )}
                   </label>
                 ))}
               </div>
