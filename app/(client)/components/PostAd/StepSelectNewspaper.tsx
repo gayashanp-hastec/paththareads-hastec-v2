@@ -40,14 +40,21 @@ export default function StepSelectNewspaper({
   });
 
   const handleSelectNewspaper = (paper: any) => {
+    console.log("select newspaper output", paper);
     updateFormData({
       selectedNewspaper: {
         id: paper.id,
         name: paper.name,
         type: paper.type,
         name_sinhala: paper.name_sinhala,
+        no_col_per_page: paper.no_col_per_page,
+        col_height: paper.col_height,
+        min_ad_height: paper.min_ad_height,
+        tint_additional_charge: paper.tint_additional_charge,
+        newspaper_serial_no: paper.newspaper_serial_no,
       },
     });
+    console.log("select newspaper form data output", formData);
 
     setIsNextEnabled?.(true);
   };
@@ -140,7 +147,7 @@ export default function StepSelectNewspaper({
                       fontFamily: "var(--font-sinhala), sans-serif",
                     }}
                   >
-                    {paper.name_sinhala === null ? (
+                    {paper.name_sinhala === "" ? (
                       <h3>{paper.name}</h3>
                     ) : (
                       <h3>{paper.name_sinhala}</h3>

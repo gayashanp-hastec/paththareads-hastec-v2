@@ -16,6 +16,11 @@ interface Newspaper {
   code: string;
   name: string;
   id: string;
+  no_col_per_page: number;
+  col_height: number;
+  min_ad_height: number;
+  tint_additional_charge: number;
+  newspaper_serial_no: number;
 }
 
 interface AdType {
@@ -57,6 +62,13 @@ interface FormData {
   deathCertificate: File | null;
   photoCategory: string | null;
   uploadedImage: File | null;
+  // fullpagead: boolean;
+  // halfPageAdHR: boolean;
+  // halfPageAdVR: boolean;
+  noOfColumns: number;
+  adHeight: number;
+  colorOption: string;
+  adSizeType: string;
   vehicleModel: string;
   vehicleType: string;
   vehicleYear: string;
@@ -99,6 +111,13 @@ export default function PostAdPage() {
     deathCertificate: null,
     photoCategory: null,
     uploadedImage: null,
+    // fullpagead: false,
+    // halfPageAdHR: false,
+    // halfPageAdVR: false,
+    noOfColumns: 1,
+    adHeight: 0,
+    colorOption: "",
+    adSizeType: "",
     vehicleModel: "",
     vehicleType: "",
     vehicleYear: "",
@@ -141,8 +160,15 @@ export default function PostAdPage() {
           toast.error("Publish date is required.");
           return false;
         }
-        if (!formData.adText.trim()) {
+        if (formData.adType !== "casual" && !formData.adText.trim()) {
           toast.error("Advertisement text cannot be empty.");
+          return false;
+        }
+        if (
+          (formData.adType === "casual" && formData.adSizeType === "") ||
+          formData.colorOption === ""
+        ) {
+          toast.error("Please select size and color!");
           return false;
         }
         const hasProfanity = await checkProfanity(formData.adText);

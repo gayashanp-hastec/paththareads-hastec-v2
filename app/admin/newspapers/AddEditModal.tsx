@@ -20,6 +20,14 @@ const DEFAULT_AD_TYPE = {
   isUploadImage: false,
   extraNotes1: "",
   extraNotes2: "",
+  csColBWPrice: 0,
+  csColBWOneColorPrice: 0,
+  csColBWTwoColorPrice: 0,
+  csColFullColorPrice: 0,
+  csPageBWPrice: 0,
+  csPageBWOneColorPrice: 0,
+  csPageBWTwoColorPrice: 0,
+  csPageFullColorPrice: 0,
 };
 
 const AD_TYPE_OPTIONS = [
@@ -80,6 +88,14 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
       maxWords: t.max_words,
       imgUrl: t.img_url || "",
       isUploadImage: t.is_upload_image,
+      csColBWPrice: t.cs_col_bw_price,
+      csColBWOneColorPrice: t.cs_col_bw_one_color_price,
+      csColBWTwoColorPrice: t.cs_col_bw_two_color_price,
+      csColFullColorPrice: t.cs_col_full_color_price,
+      csPageBWPrice: t.cs_page_bw_price,
+      csPageBWOneColorPrice: t.cs_page_bw_one_color_price,
+      csPageBWTwoColorPrice: t.cs_page_bw_two_color_price,
+      csPageFullColorPrice: t.cs_page_full_color_price,
       extraNotes1: t.extra_notes1 || "",
       extraNotes2: t.extra_notes2 || "",
       categories: "",
@@ -164,6 +180,14 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
         img_url: t.imgUrl || null,
         priority_price: Number(t.priorityPrice),
         is_upload_image: Boolean(t.isUploadImage),
+        cs_col_bw_price: Number(t.csColBWPrice),
+        cs_col_bw_one_color_price: Number(t.csColBWOneColorPrice),
+        cs_col_bw_two_color_price: Number(t.csColBWTwoColorPrice),
+        cs_col_full_color_price: Number(t.csColFullColorPrice),
+        cs_page_bw_price: Number(t.csPageBWPrice),
+        cs_page_bw_one_color_price: Number(t.csPageBWOneColorPrice),
+        cs_page_bw_two_color_price: Number(t.csPageBWTwoColorPrice),
+        cs_page_full_color_price: Number(t.csPageFullColorPrice),
         extra_notes1: t.extraNotes1 || null,
         extra_notes2: t.extraNotes2 || null,
       })),
@@ -235,6 +259,14 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
               maxWords: t.max_words,
               imgUrl: t.img_url || "",
               isUploadImage: t.is_upload_image,
+              csColBWPrice: t.cs_col_bw_price,
+              csColBWOneColorPrice: t.cs_col_bw_one_color_price,
+              csColBWTwoColorPrice: t.cs_col_bw_two_color_price,
+              csColFullColorPrice: t.cs_col_full_color_price,
+              csPageBWPrice: t.cs_page_bw_price,
+              csPageBWOneColorPrice: t.cs_page_bw_one_color_price,
+              csPageBWTwoColorPrice: t.cs_page_bw_two_color_price,
+              csPageFullColorPrice: t.cs_page_full_color_price,
               extraNotes1: t.extra_notes1 || "",
               extraNotes2: t.extra_notes2 || "",
               categories: "",
@@ -418,52 +450,76 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                 <p className="text-sm text-gray-500">No ad types added yet.</p>
               )}
 
-              {adTypes.map((t, index) => (
-                <div
-                  key={index}
-                  className="mb-5 rounded-xl border bg-white p-4 shadow-sm"
-                >
-                  <h4 className="mb-3 text-sm font-semibold text-[var(--color-primary-dark)]">
-                    Ad Type #{index + 1}
-                  </h4>
+              {adTypes.map((t, index) => {
+                const DEFAULT_PRICE_FIELDS = [
+                  ["First Word Count", "countFirstWords"],
+                  ["Base Price", "basePrice"],
+                  ["Additional Word Price", "additionalWordPrice"],
+                  ["Tint Color Price", "tintColorPrice"],
+                ];
 
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    {[
-                      ["Select Type Key", "typeKey", "select"],
-                      ["Display Name", "name", "text"],
-                      ["Base Type", "baseType", "text"],
-                      ["First Word Count", "countFirstWords", "number"],
-                      ["Base Price", "basePrice", "number"],
-                      [
-                        "Additional Word Price",
-                        "additionalWordPrice",
-                        "number",
-                      ],
-                      ["Tint Color Price", "tintColorPrice", "number"],
-                      ["Max Words", "maxWords", "number"],
-                      ["Priority Price", "priorityPrice", "number"],
-                    ].map(([label, key, type]) => (
-                      <div key={key}>
+                const CASUAL_PRICE_FIELDS = [
+                  ["B&W Price (Per Column)", "csColBWPrice"],
+                  ["B&W + 1 Color (Per Column)", "csColBWOneColorPrice"],
+                  ["B&W + 2 Colors (Per Column)", "csColBWTwoColorPrice"],
+                  ["Full Color (Per Column)", "csColFullColorPrice"],
+
+                  ["B&W Price (Full Page)", "csPageBWPrice"],
+                  ["B&W + 1 Color (Full Page)", "csPageBWOneColorPrice"],
+                  ["B&W + 2 Colors (Full Page)", "csPageBWTwoColorPrice"],
+                  ["Full Color (Full Page)", "csPageFullColorPrice"],
+                ];
+
+                const priceFields =
+                  t.typeKey === "casual"
+                    ? CASUAL_PRICE_FIELDS
+                    : DEFAULT_PRICE_FIELDS;
+
+                return (
+                  <div
+                    key={index}
+                    className="mb-5 rounded-xl border bg-white p-4 shadow-sm"
+                  >
+                    <h4 className="mb-3 text-sm font-semibold text-[var(--color-primary-dark)]">
+                      Ad Type #{index + 1}
+                    </h4>
+
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                      {/* Type Selector */}
+                      <div>
                         <label className="block text-sm font-medium text-[var(--color-text)]">
-                          {label}
+                          Select Type Key
                         </label>
-                        {type === "select" ? (
-                          <select
-                            className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-                            value={(t as any)[key]}
-                            onChange={(e) =>
-                              updateAdType(index, key, e.target.value)
-                            }
-                          >
-                            {AD_TYPE_OPTIONS.map((opt) => (
-                              <option key={opt}>{opt}</option>
-                            ))}
-                          </select>
-                        ) : (
+                        <select
+                          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                          value={t.typeKey}
+                          onChange={(e) =>
+                            updateAdType(index, "typeKey", e.target.value)
+                          }
+                        >
+                          {AD_TYPE_OPTIONS.map((opt) => (
+                            <option key={opt} value={opt}>
+                              {opt}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Static Fields */}
+                      {[
+                        ["Display Name", "name", "text"],
+                        ["Base Type", "baseType", "text"],
+                        ["Max Words", "maxWords", "number"],
+                        ["Priority Price", "priorityPrice", "number"],
+                      ].map(([label, key, type]) => (
+                        <div key={key as string}>
+                          <label className="block text-sm font-medium text-[var(--color-text)]">
+                            {label}
+                          </label>
                           <input
-                            type={type}
+                            type={type as string}
                             className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-                            value={(t as any)[key]}
+                            value={(t as any)[key] ?? ""}
                             onChange={(e) =>
                               updateAdType(
                                 index,
@@ -474,66 +530,87 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                               )
                             }
                           />
-                        )}
+                        </div>
+                      ))}
+
+                      {/* CONDITIONAL PRICE FIELDS */}
+                      {priceFields.map(([label, key]) => (
+                        <div key={key}>
+                          <label className="block text-sm font-medium text-[var(--color-text)]">
+                            {label}
+                          </label>
+                          <input
+                            type="number"
+                            className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                            value={(t as any)[key] ?? ""}
+                            onChange={(e) =>
+                              updateAdType(index, key, Number(e.target.value))
+                            }
+                          />
+                        </div>
+                      ))}
+
+                      {/* Toggles */}
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={t.isUploadImage}
+                          onChange={(e) =>
+                            updateAdType(
+                              index,
+                              "isUploadImage",
+                              e.target.checked
+                            )
+                          }
+                        />
+                        <span className="text-sm">Require Image Upload</span>
                       </div>
-                    ))}
 
-                    {/* Toggles */}
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={t.isUploadImage}
-                        onChange={(e) =>
-                          updateAdType(index, "isUploadImage", e.target.checked)
-                        }
-                      />
-                      <span className="text-sm">Require Image Upload</span>
-                    </div>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={t.isAllowCombined}
+                          onChange={(e) =>
+                            updateAdType(
+                              index,
+                              "isAllowCombined",
+                              e.target.checked
+                            )
+                          }
+                        />
+                        <span className="text-sm">Allow Combined</span>
+                      </div>
 
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={t.isAllowCombined}
-                        onChange={(e) =>
-                          updateAdType(
-                            index,
-                            "isAllowCombined",
-                            e.target.checked
-                          )
-                        }
-                      />
-                      <span className="text-sm">Allow Combined</span>
-                    </div>
+                      {/* Notes */}
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-medium">
+                          Extra Notes 1
+                        </label>
+                        <textarea
+                          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                          value={t.extraNotes1 ?? ""}
+                          onChange={(e) =>
+                            updateAdType(index, "extraNotes1", e.target.value)
+                          }
+                        />
+                      </div>
 
-                    {/* Notes */}
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-medium">
-                        Extra Notes 1
-                      </label>
-                      <textarea
-                        className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-                        value={t.extraNotes1}
-                        onChange={(e) =>
-                          updateAdType(index, "extraNotes1", e.target.value)
-                        }
-                      />
-                    </div>
-
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-medium">
-                        Extra Notes 2
-                      </label>
-                      <textarea
-                        className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-                        value={t.extraNotes2}
-                        onChange={(e) =>
-                          updateAdType(index, "extraNotes2", e.target.value)
-                        }
-                      />
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-medium">
+                          Extra Notes 2
+                        </label>
+                        <textarea
+                          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                          value={t.extraNotes2 ?? ""}
+                          onChange={(e) =>
+                            updateAdType(index, "extraNotes2", e.target.value)
+                          }
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
 
               {adTypes.length > 0 && (
                 <div className="mb-4 flex justify-center items-center">

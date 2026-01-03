@@ -3,6 +3,9 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import toast from "react-hot-toast";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import AdGridCanvas from "../AdGridCanvas";
 
 interface StepSelectAdTypeProps {
   formData: any;
@@ -24,6 +27,14 @@ interface AdType {
   max_words: number;
   img_url?: string;
   is_upload_image: boolean;
+  cs_col_bw_price: number;
+  cs_col_bw_one_color_price: number;
+  cs_col_bw_two_color_price: number;
+  cs_col_full_color_price: number;
+  cs_page_bw_price: number;
+  cs_page_bw_one_color_price: number;
+  cs_page_bw_two_color_price: number;
+  cs_page_full_color_price: number;
   extra_notes1?: string;
   extra_notes2?: string;
   categories: {
@@ -38,6 +49,9 @@ export default function StepSelectAdType({
 }: StepSelectAdTypeProps) {
   const [adTypes, setAdTypes] = useState<AdType[]>([]);
   const [loading, setLoading] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const [selectedSize, setselectedSize] = useState<string>("");
+  const [selectedColor, setselectedColor] = useState<number>(0);
   const [selectedAdType, setSelectedAdType] = useState<AdType | null>(null);
   const [wordCount, setWordCount] = useState<number>(
     formData.adText?.split(" ").filter(Boolean).length || 0
@@ -50,6 +64,11 @@ export default function StepSelectAdType({
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [selectedSubCategory, setSelectedSubCategory] = useState<string>("");
   const [subCategoryOptions, setSubCategoryOptions] = useState<string[]>([]);
+  const [noOfColumnsPerPage, setNoOfColumnsPerPage] = useState<number>(0);
+  const [minAdHeight, setminAdHeight] = useState<number>(0);
+  const [maxColHeight, setmaxColHeight] = useState<number>(0);
+  const [tintAdditionalCharge, settintAdditionalCharge] = useState<number>(0);
+  const [newspaperDays, setnewspaperDays] = useState<string[]>([]);
 
   const selectedNewspaperId = formData.selectedNewspaper?.id;
 
@@ -67,6 +86,17 @@ export default function StepSelectAdType({
   }, [selectedNewspaperId]);
 
   const handleAdTypeSelect = (adType: AdType) => {
+    console.log("formData.no_col_per_page ", formData.no_col_per_page);
+    console.log(
+      "formData.selectedNewspaper.no_col_per_page ",
+      formData.selectedNewspaper.no_col_per_page
+    );
+    setNoOfColumnsPerPage(formData.selectedNewspaper.no_col_per_page);
+    setminAdHeight(formData.selectedNewspaper.min_ad_height);
+    setmaxColHeight(formData.selectedNewspaper.col_height);
+    settintAdditionalCharge(formData.selectedNewspaper.tint_additional_charge);
+    setnewspaperDays(["tuesday", "thursday"]);
+    // console.log(formData);
     setSelectedAdType(adType);
     updateFormData({
       adType: adType.key,
@@ -83,6 +113,13 @@ export default function StepSelectAdType({
     setWordCount(0);
     setSelectedCategory("");
     setSelectedSubCategory("");
+    console.log(
+      "final",
+      noOfColumnsPerPage,
+      minAdHeight,
+      tintAdditionalCharge,
+      maxColHeight
+    );
   };
 
   // Word count & price calculation
@@ -118,10 +155,37 @@ export default function StepSelectAdType({
   useEffect(() => {
     if (!selectedAdType) return;
 
-    let total = selectedAdType.base_price;
-    const breakdown = [
-      { label: "Base Price", amount: selectedAdType.base_price },
-    ];
+    let total = 0;
+    const breakdown = [];
+
+    // CASUAL AD PRICING
+    if (selectedAdType.key === "casual") {
+      let basePrice = 0;
+
+      // FULL PAGE → color only
+      if (formData.adSizeType === "full") {
+        basePrice = 0;
+        basePrice = selectedColor;
+      }
+
+      // CUSTOM SIZE → columns × height × color
+      if (formData.adSizeType === "custom") {
+        basePrice = 0;
+        basePrice =
+          (formData.noOfColumns || 1) * //line 1
+          (formData.adHeight || minAdHeight) * //line 2
+          (selectedColor || 0);
+      }
+
+      breakdown.push({ label: "Base Price", amount: basePrice });
+      total += basePrice;
+    } else {
+      breakdown.push({
+        label: "Base Price",
+        amount: selectedAdType.base_price,
+      });
+      total += selectedAdType.base_price;
+    }
 
     const extraWords = Math.max(
       0,
@@ -176,6 +240,12 @@ export default function StepSelectAdType({
     updateFormData({ totalPrice: total });
   }, [
     wordCount,
+
+    formData.adSizeType,
+    formData.noOfColumns,
+    formData.adHeight,
+    selectedColor,
+
     formData.backgroundColor,
     formData.combinedAd,
     formData.priorityPrice,
@@ -244,6 +314,37 @@ export default function StepSelectAdType({
     return res.json();
   }
 
+  const DAY_MAP: Record<string, number> = {
+    sunday: 0,
+    monday: 1,
+    tuesday: 2,
+    wednesday: 3,
+    thursday: 4,
+    friday: 5,
+    saturday: 6,
+  };
+
+  function isAllowedDateByArray(date: Date, allowedDays: string[]) {
+    if (!allowedDays || allowedDays.length === 0) return true;
+
+    const allowedDayNumbers = allowedDays
+      .map((d) => DAY_MAP[d.toLowerCase()])
+      .filter((d) => d !== undefined);
+
+    return allowedDayNumbers.includes(date.getDay());
+  }
+
+  useEffect(() => {
+    if (selectedAdType?.key !== "casual") return;
+
+    if (formData.adSizeType === "custom") {
+      updateFormData({
+        noOfColumns: formData.noOfColumns ?? 1,
+        adHeight: formData.adHeight ?? minAdHeight,
+      });
+    }
+  }, [formData.adSizeType, selectedAdType, minAdHeight]);
+
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-center mb-2">Select Ad Type</h2>
@@ -303,14 +404,30 @@ export default function StepSelectAdType({
               Publish Date{" "}
               <span
                 className="text-sm"
-                style={{
-                  fontFamily: "var(--font-sinhala), sans-serif",
-                }}
+                style={{ fontFamily: "var(--font-sinhala), sans-serif" }}
               >
                 (දැන්වීම පළ කරන දිනය)
-              </span>{" "}
+              </span>
               <span className="text-red-500">*</span>
             </label>
+
+            {/* <DatePicker
+              selected={
+                formData.publishDate ? new Date(formData.publishDate) : null
+              }
+              onChange={(date: Date | null) =>
+                updateFormData({
+                  publishDate: date ? date.toISOString().split("T")[0] : "",
+                })
+              }
+              filterDate={(date) => isAllowedDateByArray(date, newspaperDays)}
+              minDate={new Date()}
+              dateFormat="yyyy-MM-dd"
+              placeholderText="Select date"
+              className="border border-gray-300 rounded-lg p-2 w-full
+               focus:ring-2 focus:ring-primary-accent"
+              calendarClassName="!text-sm"
+            /> */}
             <input
               type="date"
               min={today}
@@ -530,6 +647,304 @@ export default function StepSelectAdType({
             </div>
           )}
 
+          {selectedAdType.key === "casual" && (
+            <div className="mt-6 rounded-xl border border-gray-300 bg-white p-4 shadow-sm">
+              <h3 className="mb-1 font-normal text-[var(--color-primary-dark)] text-center">
+                Advertisement Size
+              </h3>
+              <h3
+                className="mb-2 font-normal text-[var(--color-primary-dark)] text-center text-sm"
+                style={{ fontFamily: "var(--font-sinhala), sans-serif" }}
+              >
+                (දැන්වීමේ ප්‍රමාණය)
+              </h3>
+              <div className="flex flex-col m-auto justify-center text-center mb-8">
+                <p className="text-sm">
+                  <button
+                    onClick={() => setIsOpen(true)}
+                    className="text-blue-800 hover:text-blue-600"
+                  >
+                    Learn more
+                  </button>
+                  &nbsp;about cost calculation for casual ads.
+                </p>
+              </div>
+
+              {/* Casual advertisement fields */}
+              <div className="flex flex-col md:flex-row gap-4">
+                {[
+                  {
+                    key: "full",
+                    label: "Full Page",
+                    subLabel: "(මුළු පිටුවම)",
+                  },
+                  // {
+                  //   key: "half_hr",
+                  //   label: "Half Page (Horizontal)",
+                  //   subLabel: "(භාග පිටුවක් (තිරස්))",
+                  // },
+                  // {
+                  //   key: "half_vr",
+                  //   label: "Half Page (Vertical)",
+                  //   subLabel: "(භාග පිටුවක් (සිරස්))",
+                  // },
+                  {
+                    key: "custom",
+                    label: "Customize",
+                    subLabel: "(ඔබගේ අවශ්‍යතාවය අනුව)",
+                  },
+                ].map((option) => (
+                  <label
+                    key={option.key}
+                    className={`cursor-pointer flex flex-col items-center justify-center sm:w-full md:w-1/2 border rounded-md p-3 text-center transition ${
+                      formData.adSizeType === option.key
+                        ? "bg-[var(--color-primary-dark)] text-white border-[var(--color-primary)]"
+                        : "bg-white text-[var(--color-primary-dark)] border-gray-300 hover:border-[var(--color-primary)]"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="adSizeType"
+                      value={option.key}
+                      className="hidden"
+                      checked={formData.adSizeType === option.key}
+                      onChange={() => {
+                        updateFormData({
+                          adSizeType: option.key,
+                          // fullPageAd: option.key === "full",
+                          // halfPageAdHR: option.key === "half_hr",
+                          // halfPageAdVR: option.key === "half_vr",
+                          colorOption: "",
+                        });
+                        setselectedSize(option.key);
+                        toast.success(selectedSize);
+                        setselectedColor(0);
+                      }}
+                    />
+                    <span className="font-semibold text-sm">
+                      {option.label}
+                    </span>
+                    <span
+                      className="text-xs mt-1"
+                      style={{ fontFamily: "var(--font-sinhala), sans-serif" }}
+                    >
+                      {option.subLabel}
+                    </span>
+                  </label>
+                ))}
+              </div>
+
+              {/* custom size fields */}
+              {formData.adSizeType == "custom" && (
+                <>
+                  {/* No of Columns */}
+                  <div className="mt-8">
+                    <label className="block font-medium mb-2">
+                      No. of Columns{" "}
+                      <span
+                        className="text-sm"
+                        style={{
+                          fontFamily: "var(--font-sinhala), sans-serif",
+                        }}
+                      >
+                        (තීරු ගණන)
+                      </span>{" "}
+                      <span className="text-red-500">*</span>
+                    </label>
+
+                    <div className="flex flex-wrap gap-2">
+                      {Array.from(
+                        { length: noOfColumnsPerPage },
+                        (_, i) => i + 1
+                      ).map((num) => (
+                        <label key={num} className="cursor-pointer">
+                          <input
+                            type="radio"
+                            name="noOfColumns"
+                            value={num}
+                            checked={formData.noOfColumns === num}
+                            onChange={() =>
+                              updateFormData({ noOfColumns: num })
+                            }
+                            className="hidden"
+                          />
+                          <div
+                            className={`flex h-10 w-10 items-center justify-center rounded-md border text-sm font-semibold transition ${
+                              formData.noOfColumns === num
+                                ? "border-[var(--color-primary)] bg-[var(--color-primary)] text-white"
+                                : "border-gray-300 bg-white text-gray-700 hover:border-[var(--color-primary)]"
+                            }`}
+                          >
+                            {num}
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Ad Height */}
+                  <div className="mt-8">
+                    <label className="block font-medium mb-2">
+                      Ad Height (cm){" "}
+                      <span
+                        className="text-sm"
+                        style={{
+                          fontFamily: "var(--font-sinhala), sans-serif",
+                        }}
+                      >
+                        (උස සෙ.මී.)
+                      </span>
+                    </label>
+
+                    <div className="flex items-center gap-4">
+                      <input
+                        type="range"
+                        min={minAdHeight}
+                        max={maxColHeight}
+                        value={formData.adHeight}
+                        onChange={(e) =>
+                          updateFormData({
+                            adHeight: Number(e.target.value),
+                          })
+                        }
+                        className="flex-1 accent-[var(--color-primary)] cursor-pointer"
+                      />
+
+                      <input
+                        type="number"
+                        min={minAdHeight}
+                        max={maxColHeight}
+                        value={
+                          formData.adHeight
+                            ? formData.adHeight
+                            : formData.selectedNewspaper.min_ad_height
+                        }
+                        onChange={(e) =>
+                          updateFormData({
+                            adHeight: Number(e.target.value),
+                          })
+                        }
+                        className="w-20 h-10 rounded-md border border-gray-300 text-center text-sm font-semibold focus:border-[var(--color-primary)] focus:outline-none"
+                      />
+                    </div>
+
+                    <div className="mt-1 text-xs text-gray-500">
+                      Min: {minAdHeight} cm &nbsp;|&nbsp; Max: {maxColHeight} cm
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+          {/* <AdGridCanvas
+            noOfColumnsPerPage={noOfColumnsPerPage}
+            maxColHeight={maxColHeight}
+          /> */}
+
+          {selectedAdType.key === "casual" && (
+            <div className="mt-6 rounded-xl border border-gray-300 bg-white p-4 shadow-sm">
+              <h3 className="mb-1 font-normal text-[var(--color-primary-dark)] text-center">
+                Advertisement Color Options
+              </h3>
+              <h3
+                className="mb-8 font-normal text-[var(--color-primary-dark)] text-center text-sm"
+                style={{ fontFamily: "var(--font-sinhala), sans-serif" }}
+              >
+                (දැන්වීමේ වර්ණ)
+              </h3>
+
+              <div className="flex flex-col md:flex-row gap-4">
+                {[
+                  {
+                    key: "bw",
+                    label: "Black & White",
+                    subLabel: "(කළු සහ සුදු)",
+                    price:
+                      formData.adSizeType === "custom"
+                        ? selectedAdType.cs_col_bw_price
+                        : formData.adSizeType === "full"
+                        ? selectedAdType.cs_page_bw_price
+                        : 0,
+                  },
+                  {
+                    key: "bw1",
+                    label: "Black + 1 Color",
+                    subLabel: "(කළු + වර්ණ 1ක්)",
+                    price:
+                      formData.adSizeType === "custom"
+                        ? selectedAdType.cs_col_bw_one_color_price
+                        : formData.adSizeType === "full"
+                        ? selectedAdType.cs_page_bw_one_color_price
+                        : 0,
+                  },
+                  {
+                    key: "bw2",
+                    label: "Black + 2 Colors",
+                    subLabel: "(කළු + වර්ණ 2ක්)",
+                    price:
+                      formData.adSizeType === "custom"
+                        ? selectedAdType.cs_col_bw_two_color_price
+                        : formData.adSizeType === "full"
+                        ? selectedAdType.cs_page_bw_two_color_price
+                        : 0,
+                  },
+                  {
+                    key: "full",
+                    label: "Full Color",
+                    subLabel: "(සම්පූර්ණයෙන් වර්ණ කර)",
+                    price:
+                      formData.adSizeType === "custom"
+                        ? selectedAdType.cs_col_full_color_price
+                        : formData.adSizeType === "full"
+                        ? selectedAdType.cs_page_full_color_price
+                        : 0,
+                  },
+                ].map((option) => (
+                  <label
+                    key={option.key}
+                    className={`cursor-pointer flex flex-col items-center justify-center sm:w-full md:w-1/4 border rounded-md p-3 text-center transition ${
+                      formData.colorOption === option.key
+                        ? "bg-[var(--color-primary-dark)] text-white border-[var(--color-primary)]"
+                        : "bg-white text-[var(--color-primary-dark)] border-gray-300 hover:border-[var(--color-primary)]"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="colorOption"
+                      value={option.key}
+                      className="hidden"
+                      checked={formData.colorOption === option.key}
+                      onChange={() => {
+                        updateFormData({
+                          colorOption: option.key,
+                          // fullPageAd: option.key === "full",
+                          // halfPageAdHR: option.key === "half_hr",
+                          // halfPageAdVR: option.key === "half_vr",
+                        });
+                        setselectedColor(option.price);
+                      }}
+                    />
+                    <span className="font-semibold text-sm">
+                      {option.label}
+                    </span>
+                    <span
+                      className="text-xs mt-1"
+                      style={{ fontFamily: "var(--font-sinhala), sans-serif" }}
+                    >
+                      {option.subLabel}
+                    </span>
+                    <span
+                      className="text-xs mt-1"
+                      style={{ fontFamily: "var(--font-sinhala), sans-serif" }}
+                    >
+                      {option.price}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Checkboxes */}
           <div className="flex flex-col md:flex-row gap-4 md:mt-8">
             <label className="flex items-center space-x-2">
@@ -649,6 +1064,57 @@ export default function StepSelectAdType({
               <span className="text-base font-bold text-[var(--color-primary)]">
                 LKR {totalPrice.toLocaleString()}
               </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="relative w-full max-w-lg bg-white rounded-xl shadow-2xl overflow-hidden border border-[var(--color-primary-dark)] animate-fadeIn">
+            {/* Close Button */}
+            <button
+              onClick={() => setIsOpen(false)}
+              className="absolute top-3 right-3 text-gray-500 hover:text-[var(--color-primary)] font-bold text-2xl transition-colors"
+            >
+              &times;
+            </button>
+
+            <div className="p-6 space-y-5">
+              <h2 className="text-xl md:text-2xl font-bold text-[var(--color-primary-dark)] text-center">
+                Casual Advertisement Tips
+              </h2>
+
+              <ul className="list-disc list-inside text-sm md:text-base space-y-2 text-gray-700">
+                <li>
+                  <span className="font-semibold">Width:</span> measured in
+                  columns; 1 column = 3.8 cm
+                </li>
+                <li>
+                  <span className="font-semibold">Height:</span> measured in
+                  centimeters
+                </li>
+                <li>
+                  <span className="font-semibold">
+                    Cost Calculation: (Width × Height × per Column Rate) + Tax
+                  </span>
+                </li>
+              </ul>
+
+              {/* Sample Image */}
+              <div className="flex justify-center">
+                <img
+                  src="/casual-ad-sample.png"
+                  alt="Sample ad layout"
+                  className="max-w-full h-auto rounded-lg border border-[var(--color-primary-accent)] shadow-sm"
+                />
+              </div>
+
+              {/* Optional Note */}
+              <p className="text-xs text-gray-500 text-center">
+                Tip: Use the grid and ad height sliders to customize your ad
+                size precisely.
+              </p>
             </div>
           </div>
         </div>
