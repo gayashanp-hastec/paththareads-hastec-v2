@@ -115,9 +115,11 @@ model advertisements {
   status              String?             @default("Pending") @db.VarChar(20)
   created_at          DateTime?           @default(now()) @db.Timestamp(6)
   updated_at          DateTime?           @default(now()) @db.Timestamp(6)
+  newspaper_serial_no Int?
   ad_review_history   ad_review_history[]
   ad_status_history   ad_status_history[]
   advertisers         advertisers?        @relation(fields: [advertiser_id], references: [advertiser_id], onDelete: Cascade, onUpdate: NoAction)
+  newspapers          newspapers?         @relation(fields: [newspaper_serial_no], references: [newspaper_serial_no], map: "fk_ads_newspaper_serial")
   payment_ads         payment_ads[]
   tracking_tokens     tracking_tokens[]
 
@@ -182,18 +184,29 @@ model payment_ads {
 }
 
 model newspapers {
-  id                     String     @id
-  name                   String
-  type                   String
-  no_col_per_page        Int
-  col_width              Int
-  col_height             Int
-  min_ad_height          Int
-  tint_additional_charge Int
-  newspaper_img          String?
-  created_at             DateTime?  @default(now()) @db.Timestamptz(6)
-  name_sinhala           String?
-  ad_types               ad_types[]
+  id                         String           @id
+  name                       String
+  type                       String
+  no_col_per_page            Int
+  col_width                  Int
+  col_height                 Int
+  min_ad_height              Int
+  tint_additional_charge     Int
+  newspaper_img              String?
+  created_at                 DateTime?        @default(now()) @db.Timestamptz(6)
+  name_sinhala               String?
+  cs_col_bw_price            Int?
+  cs_col_bw_one_color_price  Int?
+  cs_col_bw_two_color_price  Int?
+  cs_col_full_color_price    Int?
+  cs_page_bw_price           Int?
+  cs_page_bw_one_color_price Int?
+  cs_page_bw_two_color_price Int?
+  cs_page_full_color_price   String?
+  newspaper_status           Boolean          @default(true)
+  newspaper_serial_no        Int              @unique @default(autoincrement())
+  ad_types                   ad_types[]
+  advertisements             advertisements[]
 }
 
 model ad_type_categories {
@@ -215,25 +228,33 @@ model ad_type_color_options {
 }
 
 model ad_types {
-  id                    Int                     @id @default(autoincrement())
-  newspaper_id          String
-  key                   String
-  name                  String
-  base_type             String
-  count_first_words     Int
-  base_price            Int
-  additional_word_price Int
-  tint_color_price      Int
-  is_allow_combined     Boolean
-  max_words             Int
-  img_url               String?
-  is_upload_image       Boolean
-  extra_notes1          String?
-  extra_notes2          String?
-  priority_price        Int?
-  ad_type_categories    ad_type_categories[]
-  ad_type_color_options ad_type_color_options[]
-  newspapers            newspapers              @relation(fields: [newspaper_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_ad_types_newspaper")
+  id                         Int                     @id @default(autoincrement())
+  newspaper_id               String
+  key                        String
+  name                       String
+  base_type                  String
+  count_first_words          Int
+  base_price                 Int
+  additional_word_price      Int
+  tint_color_price           Int
+  is_allow_combined          Boolean
+  max_words                  Int
+  img_url                    String?
+  is_upload_image            Boolean
+  extra_notes1               String?
+  extra_notes2               String?
+  priority_price             Int?
+  cs_col_bw_price            Int                     @default(0)
+  cs_col_bw_one_color_price  Int                     @default(0)
+  cs_col_bw_two_color_price  Int                     @default(0)
+  cs_col_full_color_price    Int                     @default(0)
+  cs_page_bw_price           Int                     @default(0)
+  cs_page_bw_one_color_price Int                     @default(0)
+  cs_page_bw_two_color_price Int                     @default(0)
+  cs_page_full_color_price   Int                     @default(0)
+  ad_type_categories         ad_type_categories[]
+  ad_type_color_options      ad_type_color_options[]
+  newspapers                 newspapers              @relation(fields: [newspaper_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_ad_types_newspaper")
 
   @@unique([newspaper_id, key], map: "uq_newspaper_ad_key")
   @@index([newspaper_id], map: "idx_ad_types_newspaper_id")
