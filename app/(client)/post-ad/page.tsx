@@ -165,8 +165,8 @@ export default function PostAdPage() {
           return false;
         }
         if (
-          (formData.adType === "casual" && formData.adSizeType === "") ||
-          formData.colorOption === ""
+          (formData.adSizeType === "" || formData.colorOption === "") &&
+          formData.adType === "casual"
         ) {
           toast.error("Please select size and color!");
           return false;
@@ -270,6 +270,7 @@ export default function PostAdPage() {
           upload_image: formData.uploadedImage || null,
           special_notes: formData.specialNotes,
           price: formData.totalPrice || 0,
+          newspaper_serial_no: formData.selectedNewspaper.newspaper_serial_no,
         },
       };
 

@@ -40,20 +40,67 @@ export async function POST(req: Request) {
       });
     }
 
-    // ✅ Step 2: Generate unique 16-character reference number
-    const generateRefNumber = () =>
-      Math.random().toString().slice(2, 18).padEnd(16, "0");
-
-    let referenceNumber = generateRefNumber();
-
-    // Ensure uniqueness
-    while (
-      await prisma.advertisements.findUnique({
-        where: { reference_number: referenceNumber },
-      })
+    async function generateAdReferenceNumber(
+      prisma: PrismaClient,
+      newspaperSerialNo: number
     ) {
-      referenceNumber = generateRefNumber();
+      // 1️⃣ First 5 digits (newspaper prefix)
+      const prefix = newspaperSerialNo.toString().padStart(5, "0");
+
+      // 2️⃣ Find the latest reference number for this newspaper
+      const lastAd = await prisma.advertisements.findFirst({
+        where: {
+          reference_number: {
+            startsWith: prefix,
+          },
+        },
+        orderBy: {
+          reference_number: "desc",
+        },
+        select: {
+          reference_number: true,
+        },
+      });
+
+      // 3️⃣ Calculate next sequence
+      let nextNumber = 1;
+
+      if (lastAd) {
+        const last11Digits = lastAd.reference_number.slice(5); // after prefix
+        nextNumber = Number(last11Digits) + 1;
+      }
+
+      // 4️⃣ Pad to 11 digits
+      const suffix = nextNumber.toString().padStart(11, "0");
+
+      // 5️⃣ Final 16-digit reference
+      return prefix + suffix;
     }
+
+    if (!advertisement.newspaper_serial_no) {
+      return NextResponse.json(
+        { error: "Newspaper serial number is required" },
+        { status: 400 }
+      );
+    }
+
+    let referenceNumber: string;
+    let attempts = 0;
+
+    while (true) {
+      try {
+        referenceNumber = await generateAdReferenceNumber(
+          prisma,
+          advertisement.newspaper_serial_no
+        );
+        break;
+      } catch (err) {
+        attempts++;
+        if (attempts > 3) throw err;
+      }
+    }
+
+    console.log(referenceNumber);
 
     // ✅ Step 3: Create advertisement entry
     const adRecord = await prisma.advertisements.create({
@@ -73,6 +120,7 @@ export async function POST(req: Request) {
         special_notes: advertisement.special_notes || null,
         price: advertisement.price ? parseFloat(advertisement.price) : null,
         status: "Pending",
+        newspaper_serial_no: advertisement.newspaper_serial_no,
       },
     });
 
