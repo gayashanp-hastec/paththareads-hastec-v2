@@ -19,6 +19,13 @@ export default function StepSelectNewspaper({
   const [activeTab, setActiveTab] = useState<
     "daily" | "sunday" | "weekly" | "monthly"
   >("daily");
+  const tabs = [
+    { key: "daily", en: "Daily Newspapers", si: "දිනපතා පුවත්පත්" },
+    { key: "sunday", en: "Sunday Newspapers", si: "ඉරිදා පුවත්පත්" },
+    { key: "weekly", en: "Weekly Newspapers", si: "සතිපතා පුවත්පත්" },
+    { key: "monthly", en: "Monthly Newspapers", si: "මාසික පුවත්පත්" },
+  ] as const;
+
   const [newspapers, setNewspapers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -104,45 +111,46 @@ export default function StepSelectNewspaper({
       {/* scrolling tabs */}
       <div
         className="
-    my-4 flex gap-3
+    my-4
+    flex gap-3
     overflow-x-auto
-    scrollbar-hide
-    px-2
+    scroll-smooth
+    snap-x snap-mandatory
+    px-3
     md:justify-center
+    md:overflow-visible
   "
       >
-        {[
-          { key: "daily", en: "Daily Newspapers", si: "දිනපතා පුවත්පත්" },
-          { key: "sunday", en: "Sunday Newspapers", si: "ඉරිදා පුවත්පත්" },
-          { key: "weekly", en: "Weekly Newspapers", si: "සතිපතා පුවත්පත්" },
-          { key: "monthly", en: "Monthly Newspapers", si: "මාසික පුවත්පත්" },
-        ].map((tab) => (
+        {tabs.map((tab) => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
             className={`
-        min-w-[160px]
-        shrink-0
-        px-5 py-3
+        snap-center
+        min-w-[110px]
+        sm:min-w-[140px]
+        px-4 py-3
         rounded-xl
         font-medium
         text-center
         transition
+        whitespace-nowrap
         ${
           activeTab === tab.key
-            ? "bg-primary-accent text-white shadow"
+            ? "bg-primary-accent text-white shadow-md scale-[1.02]"
             : "bg-gray-100 text-gray-700 hover:bg-gray-200"
         }
       `}
           >
-            <div>{tab.en}</div>
+            <div className="text-sm sm:text-base">{tab.en}</div>
+
             <div
               style={{ fontFamily: "var(--font-sinhala), sans-serif" }}
-              className={`mt-1 text-sm ${
+              className={`mt-1 text-xs sm:text-sm ${
                 activeTab === tab.key ? "text-white/90" : "text-gray-600"
               }`}
             >
-              ({tab.si})
+              {tab.si}
             </div>
           </button>
         ))}
