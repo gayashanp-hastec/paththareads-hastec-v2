@@ -22,6 +22,8 @@ interface Newspaper {
   tint_additional_charge: number;
   newspaper_serial_no: number;
   is_allow_language_combined: false;
+  combine_eng_price: false;
+  combine_tam_price: false;
 }
 
 interface AdType {

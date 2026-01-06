@@ -226,6 +226,22 @@ export default function StepSelectAdType({
       total += selectedAdType.priority_price;
     }
 
+    if (formData.userLangCombineSelected_Eng) {
+      breakdown.push({
+        label: "Include in English paper",
+        amount: formData.selectedNewspaper.combine_eng_price,
+      });
+      total += formData.selectedNewspaper.combine_eng_price;
+    }
+
+    if (formData.userLangCombineSelected_Tam) {
+      breakdown.push({
+        label: "Include in Tamil paper",
+        amount: formData.selectedNewspaper.combine_tam_price,
+      });
+      total += formData.selectedNewspaper.combine_tam_price;
+    }
+
     if (formData.priorityPrice) {
       if (!formData.adText?.startsWith("0")) {
         updateFormData({
@@ -254,6 +270,8 @@ export default function StepSelectAdType({
     formData.backgroundColor,
     formData.combinedAd,
     formData.priorityPrice,
+    formData.userLangCombineSelected_Eng,
+    formData.userLangCombineSelected_Tam,
     selectedAdType,
   ]);
 
@@ -1235,11 +1253,15 @@ export default function StepSelectAdType({
                   <input
                     type="checkbox"
                     checked={formData.userLangCombineSelected}
-                    onChange={(e) =>
+                    onChange={(e) => {
+                      console.log(
+                        "eng price",
+                        formData.selectedNewspaper.combine_eng_price
+                      );
                       updateFormData({
                         userLangCombineSelected: e.target.checked,
-                      })
-                    }
+                      });
+                    }}
                   />
                   <span>
                     Combine with other papers{" "}
@@ -1283,11 +1305,12 @@ export default function StepSelectAdType({
                   <input
                     type="checkbox"
                     checked={formData.userLangCombineSelected_Tam}
-                    onChange={(e) =>
+                    onChange={(e) => {
+                      console.log(formData.selectedNespaper);
                       updateFormData({
                         userLangCombineSelected_Tam: e.target.checked,
-                      })
-                    }
+                      });
+                    }}
                   />
                   <span>
                     Place Ad in Tamil Paper

@@ -72,6 +72,8 @@ export default function StepSelectNewspaper({
         tint_additional_charge: paper.tint_additional_charge,
         newspaper_serial_no: paper.newspaper_serial_no,
         is_lang_combine_allowed: paper.is_lang_combine_allowed,
+        combine_eng_price: paper.combine_eng_price,
+        combine_tam_price: paper.combine_tam_price,
       },
     });
     console.log("select newspaper form data output", formData);
