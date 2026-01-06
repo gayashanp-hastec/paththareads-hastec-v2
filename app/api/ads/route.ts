@@ -13,10 +13,27 @@ export async function GET() {
       advertisement_text: true,
       upload_image: true,
       price: true,
+      advertisers: {
+        select: {
+          name: true,
+        },
+      },
     },
     orderBy: { created_at: "desc" },
   });
-  return NextResponse.json(ads);
+
+  const formattedAds = ads.map((ad) => ({
+    reference_number: ad.reference_number,
+    newspaper_name: ad.newspaper_name,
+    ad_type: ad.ad_type,
+    created_at: ad.created_at,
+    status: ad.status,
+    advertisement_text: ad.advertisement_text,
+    upload_image: ad.upload_image,
+    advertiser_name: ad.advertisers?.name ?? "—",
+  }));
+
+  return NextResponse.json(formattedAds);
 }
 
 export async function PATCH(req: NextRequest) {

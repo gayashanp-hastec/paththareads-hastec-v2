@@ -86,11 +86,11 @@ export default function StepSelectAdType({
   }, [selectedNewspaperId]);
 
   const handleAdTypeSelect = (adType: AdType) => {
-    console.log("formData.no_col_per_page ", formData.no_col_per_page);
-    console.log(
-      "formData.selectedNewspaper.no_col_per_page ",
-      formData.selectedNewspaper.no_col_per_page
-    );
+    console.log("formData all ", formData);
+    // console.log(
+    //   "formData.selectedNewspaper.no_col_per_page ",
+    //   formData.selectedNewspaper.no_col_per_page
+    // );
     setNoOfColumnsPerPage(formData.selectedNewspaper.no_col_per_page);
     setminAdHeight(formData.selectedNewspaper.min_ad_height);
     setmaxColHeight(formData.selectedNewspaper.col_height);
@@ -104,7 +104,12 @@ export default function StepSelectAdType({
       adText: "",
       backgroundColor: false,
       combinedAd: false,
+      hasOwnArtwork: false,
+      needArtwork: false,
       uploadedImage: null,
+      userLangCombineSelected: false,
+      userLangCombineSelected_Tam: false,
+      userLangCombineSelected_Eng: false,
       specialNotes: "",
       classifiedCategory: "",
       photoCategory: "",
@@ -514,67 +519,218 @@ export default function StepSelectAdType({
               </select>
             </div>
           )}
-
-          {/* Advertisement Text */}
-          <div className="relative md:mt-8">
-            <label className="block font-medium mb-1">
-              Advertisement Text{" "}
-              <span
-                className="text-sm"
-                style={{
-                  fontFamily: "var(--font-sinhala), sans-serif",
-                }}
-              >
-                (දැන්වීම් විස්තරය)
-              </span>{" "}
-              <span className="text-red-500">*</span>
-            </label>
-            <div className="absolute top-0 right-0 text-sm text-gray-500">
-              {wordCount}/{selectedAdType.max_words} words
-            </div>
-            <textarea
-              rows={5}
-              placeholder="Type your advertisement here"
-              value={formData.adText || ""}
-              onChange={handleTextChange}
-              required
-              className="border border-gray-300 rounded-lg p-3 w-full focus:ring-2 focus:ring-primary-accent resize-none"
-            />
-            <p className="text-sm">
-              To type in Sinhala, go to a{" "}
-              <a
-                href="https://ucsc.cmb.ac.lk/ltrl/services/feconverter/t1.html"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-800 hover:text-blue-600"
-              >
-                Sinhala typing tool
-              </a>
-              , type your advertisement, then copy and paste it here.{" "}
-            </p>
-            <p className="text-sm">
-              <span
-                className="text-xs"
-                style={{
-                  fontFamily: "var(--font-sinhala), sans-serif",
-                }}
-              >
-                (සිංහලෙන් ටයිප් කිරීමට,{" "}
-                <a
-                  href="https://ucsc.cmb.ac.lk/ltrl/services/feconverter/t1.html"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-800 hover:text-blue-600"
+          {selectedAdType.key === "casual" && (
+            <div className="md:mt-8">
+              <label className="block mb-2 font-medium">
+                I have my own artwork
+                <span
+                  className="text-sm ml-1"
+                  style={{ fontFamily: "var(--font-sinhala), sans-serif" }}
                 >
-                  සිංහල ටයිපින්{" "}
-                </a>
-                මෙවලමට පිවිස ඔබේ දැන්වීම ටයිප් කර, පිටපත් කර මෙහි ඇතුළත් කරන්න.)
-              </span>{" "}
-            </p>
-          </div>
+                  (මගේම කලාකෘතියක් ඇත)
+                </span>
+              </label>
+
+              <div className="inline-flex rounded-full border border-gray-300 overflow-hidden">
+                {/* Yes Button */}
+                <button
+                  type="button"
+                  onClick={() => updateFormData({ hasOwnArtwork: true })}
+                  className={`px-4 py-2 text-sm font-semibold transition ${
+                    formData.hasOwnArtwork
+                      ? "bg-[var(--color-primary-accent)] text-white"
+                      : "bg-white text-[var(--color-primary-dark)] hover:bg-[var(--color-primary-accent)]/20"
+                  }`}
+                >
+                  Yes
+                </button>
+
+                {/* No Button */}
+                <button
+                  type="button"
+                  onClick={() => updateFormData({ hasOwnArtwork: false })}
+                  className={`px-4 py-2 text-sm font-semibold transition ${
+                    formData.hasOwnArtwork === false
+                      ? "bg-[var(--color-primary-accent)] text-white"
+                      : "bg-white text-[var(--color-primary-dark)] hover:bg-[var(--color-primary-accent)]/20"
+                  }`}
+                >
+                  No
+                </button>
+              </div>
+            </div>
+          )}
+
+          {selectedAdType.key === "casual" && !formData.hasOwnArtwork && (
+            <>
+              {/* Advertisement Text */}
+              <div className="relative md:mt-8">
+                <label className="block font-medium mb-1">
+                  Advertisement Text{" "}
+                  <span
+                    className="text-sm"
+                    style={{
+                      fontFamily: "var(--font-sinhala), sans-serif",
+                    }}
+                  >
+                    (දැන්වීම් විස්තරය)
+                  </span>{" "}
+                  <span className="text-red-500">*</span>
+                </label>
+                <div className="absolute top-0 right-0 text-sm text-gray-500">
+                  {wordCount}/{selectedAdType.max_words} words
+                </div>
+                <textarea
+                  rows={5}
+                  placeholder="Type your advertisement here"
+                  value={formData.adText || ""}
+                  onChange={handleTextChange}
+                  required
+                  className="border border-gray-300 rounded-lg p-3 w-full focus:ring-2 focus:ring-primary-accent resize-none"
+                />
+                <p className="text-sm">
+                  To type in Sinhala, go to a{" "}
+                  <a
+                    href="https://ucsc.cmb.ac.lk/ltrl/services/feconverter/t1.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-800 hover:text-blue-600"
+                  >
+                    Sinhala typing tool
+                  </a>
+                  , type your advertisement, then copy and paste it here.{" "}
+                </p>
+                <p className="text-sm">
+                  <span
+                    className="text-xs"
+                    style={{
+                      fontFamily: "var(--font-sinhala), sans-serif",
+                    }}
+                  >
+                    (සිංහලෙන් ටයිප් කිරීමට,{" "}
+                    <a
+                      href="https://ucsc.cmb.ac.lk/ltrl/services/feconverter/t1.html"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-800 hover:text-blue-600"
+                    >
+                      සිංහල ටයිපින්{" "}
+                    </a>
+                    මෙවලමට පිවිස ඔබේ දැන්වීම ටයිප් කර, පිටපත් කර මෙහි ඇතුළත්
+                    කරන්න.)
+                  </span>{" "}
+                </p>
+              </div>
+            </>
+          )}
+
+          {selectedAdType.key !== "casual" && (
+            <>
+              {/* Advertisement Text */}
+              <div className="relative md:mt-8">
+                <label className="block font-medium mb-1">
+                  Advertisement Text{" "}
+                  <span
+                    className="text-sm"
+                    style={{
+                      fontFamily: "var(--font-sinhala), sans-serif",
+                    }}
+                  >
+                    (දැන්වීම් විස්තරය)
+                  </span>{" "}
+                  <span className="text-red-500">*</span>
+                </label>
+                <div className="absolute top-0 right-0 text-sm text-gray-500">
+                  {wordCount}/{selectedAdType.max_words} words
+                </div>
+                <textarea
+                  rows={5}
+                  placeholder="Type your advertisement here"
+                  value={formData.adText || ""}
+                  onChange={handleTextChange}
+                  required
+                  className="border border-gray-300 rounded-lg p-3 w-full focus:ring-2 focus:ring-primary-accent resize-none"
+                />
+                <p className="text-sm">
+                  To type in Sinhala, go to a{" "}
+                  <a
+                    href="https://ucsc.cmb.ac.lk/ltrl/services/feconverter/t1.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-800 hover:text-blue-600"
+                  >
+                    Sinhala typing tool
+                  </a>
+                  , type your advertisement, then copy and paste it here.{" "}
+                </p>
+                <p className="text-sm">
+                  <span
+                    className="text-xs"
+                    style={{
+                      fontFamily: "var(--font-sinhala), sans-serif",
+                    }}
+                  >
+                    (සිංහලෙන් ටයිප් කිරීමට,{" "}
+                    <a
+                      href="https://ucsc.cmb.ac.lk/ltrl/services/feconverter/t1.html"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-800 hover:text-blue-600"
+                    >
+                      සිංහල ටයිපින්{" "}
+                    </a>
+                    මෙවලමට පිවිස ඔබේ දැන්වීම ටයිප් කර, පිටපත් කර මෙහි ඇතුළත්
+                    කරන්න.)
+                  </span>{" "}
+                </p>
+              </div>
+            </>
+          )}
+
+          {selectedAdType.key === "casual" && !formData.hasOwnArtwork && (
+            <div className="md:mt-8">
+              <label className="block mb-2 font-medium">
+                Do you need an artwork designed?
+                <span
+                  className="text-sm ml-1"
+                  style={{ fontFamily: "var(--font-sinhala), sans-serif" }}
+                >
+                  (ඔබට කලාකෘතියක් නිර්මාණය කරගැනීමට අවශ්‍යද?)
+                </span>
+              </label>
+
+              <div className="inline-flex rounded-full border border-gray-300 overflow-hidden">
+                {/* Yes Button */}
+                <button
+                  type="button"
+                  onClick={() => updateFormData({ needArtwork: true })}
+                  className={`px-4 py-2 text-sm font-semibold transition ${
+                    formData.needArtwork
+                      ? "bg-[var(--color-primary-accent)] text-white"
+                      : "bg-white text-[var(--color-primary-dark)] hover:bg-[var(--color-primary-accent)]/20"
+                  }`}
+                >
+                  Yes
+                </button>
+
+                {/* No Button */}
+                <button
+                  type="button"
+                  onClick={() => updateFormData({ needArtwork: false })}
+                  className={`px-4 py-2 text-sm font-semibold transition ${
+                    formData.needArtwork === false
+                      ? "bg-[var(--color-primary-accent)] text-white"
+                      : "bg-white text-[var(--color-primary-dark)] hover:bg-[var(--color-primary-accent)]/20"
+                  }`}
+                >
+                  No
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Image Upload */}
-          {selectedAdType.is_upload_image && (
+          {formData.hasOwnArtwork && selectedAdType.is_upload_image && (
             <div className="md:mt-8">
               <label className="block mb-2 font-medium">
                 Upload Image{" "}
@@ -646,6 +802,80 @@ export default function StepSelectAdType({
               )}
             </div>
           )}
+
+          {selectedAdType.key !== "casual" &&
+            selectedAdType.is_upload_image && (
+              <div className="md:mt-8">
+                <label className="block mb-2 font-medium">
+                  Upload Image{" "}
+                  <span
+                    className="text-sm"
+                    style={{ fontFamily: "var(--font-sinhala), sans-serif" }}
+                  >
+                    (ඡායාරූප ඇතුලත් කරන්න)
+                  </span>{" "}
+                  <span className="text-red-500">*</span>
+                </label>
+
+                <input
+                  type="file"
+                  accept="image/*"
+                  required
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+
+                    try {
+                      updateFormData({ uploading: true });
+
+                      const data = await uploadImageToCloudinary(file);
+
+                      updateFormData({
+                        uploadedImage: data.secure_url,
+                        uploading: false,
+                      });
+                    } catch (error) {
+                      console.error(error);
+                      updateFormData({ uploading: false });
+                      alert("Image upload failed. Please try again.");
+                    }
+                  }}
+                  className="w-full border border-gray-300 rounded-lg p-3
+               focus:ring-2 focus:ring-primary-accent
+               file:mr-4 file:py-2 file:px-4
+               file:rounded-full file:border-0
+               file:bg-primary-accent file:text-white
+               file:cursor-pointer
+               hover:file:bg-primary-accent/90
+               transition"
+                />
+
+                {/* Optional status text (non-breaking, visual only) */}
+                {formData.uploading && (
+                  <p className="text-sm text-gray-500 mt-2">Uploading image…</p>
+                )}
+
+                {formData.uploadedImage && !formData.uploading && (
+                  <p className="text-sm text-green-600 mt-2">
+                    Image uploaded successfully
+                  </p>
+                )}
+
+                {formData.uploadedImage && (
+                  <img
+                    src={formData.uploadedImage}
+                    alt="Uploaded preview"
+                    className="mt-4 w-48 rounded-lg border"
+                  />
+                )}
+
+                {selectedAdType.extra_notes1 && (
+                  <p className="text-xs text-gray-500">
+                    {selectedAdType.extra_notes1}
+                  </p>
+                )}
+              </div>
+            )}
 
           {selectedAdType.key === "casual" && (
             <div className="mt-6 rounded-xl border border-gray-300 bg-white p-4 shadow-sm">
@@ -948,54 +1178,131 @@ export default function StepSelectAdType({
               </div>
             </div>
           )}
-
-          {/* Checkboxes */}
-          <div className="flex flex-col md:flex-row gap-4 md:mt-8">
-            <label className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                checked={formData.priorityPrice}
-                onChange={(e) =>
-                  updateFormData({ priorityPrice: e.target.checked })
-                }
-              />
-
-              <span>
-                Priority{" "}
-                <span
-                  className="text-sm"
-                  style={{
-                    fontFamily: "var(--font-sinhala), sans-serif",
-                  }}
-                >
-                  (ප්‍රමුඛ දැන්වීමකි)
-                </span>{" "}
-                {/* (LKR {selectedAdType.priority_price}) */}
-              </span>
-            </label>
-            {selectedAdType.tint_color_price > 0 && (
+          {console.log("before tint", formData)}
+          {formData.selectedNewspaper.type?.toLowerCase() === "sunday" && (
+            <div className="flex flex-col md:flex-row gap-4 md:mt-8">
               <label className="flex items-center space-x-2">
                 <input
                   type="checkbox"
-                  checked={formData.backgroundColor}
+                  checked={formData.priorityPrice}
                   onChange={(e) =>
-                    updateFormData({ backgroundColor: e.target.checked })
+                    updateFormData({ priorityPrice: e.target.checked })
                   }
                 />
                 <span>
-                  Background Color{" "}
+                  Priority{" "}
                   <span
                     className="text-sm"
                     style={{
                       fontFamily: "var(--font-sinhala), sans-serif",
                     }}
                   >
-                    (පසුබිම වර්ණගන්වන්න)
+                    (ප්‍රමුඛ දැන්වීමකි)
                   </span>{" "}
-                  {/* (LKR {selectedAdType.tint_color_price}) */}
+                  {/* (LKR {selectedAdType.priority_price}) */}
                 </span>
               </label>
+              {selectedAdType.tint_color_price > 0 && (
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={formData.backgroundColor}
+                    onChange={(e) =>
+                      updateFormData({ backgroundColor: e.target.checked })
+                    }
+                  />
+                  <span>
+                    Background Color{" "}
+                    <span
+                      className="text-sm"
+                      style={{
+                        fontFamily: "var(--font-sinhala), sans-serif",
+                      }}
+                    >
+                      (පසුබිම වර්ණගන්වන්න)
+                    </span>{" "}
+                    {/* (LKR {selectedAdType.tint_color_price}) */}
+                  </span>
+                </label>
+              )}
+            </div>
+          )}
+
+          {selectedAdType.key === "classified" &&
+            formData.selectedNewspaper?.is_lang_combine_allowed && (
+              <div className="my-4">
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={formData.userLangCombineSelected}
+                    onChange={(e) =>
+                      updateFormData({
+                        userLangCombineSelected: e.target.checked,
+                      })
+                    }
+                  />
+                  <span>
+                    Combine with other papers{" "}
+                    <span
+                      className="text-sm"
+                      style={{
+                        fontFamily: "var(--font-sinhala), sans-serif",
+                      }}
+                    >
+                      (දමිළ හෝ ඉංග්‍රීසි පුවත්පත් වලද පල කරන්න)
+                    </span>{" "}
+                  </span>
+                </label>
+              </div>
             )}
+
+          {selectedAdType.key === "classified" &&
+            formData.userLangCombineSelected && (
+              <div className="my-4 grid grid-cols-2">
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={formData.userLangCombineSelected_Eng}
+                    onChange={(e) =>
+                      updateFormData({
+                        userLangCombineSelected_Eng: e.target.checked,
+                      })
+                    }
+                  />
+                  <span>
+                    Place Ad in English Paper
+                    <span
+                      className="text-sm"
+                      style={{
+                        fontFamily: "var(--font-sinhala), sans-serif",
+                      }}
+                    ></span>{" "}
+                  </span>
+                </label>
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={formData.userLangCombineSelected_Tam}
+                    onChange={(e) =>
+                      updateFormData({
+                        userLangCombineSelected_Tam: e.target.checked,
+                      })
+                    }
+                  />
+                  <span>
+                    Place Ad in Tamil Paper
+                    <span
+                      className="text-sm"
+                      style={{
+                        fontFamily: "var(--font-sinhala), sans-serif",
+                      }}
+                    ></span>{" "}
+                  </span>
+                </label>
+              </div>
+            )}
+
+          <div>
             {selectedAdType.is_allow_combined && (
               <label className="flex items-center space-x-2">
                 <input

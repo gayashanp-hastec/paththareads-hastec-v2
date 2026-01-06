@@ -16,6 +16,10 @@ export async function GET() {
       tint_additional_charge: true,
       newspaper_status: true,
       newspaper_serial_no: true,
+      is_lang_combine_allowed: true,
+      combine_eng_price: true,
+      combine_tam_price: true,
+      combine_eng_tam_price: true,
     },
     orderBy: {
       name: "asc",
@@ -34,6 +38,10 @@ export async function GET() {
     min_ad_height: n.min_ad_height,
     tint_additional_charge: n.tint_additional_charge,
     newspaper_serial_no: n.newspaper_serial_no,
+    is_lang_combine_allowed: n.is_lang_combine_allowed,
+    combine_eng_price: n.combine_eng_price,
+    combine_tam_price: n.combine_tam_price,
+    combine_eng_tam_price: n.combine_eng_tam_price,
   }));
 
   return NextResponse.json(formatted);
@@ -55,6 +63,10 @@ export async function POST(req: Request) {
       tint_additional_charge,
       newspaper_img,
       name_sinhala,
+      is_lang_combine_allowed,
+      combine_eng_price,
+      combine_tam_price,
+      combine_eng_tam_price,
       ad_types = [], // optional
     } = body;
 
@@ -67,7 +79,11 @@ export async function POST(req: Request) {
       col_width == null ||
       col_height == null ||
       min_ad_height == null ||
-      tint_additional_charge == null
+      tint_additional_charge == null ||
+      is_lang_combine_allowed == null ||
+      combine_eng_price == null ||
+      combine_tam_price == null ||
+      combine_eng_tam_price == null
     ) {
       return NextResponse.json(
         { message: "Missing required fields" },
@@ -90,6 +106,10 @@ export async function POST(req: Request) {
           tint_additional_charge,
           newspaper_img,
           name_sinhala,
+          is_lang_combine_allowed,
+          combine_eng_price,
+          combine_tam_price,
+          combine_eng_tam_price,
         },
       });
 

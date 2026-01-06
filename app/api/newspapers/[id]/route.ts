@@ -71,6 +71,10 @@ export async function PUT(
       tint_additional_charge,
       newspaper_img,
       name_sinhala,
+      is_lang_combine_allowed,
+      combine_eng_price,
+      combine_tam_price,
+      combine_eng_tam_price,
       ad_types = [],
     } = body;
 
@@ -96,6 +100,10 @@ export async function PUT(
           tint_additional_charge,
           newspaper_img,
           name_sinhala,
+          is_lang_combine_allowed,
+          combine_eng_price,
+          combine_tam_price,
+          combine_eng_tam_price,
         },
       });
 

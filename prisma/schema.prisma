@@ -205,6 +205,10 @@ model newspapers {
   cs_page_full_color_price   String?
   newspaper_status           Boolean          @default(true)
   newspaper_serial_no        Int              @unique @default(autoincrement())
+  is_lang_combine_allowed    Boolean          @default(false)
+  combine_eng_price          Int?             @default(0)
+  combine_tam_price          Int?             @default(0)
+  combine_eng_tam_price      Int?             @default(0)
   ad_types                   ad_types[]
   advertisements             advertisements[]
 }

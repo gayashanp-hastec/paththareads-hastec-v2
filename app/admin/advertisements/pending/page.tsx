@@ -13,6 +13,7 @@ interface AdminAdvertisementsPending {
   status: string;
   advertisement_text: string;
   upload_image: string;
+  advertiser_name: string;
 }
 
 export default function AdminAdvertisementsPending() {
@@ -61,7 +62,8 @@ export default function AdminAdvertisementsPending() {
       (ad) =>
         ad.reference_number.toLowerCase().includes(search.toLowerCase()) ||
         ad.newspaper_name.toLowerCase().includes(search.toLowerCase()) ||
-        ad.status.toLowerCase().includes(search.toLowerCase())
+        ad.status.toLowerCase().includes(search.toLowerCase()) ||
+        ad.advertiser_name.toLowerCase().includes(search.toLowerCase())
     );
     updated.sort((a, b) =>
       sortKey === "created_at"
@@ -145,7 +147,7 @@ export default function AdminAdvertisementsPending() {
         <div className="flex flex-col md:flex-row items-center justify-between gap-3">
           <input
             type="text"
-            placeholder="Search by reference, paper, or status..."
+            placeholder="Search by reference, name, paper, or status..."
             className="border rounded-lg px-4 py-2 w-full md:w-1/2"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -186,6 +188,7 @@ export default function AdminAdvertisementsPending() {
             <thead className="bg-gray-100 text-gray-700 uppercase text-xs">
               <tr>
                 <th className="px-4 py-3">Reference</th>
+                <th className="px-4 py-3">Advertiser Name</th>
                 <th className="px-4 py-3">Newspaper</th>
                 <th className="px-4 py-3">Advertiser ID</th>
                 <th className="px-4 py-3">Type</th>
@@ -203,6 +206,9 @@ export default function AdminAdvertisementsPending() {
                   >
                     <td className="px-4 py-2 font-mono">
                       {ad.reference_number}
+                    </td>
+                    <td className="px-4 py-2 font-mono">
+                      {ad.advertiser_name}
                     </td>
                     <td className="px-4 py-2">{ad.newspaper_name}</td>
                     <td className="px-4 py-2">{ad.advertiser_id}</td>

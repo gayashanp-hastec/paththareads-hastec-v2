@@ -16,7 +16,9 @@ export default function StepSelectNewspaper({
   nextStep,
   setIsNextEnabled,
 }: StepSelectNewspaperProps) {
-  const [activeTab, setActiveTab] = useState<"daily" | "sunday">("daily");
+  const [activeTab, setActiveTab] = useState<
+    "daily" | "sunday" | "weekly" | "monthly"
+  >("daily");
   const [newspapers, setNewspapers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -36,11 +38,21 @@ export default function StepSelectNewspaper({
   // Filter newspapers by tab
   const filteredNewspapers = newspapers.filter((paper: any) => {
     const type = paper.type?.toLowerCase();
-    return activeTab === "daily" ? type === "daily" : type === "sunday";
+    return activeTab === "daily"
+      ? type === "daily"
+      : activeTab === "sunday"
+      ? type === "sunday"
+      : activeTab === "weekly"
+      ? type === "weekly"
+      : type === "monthly";
   });
 
   const handleSelectNewspaper = (paper: any) => {
     console.log("select newspaper output", paper);
+    console.log(
+      "select newspaper language output",
+      paper.is_lang_combine_allowed
+    );
     updateFormData({
       selectedNewspaper: {
         id: paper.id,
@@ -52,6 +64,7 @@ export default function StepSelectNewspaper({
         min_ad_height: paper.min_ad_height,
         tint_additional_charge: paper.tint_additional_charge,
         newspaper_serial_no: paper.newspaper_serial_no,
+        is_lang_combine_allowed: paper.is_lang_combine_allowed,
       },
     });
     console.log("select newspaper form data output", formData);
@@ -84,78 +97,119 @@ export default function StepSelectNewspaper({
       </header>
 
       {/* ================= TABS ================= */}
-      <div className="flex justify-center gap-4">
-        <button
-          onClick={() => setActiveTab("daily")}
-          className={`px-5 py-2 rounded-md text-sm font-medium transition
-            ${
-              activeTab === "daily"
-                ? "bg-primary-accent text-white shadow"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-            }`}
-        >
-          Daily Newspapers
-        </button>
 
-        <button
-          onClick={() => setActiveTab("sunday")}
-          className={`px-5 py-2 rounded-md text-sm font-medium transition
-            ${
-              activeTab === "sunday"
-                ? "bg-primary-accent text-white shadow"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-            }`}
-        >
-          Sunday Newspapers
-        </button>
+      {/* stack tabs */}
+      {/* <div className="my-4 flex flex-wrap justify-center gap-3"> */}
+
+      {/* scrolling tabs */}
+      <div
+        className="
+    my-4 flex gap-3
+    overflow-x-auto
+    scrollbar-hide
+    px-2
+    md:justify-center
+  "
+      >
+        {[
+          { key: "daily", en: "Daily Newspapers", si: "දිනපතා පුවත්පත්" },
+          { key: "sunday", en: "Sunday Newspapers", si: "ඉරිදා පුවත්පත්" },
+          { key: "weekly", en: "Weekly Newspapers", si: "සතිපතා පුවත්පත්" },
+          { key: "monthly", en: "Monthly Newspapers", si: "මාසික පුවත්පත්" },
+        ].map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => setActiveTab(tab.key)}
+            className={`
+        min-w-[160px]
+        shrink-0
+        px-5 py-3
+        rounded-xl
+        font-medium
+        text-center
+        transition
+        ${
+          activeTab === tab.key
+            ? "bg-primary-accent text-white shadow"
+            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+        }
+      `}
+          >
+            <div>{tab.en}</div>
+            <div
+              style={{ fontFamily: "var(--font-sinhala), sans-serif" }}
+              className={`mt-1 text-sm ${
+                activeTab === tab.key ? "text-white/90" : "text-gray-600"
+              }`}
+            >
+              ({tab.si})
+            </div>
+          </button>
+        ))}
       </div>
 
       {/* ================= GRID ================= */}
       <div className="grid grid-cols-2 gap-4 px-4 sm:grid-cols-3 md:grid-cols-4">
-        {loading
-          ? Array.from({ length: 4 }).map((_, idx) => (
-              <div
-                key={idx}
-                className="relative flex aspect-[3/2] items-center justify-center 
+        {loading ? (
+          Array.from({ length: 4 }).map((_, idx) => (
+            <div
+              key={idx}
+              className="relative flex aspect-[3/2] items-center justify-center 
                   overflow-hidden rounded-lg bg-[var(--color-orange-accent)] animate-pulse shadow-sm"
-              />
-            ))
-          : filteredNewspapers.map((paper: any) => {
-              const isSelected = formData.selectedNewspaper?.id === paper.id;
+            />
+          ))
+        ) : filteredNewspapers.length === 0 ? (
+          <div className="col-span-full flex flex-col items-center justify-center py-10">
+            <p className="text-center text-sm md:text-base text-gray-500 font-medium">
+              No newspapers available
+            </p>
+            <p
+              style={{
+                fontFamily: "var(--font-sinhala), sans-serif",
+              }}
+              className="mt-1 text-gray-700 text-sm"
+            >
+              (පුවත්පත් නොමැත)
+            </p>
+          </div>
+        ) : (
+          filteredNewspapers.map((paper: any) => {
+            const isSelected = formData.selectedNewspaper?.id === paper.id;
 
-              return (
-                <button
-                  key={paper.id}
-                  type="button"
-                  onClick={() => handleSelectNewspaper(paper)}
-                  aria-pressed={isSelected}
-                  className={`relative flex aspect-[3/2] items-center justify-center 
+            return (
+              <button
+                key={paper.id}
+                type="button"
+                onClick={() => handleSelectNewspaper(paper)}
+                aria-pressed={isSelected}
+                className={`relative flex aspect-[3/2] items-center justify-center 
                     overflow-hidden rounded-lg bg-white shadow-sm transition
                     hover:scale-[1.03] focus:outline-none focus:ring-2 
                     focus:ring-primary-accent
                     ${isSelected ? "ring-4 ring-primary-accent" : ""}
                   `}
-                >
-                  <div
-                    className={`flex items-center justify-center w-full h-full p-4 text-center 
+              >
+                <div
+                  className={`flex items-center justify-center w-full h-full p-4 text-center 
                       rounded-xl shadow-lg shadow-gray-400/20 font-bold text-gray-800 text-lg md:text-2xl lg:text-2xl
                       uppercase tracking-wide select-none transition-transform transform hover:scale-105
                     `}
-                    style={{
-                      background:
-                        "linear-gradient(to bottom right, #fff, #fff, var(--color-primary))",
-                      fontFamily: "var(--font-sinhala), sans-serif",
-                    }}
-                  >
-                    {paper.name_sinhala === "" ? (
-                      <h3>{paper.name}</h3>
-                    ) : (
-                      <h3>{paper.name_sinhala}</h3>
-                    )}
-                  </div>
-                </button>
-              );
-            })}
+                  style={{
+                    background:
+                      "linear-gradient(to bottom right, #fff, #fff, var(--color-primary))",
+                    fontFamily: "var(--font-sinhala), sans-serif",
+                  }}
+                >
+                  {paper.name_sinhala === "" ? (
+                    <h3>{paper.name}</h3>
+                  ) : (
+                    <h3>{paper.name_sinhala}</h3>
+                  )}
+                </div>
+              </button>
+            );
+          })
+        )}
       </div>
     </section>
   );

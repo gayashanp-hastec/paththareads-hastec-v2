@@ -21,6 +21,7 @@ interface Newspaper {
   min_ad_height: number;
   tint_additional_charge: number;
   newspaper_serial_no: number;
+  is_allow_language_combined: false;
 }
 
 interface AdType {
@@ -61,7 +62,13 @@ interface FormData {
   specialNotes: string;
   deathCertificate: File | null;
   photoCategory: string | null;
+  hasOwnArtwork: boolean;
+  needArtwork: boolean;
   uploadedImage: File | null;
+  is_allow_language_combined: boolean;
+  userLangCombineSelected: boolean;
+  userLangCombineSelected_Tam: boolean;
+  userLangCombineSelected_Eng: boolean;
   // fullpagead: boolean;
   // halfPageAdHR: boolean;
   // halfPageAdVR: boolean;
@@ -111,6 +118,12 @@ export default function PostAdPage() {
     deathCertificate: null,
     photoCategory: null,
     uploadedImage: null,
+    hasOwnArtwork: false,
+    needArtwork: false,
+    is_allow_language_combined: false,
+    userLangCombineSelected: false,
+    userLangCombineSelected_Eng: false,
+    userLangCombineSelected_Tam: false,
     // fullpagead: false,
     // halfPageAdHR: false,
     // halfPageAdVR: false,

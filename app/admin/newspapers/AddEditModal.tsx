@@ -50,6 +50,10 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
       minAdHeight: 0,
       tintAdditionalCharge: 0,
       newspaperimg: "", // kept but unused
+      is_lang_combine_allowed: false,
+      combine_eng_price: 0,
+      combine_tam_price: 0,
+      combine_eng_tam_price: 0,
     }
   );
 
@@ -167,6 +171,10 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
       min_ad_height: Number(form.minAdHeight),
       tint_additional_charge: Number(form.tintAdditionalCharge),
       newspaper_img: null, // image upload disabled
+      is_lang_combine_allowed: Boolean(form.is_lang_combine_allowed),
+      combine_eng_price: Number(form.combine_eng_price),
+      combine_tam_price: Number(form.combine_tam_price),
+      combine_eng_tam_price: Number(form.combine_eng_tam_price),
       ad_types: adTypes.map((t) => ({
         key: t.typeKey,
         name: t.name,
@@ -222,6 +230,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
 
   useEffect(() => {
     if (!item?.id) return;
+    console.log(form);
 
     const loadForEdit = async () => {
       try {
@@ -241,6 +250,10 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
           minAdHeight: data.min_ad_height,
           tintAdditionalCharge: data.tint_additional_charge,
           newspaperimg: data.newspaper_img || "",
+          is_lang_combine_allowed: data.is_lang_combine_allowed,
+          combine_eng_price: data.combine_eng_price,
+          combine_tam_price: data.combine_tam_price,
+          combine_eng_tam_price: data.combine_eng_tam_price,
         });
 
         // 2️⃣ Populate ad types
@@ -328,15 +341,27 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
         <NewspaperSkeleton />
       ) : (
         <div className="fixed inset-0 z-50 flex items-start justify-center overflow-auto bg-black/40 p-6 md:p-10">
-          <div className="w-full max-w-[900px] space-y-8 rounded-2xl bg-white p-6 md:p-8 shadow-2xl">
+          <div className="w-full max-w-[1200px] space-y-8 rounded-2xl bg-white p-6 md:p-8 shadow-2xl">
             {/* Header */}
-            <div className="border-b pb-4">
-              <h2 className="text-2xl font-semibold text-[var(--color-primary-dark)]">
-                {item ? "Edit Newspaper" : "Add Newspaper"}
-              </h2>
-              <p className="mt-1 text-sm text-[var(--color-text-highlight)]">
-                Configure newspaper properties and advertisement types
-              </p>
+            <div className="border-b pb-4 flex items-start justify-between gap-4">
+              {/* Title + subtitle */}
+              <div>
+                <h2 className="text-2xl font-semibold text-[var(--color-primary-dark)]">
+                  {item ? "Edit Newspaper" : "Add Newspaper"}
+                </h2>
+                <p className="mt-1 text-sm text-[var(--color-text-highlight)]">
+                  Configure newspaper properties and advertisement types
+                </p>
+              </div>
+
+              {/* Close button */}
+              <button
+                onClick={onClose}
+                className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-200 transition"
+                aria-label="Close"
+              >
+                ✕
+              </button>
             </div>
 
             {/* Newspaper Details */}
@@ -345,7 +370,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                 Newspaper Details
               </h3>
 
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
                 {/* Name */}
                 <div>
                   <label className="block text-sm font-medium text-[var(--color-text)]">
@@ -353,11 +378,11 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                   </label>
                   <input
                     type="text"
-                    className={`mt-1 w-full rounded-lg border px-3 py-2 text-sm focus:border-[var(--color-primary)] focus:outline-none
-              ${
-                errors.name ? "border-red-500 animate-shake" : "border-gray-300"
-              }
-            `}
+                    className={`mt-1 w-full rounded-lg border px-3 py-2 text-sm focus:border-[var(--color-primary)] focus:outline-none ${
+                      errors.name
+                        ? "border-red-500 animate-shake"
+                        : "border-gray-300"
+                    }`}
                     value={form.name}
                     onChange={(e) => {
                       setForm({ ...form, name: e.target.value });
@@ -371,8 +396,20 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
 
                 {/* Sinhala Name */}
                 <div>
-                  <label className="block text-sm font-medium text-[var(--color-text)]">
-                    Newspaper Sinhala Name
+                  <label className="flex items-center justify-between text-sm font-medium text-[var(--color-text)]">
+                    <span>Newspaper Name (Sinhala)</span>
+
+                    <span className="text-sm border-1 rounded py-.05 px-2 border-[var(--color-primary-accent)]">
+                      <a
+                        href="https://ucsc.cmb.ac.lk/ltrl/services/feconverter/t1.html"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title="Click here to use Sinhala typing tool"
+                        className="text-blue-800 hover:text-blue-600 whitespace-nowrap"
+                      >
+                        සිං
+                      </a>
+                    </span>
                   </label>
                   <input
                     type="text"
@@ -397,6 +434,8 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                   >
                     <option>Daily</option>
                     <option>Sunday</option>
+                    <option>Weekly</option>
+                    <option>Monthly</option>
                   </select>
                 </div>
 
@@ -423,6 +462,57 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                   </div>
                 ))}
               </div>
+              {/* Allow Combined Languages */}
+              <div className="mt-8 mb-4">
+                <label className="flex items-center gap-2 text-sm font-medium text-[var(--color-text)]">
+                  <input
+                    type="checkbox"
+                    checked={form.is_lang_combine_allowed}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        is_lang_combine_allowed: e.target.checked,
+                        ...(e.target.checked
+                          ? {}
+                          : {
+                              combine_eng_price: 0,
+                              combine_tam_price: 0,
+                              combine_eng_tam_price: 0,
+                            }),
+                      })
+                    }
+                    className="h-4 w-4 accent-[var(--color-primary)] cursor-pointer"
+                  />
+                  Allow Combined Languages
+                </label>
+              </div>
+              {form.is_lang_combine_allowed && (
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                  {[
+                    ["English Paper Price", "combine_eng_price"],
+                    ["Tamil Paper Price", "combine_tam_price"],
+                    ["English & Tamil Both Price", "combine_eng_tam_price"],
+                  ].map(([label, key]) => (
+                    <div key={key}>
+                      <label className="block text-sm font-medium text-[var(--color-text)]">
+                        {label}
+                      </label>
+                      <input
+                        type="number"
+                        min={0}
+                        className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[var(--color-primary)] focus:outline-none"
+                        value={(form as any)[key]}
+                        onChange={(e) =>
+                          setForm({
+                            ...form,
+                            [key]: Number(e.target.value) || 0,
+                          })
+                        }
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Type Error */}
@@ -484,7 +574,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                       Ad Type #{index + 1}
                     </h4>
 
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
                       {/* Type Selector */}
                       <div>
                         <label className="block text-sm font-medium text-[var(--color-text)]">
@@ -493,9 +583,9 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                         <select
                           className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
                           value={t.typeKey}
-                          onChange={(e) =>
-                            updateAdType(index, "typeKey", e.target.value)
-                          }
+                          onChange={(e) => {
+                            updateAdType(index, "typeKey", e.target.value);
+                          }}
                         >
                           {AD_TYPE_OPTIONS.map((opt) => (
                             <option key={opt} value={opt}>
@@ -551,22 +641,25 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                       ))}
 
                       {/* Toggles */}
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={t.isUploadImage}
-                          onChange={(e) =>
-                            updateAdType(
-                              index,
-                              "isUploadImage",
-                              e.target.checked
-                            )
-                          }
-                        />
-                        <span className="text-sm">Require Image Upload</span>
+                      <div className="flex items-center gap-2 md:col-span-2">
+                        <div id="reqImg" className="flex items-center gap-1">
+                          <input
+                            className="h-5 w-5 accent-[var(--color-primary)]"
+                            type="checkbox"
+                            checked={t.isUploadImage}
+                            onChange={(e) =>
+                              updateAdType(
+                                index,
+                                "isUploadImage",
+                                e.target.checked
+                              )
+                            }
+                          />
+                          <span className="text-sm">Require Image Upload</span>
+                        </div>
                       </div>
 
-                      <div className="flex items-center gap-2">
+                      {/* <div className="flex items-center gap-2">
                         <input
                           type="checkbox"
                           checked={t.isAllowCombined}
@@ -579,7 +672,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                           }
                         />
                         <span className="text-sm">Allow Combined</span>
-                      </div>
+                      </div> */}
 
                       {/* Notes */}
                       <div className="md:col-span-2">
