@@ -124,6 +124,34 @@ export async function POST(req: Request) {
       },
     });
 
+    // ✅ Step 3.1: Create casual ad details (ONLY if ad type is "casual")
+    if (advertisement.ad_type === "casual") {
+      await prisma.casual_ads.create({
+        data: {
+          reference_number: referenceNumber,
+          ad_size: advertisement.ad_size, // adSizeType from formData
+          no_of_columns: advertisement.no_of_columns,
+          ad_height: advertisement.ad_height,
+          color_option: advertisement.color_option,
+          has_artwork: advertisement.has_artwork,
+          need_artwork: advertisement.need_artwork,
+        },
+      });
+    }
+
+    if (
+      advertisement.ad_type === "classified" ||
+      advertisement.ad_type === "photo_classified"
+    ) {
+      await prisma.classified_ads.create({
+        data: {
+          reference_number: referenceNumber,
+          is_publish_eng: advertisement.is_publish_eng ?? false,
+          is_publish_tam: advertisement.is_publish_tam ?? false,
+        },
+      });
+    }
+
     // ✅ Step 4: Add initial status history
     await prisma.ad_status_history.create({
       data: {
