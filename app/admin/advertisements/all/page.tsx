@@ -375,6 +375,26 @@ export default function AdminAdvertisements() {
                       Approve
                     </button>
                   )}
+                <button
+                  onClick={async () => {
+                    if (!selectedAd) return;
+
+                    const res = await fetch("/api/ads/print", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        advertisement_text: editedText,
+                        reference_number: selectedAd.reference_number,
+                      }),
+                    });
+
+                    const blob = await res.blob();
+                    const url = URL.createObjectURL(blob);
+                    window.open(url, "_blank");
+                  }}
+                >
+                  Print
+                </button>
               </div>
             </div>
           </div>

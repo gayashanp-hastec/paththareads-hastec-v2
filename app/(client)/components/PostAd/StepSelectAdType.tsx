@@ -50,9 +50,8 @@ export default function StepSelectAdType({
   const [adTypes, setAdTypes] = useState<AdType[]>([]);
   const [loading, setLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedSize, setselectedSize] = useState<string>("");
-  const [selectedColor, setselectedColor] = useState<number>(0);
   const [selectedAdType, setSelectedAdType] = useState<AdType | null>(null);
+
   const [wordCount, setWordCount] = useState<number>(
     formData.adText?.split(" ").filter(Boolean).length || 0
   );
@@ -64,10 +63,25 @@ export default function StepSelectAdType({
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [selectedSubCategory, setSelectedSubCategory] = useState<string>("");
   const [subCategoryOptions, setSubCategoryOptions] = useState<string[]>([]);
-  const [noOfColumnsPerPage, setNoOfColumnsPerPage] = useState<number>(0);
-  const [minAdHeight, setminAdHeight] = useState<number>(0);
-  const [maxColHeight, setmaxColHeight] = useState<number>(0);
-  const [tintAdditionalCharge, settintAdditionalCharge] = useState<number>(0);
+
+  const [selectedSize, setselectedSize] = useState<string>(""); // user selected size full, custom...
+  const [selectedColor, setselectedColor] = useState<number>(0); // stores value for colors for casual ads
+  const [selectedColumns, setselectedColumns] = useState<number>(0); // user selected no of columns
+  const [selectedAdHeight, setselectedAdHeight] = useState<number>(
+    formData.selectedNewspaper.min_ad_height
+  );
+  const [noOfColumnsPerPage, setNoOfColumnsPerPage] = useState<number>(
+    formData.selectedNewspaper.no_col_per_page
+  );
+  const [minAdHeight, setminAdHeight] = useState<number>(
+    formData.selectedNewspaper.min_ad_height
+  );
+  const [maxColHeight, setmaxColHeight] = useState<number>(
+    formData.selectedNewspaper.col_height
+  );
+  const [tintAdditionalCharge, settintAdditionalCharge] = useState<number>(
+    formData.selectedNewspaper.tint_additional_charge
+  );
   const [newspaperDays, setnewspaperDays] = useState<string[]>([]);
 
   const selectedNewspaperId = formData.selectedNewspaper?.id;
@@ -87,14 +101,6 @@ export default function StepSelectAdType({
 
   const handleAdTypeSelect = (adType: AdType) => {
     console.log("formData all ", formData);
-    // console.log(
-    //   "formData.selectedNewspaper.no_col_per_page ",
-    //   formData.selectedNewspaper.no_col_per_page
-    // );
-    setNoOfColumnsPerPage(formData.selectedNewspaper.no_col_per_page);
-    setminAdHeight(formData.selectedNewspaper.min_ad_height);
-    setmaxColHeight(formData.selectedNewspaper.col_height);
-    settintAdditionalCharge(formData.selectedNewspaper.tint_additional_charge);
     setnewspaperDays(["tuesday", "thursday"]);
     // console.log(formData);
     setSelectedAdType(adType);
@@ -107,6 +113,8 @@ export default function StepSelectAdType({
       hasOwnArtwork: false,
       needArtwork: false,
       uploadedImage: null,
+      noOfColumns: 1,
+      adHeight: formData.selectedNewspaper.min_ad_height,
       userLangCombineSelected: false,
       userLangCombineSelected_Tam: false,
       userLangCombineSelected_Eng: false,
@@ -122,7 +130,7 @@ export default function StepSelectAdType({
       "final",
       noOfColumnsPerPage,
       minAdHeight,
-      tintAdditionalCharge,
+      selectedAdHeight,
       maxColHeight
     );
   };
@@ -957,6 +965,20 @@ export default function StepSelectAdType({
                       className="hidden"
                       checked={formData.adSizeType === option.key}
                       onChange={() => {
+                        option.key === "full"
+                          ? updateFormData({
+                              noOfColumns: 0,
+                            })
+                          : updateFormData({
+                              noOfColumns: selectedColumns,
+                            });
+                        option.key === "custom"
+                          ? updateFormData({
+                              adHeight: minAdHeight,
+                            })
+                          : updateFormData({
+                              adHeight: 0,
+                            });
                         updateFormData({
                           adSizeType: option.key,
                           // fullPageAd: option.key === "full",
@@ -964,8 +986,8 @@ export default function StepSelectAdType({
                           // halfPageAdVR: option.key === "half_vr",
                           colorOption: "",
                         });
+
                         setselectedSize(option.key);
-                        toast.success(selectedSize);
                         setselectedColor(0);
                       }}
                     />
@@ -985,87 +1007,150 @@ export default function StepSelectAdType({
               {/* custom size fields */}
               {formData.adSizeType == "custom" && (
                 <>
-                  {/* No of Columns */}
-                  <div className="mt-8">
-                    <label className="block font-medium mb-2">
-                      No. of Columns{" "}
-                      <span
-                        className="text-sm"
-                        style={{
-                          fontFamily: "var(--font-sinhala), sans-serif",
-                        }}
-                      >
-                        (තීරු ගණන)
-                      </span>{" "}
-                      <span className="text-red-500">*</span>
-                    </label>
+                  <div className="w-full flex flex-col justify-center items-center">
+                    {/* No of Columns */}
+                    <div
+                      id="no1"
+                      className=" flex flex-col justify-center items-center md:w-1/2 mt-8"
+                    >
+                      <label className="block font-medium mb-2">
+                        No. of Columns{" "}
+                        <span
+                          className="text-sm"
+                          style={{
+                            fontFamily: "var(--font-sinhala), sans-serif",
+                          }}
+                        >
+                          (තීරු ගණන)
+                        </span>{" "}
+                        <span className="text-red-500">*</span>
+                      </label>
 
-                    <div className="flex flex-wrap gap-2">
-                      {Array.from(
-                        { length: noOfColumnsPerPage },
-                        (_, i) => i + 1
-                      ).map((num) => (
-                        <label key={num} className="cursor-pointer">
-                          <input
-                            type="radio"
-                            name="noOfColumns"
-                            value={num}
-                            checked={formData.noOfColumns === num}
-                            onChange={() =>
-                              updateFormData({ noOfColumns: num })
-                            }
-                            className="hidden"
-                          />
-                          <div
-                            className={`flex h-10 w-10 items-center justify-center rounded-md border text-sm font-semibold transition ${
-                              formData.noOfColumns === num
-                                ? "border-[var(--color-primary)] bg-[var(--color-primary)] text-white"
-                                : "border-gray-300 bg-white text-gray-700 hover:border-[var(--color-primary)]"
-                            }`}
-                          >
-                            {num}
-                          </div>
-                        </label>
-                      ))}
+                      <div className="flex flex-wrap gap-2 my-2">
+                        {Array.from(
+                          { length: noOfColumnsPerPage },
+                          (_, i) => i + 1
+                        ).map((num) => (
+                          <label key={num} className="cursor-pointer">
+                            <input
+                              type="radio"
+                              name="noOfColumns"
+                              value={num}
+                              checked={formData.noOfColumns === num}
+                              onChange={() => {
+                                updateFormData({ noOfColumns: num });
+                                setselectedColumns(num);
+                              }}
+                              className="hidden"
+                            />
+                            <div
+                              className={`flex h-10 w-10 items-center justify-center rounded-md border text-sm font-semibold transition ${
+                                formData.noOfColumns === num
+                                  ? "border-[var(--color-primary)] bg-[var(--color-primary)] text-white"
+                                  : "border-gray-300 bg-white text-gray-700 hover:border-[var(--color-primary)]"
+                              }`}
+                            >
+                              {num}
+                            </div>
+                          </label>
+                        ))}
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Ad Height */}
-                  <div className="mt-8">
-                    <label className="block font-medium mb-2">
-                      Ad Height (cm){" "}
-                      <span
-                        className="text-sm"
-                        style={{
-                          fontFamily: "var(--font-sinhala), sans-serif",
-                        }}
-                      >
-                        (උස සෙ.මී.)
-                      </span>
-                    </label>
+                    {/* Ad Height */}
+                    <div
+                      id="no2"
+                      className="flex flex-col justify-center items-center md:w-1/2 mt-8"
+                    >
+                      <label className="block font-medium mb-2">
+                        Ad Height (cm){" "}
+                        <span
+                          className="text-sm"
+                          style={{
+                            fontFamily: "var(--font-sinhala), sans-serif",
+                          }}
+                        >
+                          (උස සෙ.මී.)
+                        </span>
+                      </label>
 
-                    <div className="flex items-center gap-4">
-                      <input
-                        type="range"
-                        min={minAdHeight}
-                        max={maxColHeight}
-                        value={formData.adHeight}
-                        onChange={(e) =>
-                          updateFormData({
-                            adHeight: Number(e.target.value),
-                          })
-                        }
-                        className="flex-1 accent-[var(--color-primary)] cursor-pointer"
-                      />
+                      <div className="flex items-center gap-4">
+                        {/* <input
+                          type="range"
+                          min={minAdHeight}
+                          max={maxColHeight}
+                          value={formData.adHeight}
+                          onChange={(e) => {
+                            console.log("selecetd size ", selectedSize);
+                            updateFormData({
+                              adHeight: Number(e.target.value),
+                            });
+                          }}
+                          className="flex-1 accent-[var(--color-primary)] cursor-pointer"
+                        />
 
-                      <input
+                        <label className="block font-medium mb-2">
+                          {formData.adHeight} (cm){" "}
+                        </label> */}
+
+                        <div className="flex items-center gap-4 my-2">
+                          {/* Minus button */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              updateFormData({
+                                adHeight: Math.max(
+                                  minAdHeight,
+                                  formData.adHeight - 1
+                                ),
+                              });
+                            }}
+                            disabled={formData.adHeight <= minAdHeight}
+                            className="h-10 w-10 rounded-md border border-gray-300 text-lg font-bold
+               hover:border-[var(--color-primary)]
+               disabled:opacity-40 disabled:cursor-not-allowed"
+                          >
+                            −
+                          </button>
+
+                          {/* Value display */}
+                          <div className="min-w-[80px] text-center font-semibold">
+                            {formData.adHeight} cm
+                          </div>
+
+                          {/* Plus button */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              updateFormData({
+                                adHeight: Math.min(
+                                  maxColHeight,
+                                  formData.adHeight + 1
+                                ),
+                              });
+                            }}
+                            disabled={formData.adHeight >= maxColHeight}
+                            className="h-10 w-10 rounded-md border border-gray-300 text-lg font-bold
+               hover:border-[var(--color-primary)]
+               disabled:opacity-40 disabled:cursor-not-allowed"
+                          >
+                            +
+                          </button>
+                        </div>
+
+                        {/* <div className="mt-1 text-xs text-gray-500">
+                          Min: {minAdHeight} cm &nbsp;|&nbsp; Max:{" "}
+                          {maxColHeight} cm
+                        </div> */}
+
+                        {/* <input
                         type="number"
                         min={minAdHeight}
                         max={maxColHeight}
                         value={
-                          formData.adHeight
-                            ? formData.adHeight
-                            : formData.selectedNewspaper.min_ad_height
+                          formData.adSizeType === "custom"
+                            ? formData.selectedNewspaper.min_ad_height
+                            : 0
                         }
                         onChange={(e) =>
                           updateFormData({
@@ -1073,13 +1158,16 @@ export default function StepSelectAdType({
                           })
                         }
                         className="w-20 h-10 rounded-md border border-gray-300 text-center text-sm font-semibold focus:border-[var(--color-primary)] focus:outline-none"
-                      />
-                    </div>
+                      /> */}
+                      </div>
 
-                    <div className="mt-1 text-xs text-gray-500">
-                      Min: {minAdHeight} cm &nbsp;|&nbsp; Max: {maxColHeight} cm
+                      <div className="mt-1 text-xs text-gray-500">
+                        Min: {minAdHeight} cm &nbsp;|&nbsp; Max: {maxColHeight}{" "}
+                        cm
+                      </div>
                     </div>
                   </div>
+                  {/* <div className="flex w-1/4"></div> */}
                 </>
               )}
             </div>
@@ -1196,7 +1284,7 @@ export default function StepSelectAdType({
               </div>
             </div>
           )}
-          {console.log("before tint", formData)}
+          {/* {console.log("before tint", formData)} */}
           {formData.selectedNewspaper.type?.toLowerCase() === "sunday" && (
             <div className="flex flex-col md:flex-row gap-4 md:mt-8">
               <label className="flex items-center space-x-2">

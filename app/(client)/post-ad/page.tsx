@@ -171,11 +171,27 @@ export default function PostAdPage() {
           return false;
         }
         if (!formData.publishDate) {
-          console.log(formData.selectedNewspaper);
+          // console.log(formData.selectedNewspaper);
           toast.error("Publish date is required.");
           return false;
         }
         if (formData.adType !== "casual" && !formData.adText.trim()) {
+          toast.error("Advertisement text cannot be empty.");
+          return false;
+        }
+        if (
+          formData.adType === "casual" &&
+          !formData.hasOwnArtwork &&
+          !formData.adText.trim()
+        ) {
+          toast.error("Advertisement text cannot be empty.");
+          return false;
+        }
+        if (
+          formData.adType === "casual" &&
+          formData.needArtwork &&
+          !formData.adText.trim()
+        ) {
           toast.error("Advertisement text cannot be empty.");
           return false;
         }
@@ -186,6 +202,19 @@ export default function PostAdPage() {
           toast.error("Please select size and color!");
           return false;
         }
+        if (
+          formData.hasOwnArtwork &&
+          formData.adType === "casual" &&
+          adType_?.is_upload_image
+        ) {
+          toast.error("Please upload an image!");
+          return false;
+        }
+        if (formData.adSizeType === "custom" && formData.noOfColumns === 0) {
+          toast.error("Please select a column size!");
+          return false;
+        }
+
         const hasProfanity = await checkProfanity(formData.adText);
         if (hasProfanity) {
           toast.error("Advertisement text contains inappropriate words.");
@@ -195,10 +224,15 @@ export default function PostAdPage() {
         //   toast.error("Please select a classified category.");
         //   return false;
         // }
-        if (adType_?.is_upload_image && !formData.uploadedImage) {
+        if (
+          formData.adType !== "casual" &&
+          adType_?.is_upload_image &&
+          !formData.uploadedImage
+        ) {
           toast.error("Please upload an image!");
           return false;
         }
+        console.log("on ad type select: ", formData);
         return true;
       case 3:
         if (!formData.advertiserName.trim()) {
@@ -256,11 +290,11 @@ export default function PostAdPage() {
   const handleSubmitForReview = async () => {
     if (!validateStep()) return;
 
-    // Runtime check for selectedNewspaper
-    if (!formData.selectedNewspaper) {
-      toast.error("Please select a newspaper.");
-      return;
-    }
+    // // Runtime check for selectedNewspaper
+    // if (!formData.selectedNewspaper) {
+    //   toast.error("Please select a newspaper.");
+    //   return;
+    // }
 
     setIsSubmitting(true);
 
@@ -274,7 +308,7 @@ export default function PostAdPage() {
           address: formData.advertiserAddress.trim(),
         },
         advertisement: {
-          newspaper_name: formData.selectedNewspaper.id,
+          newspaper_name: formData.selectedNewspaper?.id,
           ad_type: formData.adType || "",
           classified_category: formData.classifiedCategory || null,
           subcategory: formData.photoCategory || null,
@@ -285,7 +319,15 @@ export default function PostAdPage() {
           upload_image: formData.uploadedImage || null,
           special_notes: formData.specialNotes,
           price: formData.totalPrice || 0,
-          newspaper_serial_no: formData.selectedNewspaper.newspaper_serial_no,
+          newspaper_serial_no: formData.selectedNewspaper?.newspaper_serial_no,
+          ad_size: formData.adSizeType,
+          no_of_columns: formData.noOfColumns,
+          ad_height: formData.adHeight,
+          color_option: formData.colorOption,
+          has_artwork: formData.hasOwnArtwork,
+          need_artwork: formData.needArtwork,
+          is_publish_eng: formData.userLangCombineSelected_Eng,
+          is_publish_tam: formData.userLangCombineSelected_Tam,
         },
       };
 
