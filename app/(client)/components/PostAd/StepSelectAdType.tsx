@@ -22,6 +22,7 @@ interface AdType {
   base_price: number;
   additional_word_price: number;
   priority_price: number;
+  tax_amount_2: number;
   tint_color_price: number;
   is_allow_combined: boolean;
   max_words: number;
@@ -262,6 +263,14 @@ export default function StepSelectAdType({
           adText: formData.adText.slice(1),
         });
       }
+    }
+    if (selectedAdType.tax_amount_2 > 0) {
+      let calculatedtax = (total * selectedAdType.tax_amount_2) / 100.0;
+      breakdown.push({
+        label: "Taxes",
+        amount: calculatedtax,
+      });
+      total += calculatedtax;
     }
 
     setPriceBreakdown(breakdown);
@@ -1177,7 +1186,7 @@ export default function StepSelectAdType({
             maxColHeight={maxColHeight}
           /> */}
 
-          {selectedAdType.key === "casual" && (
+          {selectedAdType.key === "casual" && selectedSize !== "" && (
             <div className="mt-6 rounded-xl border border-gray-300 bg-white p-4 shadow-sm">
               <h3 className="mb-1 font-normal text-[var(--color-primary-dark)] text-center">
                 Advertisement Color Options

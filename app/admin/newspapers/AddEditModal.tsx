@@ -1,5 +1,6 @@
 "use client";
 
+import { Prisma } from "@prisma/client";
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 
@@ -10,6 +11,7 @@ const DEFAULT_AD_TYPE = {
   countFirstWords: 0,
   basePrice: 0,
   additionalWordPrice: 0,
+  taxAmount: 0,
   colorOptions: [],
   tintColorPrice: 0,
   priorityPrice: 0,
@@ -86,6 +88,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
       countFirstWords: t.count_first_words,
       basePrice: t.base_price,
       priorityPrice: t.priority_price,
+      taxAmount: t.tax_amount_2,
       additionalWordPrice: t.additional_word_price,
       tintColorPrice: t.tint_color_price,
       isAllowCombined: t.is_allow_combined,
@@ -187,6 +190,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
         max_words: Number(t.maxWords),
         img_url: t.imgUrl || null,
         priority_price: Number(t.priorityPrice),
+        tax_amount_2: Number(t.taxAmount),
         is_upload_image: Boolean(t.isUploadImage),
         cs_col_bw_price: Number(t.csColBWPrice),
         cs_col_bw_one_color_price: Number(t.csColBWOneColorPrice),
@@ -268,6 +272,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
               additionalWordPrice: t.additional_word_price,
               tintColorPrice: t.tint_color_price,
               priorityPrice: t.priority_price ?? 0,
+              taxAmount: t.tax_amount_2 ?? 0.0,
               isAllowCombined: t.is_allow_combined,
               maxWords: t.max_words,
               imgUrl: t.img_url || "",
@@ -601,6 +606,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                         ["Base Type", "baseType", "text"],
                         ["Max Words", "maxWords", "number"],
                         ["Priority Price", "priorityPrice", "number"],
+                        ["Tax", "taxAmount", "number"],
                       ].map(([label, key, type]) => (
                         <div key={key as string}>
                           <label className="block text-sm font-medium text-[var(--color-text)]">
