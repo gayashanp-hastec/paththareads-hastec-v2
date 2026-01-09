@@ -71,6 +71,7 @@ interface FormData {
   userLangCombineSelected: boolean;
   userLangCombineSelected_Tam: boolean;
   userLangCombineSelected_Eng: boolean;
+  tmagree: boolean;
   // fullpagead: boolean;
   // halfPageAdHR: boolean;
   // halfPageAdVR: boolean;
@@ -126,6 +127,7 @@ export default function PostAdPage() {
     userLangCombineSelected: false,
     userLangCombineSelected_Eng: false,
     userLangCombineSelected_Tam: false,
+    tmagree: false,
     // fullpagead: false,
     // halfPageAdHR: false,
     // halfPageAdVR: false,
@@ -269,6 +271,10 @@ export default function PostAdPage() {
           toast.error("Invalid email format.");
           return false;
         }
+        if (!formData.tmagree) {
+          toast.error("Please accept the Terms & Conditions to continue.");
+          return false;
+        }
         return true;
       default:
         return true;
@@ -288,7 +294,8 @@ export default function PostAdPage() {
 
   // ---------------- Submit For Review ----------------
   const handleSubmitForReview = async () => {
-    if (!validateStep()) return;
+    const isValid = await validateStep();
+    if (!isValid) return;
 
     // // Runtime check for selectedNewspaper
     // if (!formData.selectedNewspaper) {
