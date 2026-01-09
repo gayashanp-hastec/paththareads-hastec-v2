@@ -137,6 +137,7 @@ export async function PUT(
               extra_notes1: ad.extra_notes1 ?? null,
               extra_notes2: ad.extra_notes2 ?? null,
               priority_price: ad.priority_price ?? null,
+              tax_amount_2: ad.tax_amount_2 ?? null,
             })),
           });
         }
