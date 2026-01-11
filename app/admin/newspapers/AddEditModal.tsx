@@ -918,7 +918,6 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                                               }
                                               disabled={!sz.isAvailable} // disable if inactive
                                             >
-                                              <option value="">Select</option>
                                               <option>full_page</option>
                                               <option>half_page</option>
                                               <option>1/4_page</option>
@@ -981,7 +980,6 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                                               }
                                               disabled={!sz.isAvailable}
                                             >
-                                              <option value="">Select</option>
                                               <option>bw</option>
                                               <option>bw1</option>
                                               <option>bw2</option>
