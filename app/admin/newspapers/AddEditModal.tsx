@@ -87,6 +87,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
 
   const [typeError, setTypeError] = useState(false);
   const [errors, setErrors] = useState<{ name?: string }>({});
+  const [isSaving, setIsSaving] = useState(false);
 
   const validate = () => {
     const newErrors: any = {};
@@ -222,6 +223,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
     }
 
     setTypeError(false);
+    setIsSaving(true);
 
     const payload = {
       id: item?.id || form.name.replace(/\s+/g, "_").toUpperCase(),
@@ -303,6 +305,8 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
     } catch (err: any) {
       console.error(err);
       toast.error(err.message || "Something went wrong");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -1132,6 +1136,20 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                 Save Newspaper
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {isSaving && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="rounded-lg bg-white px-6 py-5 shadow-xl flex flex-col items-center gap-4">
+            {/* Spinner */}
+            <div className="h-10 w-10 animate-spin rounded-full border-4 border-gray-300 border-t-[var(--color-primary)]" />
+
+            {/* Text */}
+            <p className="text-sm font-medium text-gray-700">
+              Saving newspaper, please wait...
+            </p>
           </div>
         </div>
       )}
