@@ -40,6 +40,13 @@ const EMPTY_SECTION = {
   sizes: [],
 };
 
+const createEmptySection = () => ({
+  name: "",
+  extraNotes: "",
+  isAvailable: true,
+  sizes: [],
+});
+
 const EMPTY_SIZE = {
   sizeType: "",
   width: 0,
@@ -138,7 +145,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
       updated[adTypeIndex].sections = [];
     }
 
-    updated[adTypeIndex].sections.push({ ...EMPTY_SECTION });
+    updated[adTypeIndex].sections.push(createEmptySection());
     setAdTypes(updated);
   };
 
