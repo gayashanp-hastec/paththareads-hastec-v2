@@ -179,7 +179,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
     { id: 7, label: "Sun", full: "Sunday" },
   ];
 
-  const [allowed_weekdays, setallowed_weekdays] = useState<number[]>([]);
+  // const [allowed_weekdays, setallowed_weekdays] = useState<number[]>([]);
 
   /* --------------------------------------------------
      IMAGE UPLOAD (COMMENTED FOR NOW)
@@ -240,7 +240,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
       combine_eng_price: Number(form.combine_eng_price),
       combine_tam_price: Number(form.combine_tam_price),
       combine_eng_tam_price: Number(form.combine_eng_tam_price),
-      allowed_weekdays,
+      allowed_weekdays: form.allowed_weekdays,
       ad_types: adTypes.map((t) => ({
         key: t.typeKey,
         name: t.name,
@@ -398,10 +398,19 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
   }, [item?.id]);
 
   useEffect(() => {
-    if (form.type === "Daily") setallowed_weekdays([1, 2, 3, 4, 5, 6, 7]);
-    if (form.type === "Sunday") setallowed_weekdays([7]);
-    if (form.type === "Weekly") setallowed_weekdays([1]); // default Monday
-  }, [form.type]);
+    if (item) return; // ⛔ do NOT override on edit
+
+    setForm((prev: { type: string }) => {
+      if (prev.type === "Daily")
+        return { ...prev, allowed_weekdays: [1, 2, 3, 4, 5, 6, 7] };
+
+      if (prev.type === "Sunday") return { ...prev, allowed_weekdays: [7] };
+
+      if (prev.type === "Weekly") return { ...prev, allowed_weekdays: [] };
+
+      return prev;
+    });
+  }, [form.type, item]);
 
   // components/NewspaperSkeleton.tsx
   function NewspaperSkeleton() {
