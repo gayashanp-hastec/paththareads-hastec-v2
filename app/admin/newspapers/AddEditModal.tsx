@@ -16,7 +16,7 @@ const DEFAULT_AD_TYPE = {
   tintColorPrice: 0,
   priorityPrice: 0,
   isAllowCombined: false,
-  maxWords: 0,
+  maxWords: 1,
   categories: "",
   imgUrl: "",
   isUploadImage: false,
