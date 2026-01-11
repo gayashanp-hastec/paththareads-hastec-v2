@@ -211,6 +211,7 @@ model newspapers {
   combine_eng_price          Int?             @default(0)
   combine_tam_price          Int?             @default(0)
   combine_eng_tam_price      Int?             @default(0)
+  allowed_weekdays           Int[]            @default([])
   ad_types                   ad_types[]
   advertisements             advertisements[]
 }
@@ -259,6 +260,7 @@ model ad_types {
   cs_page_bw_two_color_price Int                     @default(0)
   cs_page_full_color_price   Int                     @default(0)
   tax_amount_2               Decimal?                @default(0.00) @db.Decimal(3, 2)
+  ad_sections                ad_sections[]
   ad_type_categories         ad_type_categories[]
   ad_type_color_options      ad_type_color_options[]
   newspapers                 newspapers              @relation(fields: [newspaper_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_ad_types_newspaper")
@@ -300,6 +302,28 @@ model classified_ads {
   is_publish_eng   Boolean        @default(false)
   is_publish_tam   Boolean        @default(false)
   advertisements   advertisements @relation(fields: [reference_number], references: [reference_number], onDelete: Cascade, onUpdate: NoAction, map: "fk_classified_ads_advertisement")
+}
+
+model ad_section_sizes {
+  id           Int         @id @default(autoincrement())
+  section_id   Int
+  size_type    String      @db.VarChar(50)
+  width        Decimal?    @default(0) @db.Decimal(6, 2)
+  height       Decimal?    @default(0) @db.Decimal(6, 2)
+  color_option String      @db.VarChar(50)
+  price        Decimal?    @default(0) @db.Decimal(10, 2)
+  is_available Boolean?    @default(true)
+  ad_sections  ad_sections @relation(fields: [section_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_sizes_section")
+}
+
+model ad_sections {
+  id               Int                @id @default(autoincrement())
+  ad_type_id       Int
+  name             String             @db.VarChar(100)
+  extra_notes      String?
+  is_available     Boolean?           @default(true)
+  ad_section_sizes ad_section_sizes[]
+  ad_types         ad_types           @relation(fields: [ad_type_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_ad_sections_ad_type")
 }
 
 enum role_enum {
