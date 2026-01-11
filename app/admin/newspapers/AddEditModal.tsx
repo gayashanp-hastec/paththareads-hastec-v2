@@ -81,7 +81,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
       combine_eng_price: 0,
       combine_tam_price: 0,
       combine_eng_tam_price: 0,
-      // allowed_weekdays: [],
+      allowed_weekdays: [],
     }
   );
 
@@ -331,7 +331,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
           combine_eng_price: data.combine_eng_price,
           combine_tam_price: data.combine_tam_price,
           combine_eng_tam_price: data.combine_eng_tam_price,
-          allowed_weekdays: data.allowed_weekdays || [],
+          allowed_weekdays: data.allowed_weekdays,
         });
 
         // 2️⃣ Populate ad types with sections + sizes
@@ -548,19 +548,22 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
 
                   <div className="grid grid-cols-7 gap-2">
                     {WEEKDAYS.map((day) => {
-                      const isSelected = allowed_weekdays.includes(day.id);
+                      const isSelected = form.allowed_weekdays.includes(day.id); // ✅ use form state
 
                       return (
                         <button
                           key={day.id}
                           type="button"
-                          onClick={() => {
-                            setallowed_weekdays((prev) =>
-                              isSelected
-                                ? prev.filter((d) => d !== day.id)
-                                : [...prev, day.id].sort()
-                            );
-                          }}
+                          onClick={() =>
+                            setForm((prev: any) => ({
+                              ...prev,
+                              allowed_weekdays: isSelected
+                                ? prev.allowed_weekdays.filter(
+                                    (d: any) => d !== day.id
+                                  )
+                                : [...prev.allowed_weekdays, day.id].sort(),
+                            }))
+                          }
                           className={`
             h-8 rounded-lg border text-sm font-medium transition-all
             flex flex-col items-center justify-center
