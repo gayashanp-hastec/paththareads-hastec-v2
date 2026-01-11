@@ -24,6 +24,16 @@ export async function GET(
       include: {
         ad_types: {
           orderBy: { id: "asc" },
+          include: {
+            ad_sections: {
+              orderBy: { id: "asc" },
+              include: {
+                ad_section_sizes: {
+                  orderBy: { id: "asc" },
+                },
+              },
+            },
+          },
         },
       },
     });
@@ -75,6 +85,7 @@ export async function PUT(
       combine_eng_price,
       combine_tam_price,
       combine_eng_tam_price,
+      allowed_weekdays = [],
       ad_types = [],
     } = body;
 
@@ -104,42 +115,82 @@ export async function PUT(
           combine_eng_price,
           combine_tam_price,
           combine_eng_tam_price,
+          allowed_weekdays,
         },
       });
 
-      // 2️⃣ Replace ad types
-      if (Array.isArray(ad_types)) {
-        await tx.ad_types.deleteMany({ where: { newspaper_id: id } });
+      // 2️⃣ Remove old ad types + sections + sizes
+      const existingAdTypes = await tx.ad_types.findMany({
+        where: { newspaper_id: id },
+        include: { ad_sections: { include: { ad_section_sizes: true } } },
+      });
 
-        if (ad_types.length > 0) {
-          await tx.ad_types.createMany({
-            data: ad_types.map((ad: any) => ({
-              newspaper_id: id,
-              key: ad.key,
-              name: ad.name,
-              base_type: ad.base_type,
-              count_first_words: ad.count_first_words,
-              base_price: ad.base_price,
-              additional_word_price: ad.additional_word_price,
-              tint_color_price: ad.tint_color_price,
-              is_allow_combined: ad.is_allow_combined,
-              max_words: ad.max_words,
-              img_url: ad.img_url ?? null,
-              is_upload_image: ad.is_upload_image,
-              cs_col_bw_price: ad.cs_col_bw_price,
-              cs_col_bw_one_color_price: ad.cs_col_bw_one_color_price,
-              cs_col_bw_two_color_price: ad.cs_col_bw_two_color_price,
-              cs_col_full_color_price: ad.cs_col_full_color_price,
-              cs_page_bw_price: ad.cs_page_bw_price,
-              cs_page_bw_one_color_price: ad.cs_page_bw_one_color_price,
-              cs_page_bw_two_color_price: ad.cs_page_bw_two_color_price,
-              cs_page_full_color_price: ad.cs_page_full_color_price,
-              extra_notes1: ad.extra_notes1 ?? null,
-              extra_notes2: ad.extra_notes2 ?? null,
-              priority_price: ad.priority_price ?? null,
-              tax_amount_2: ad.tax_amount_2 ?? null,
-            })),
+      for (const ad of existingAdTypes) {
+        for (const section of ad.ad_sections) {
+          await tx.ad_section_sizes.deleteMany({
+            where: { section_id: section.id },
           });
+        }
+        await tx.ad_sections.deleteMany({ where: { ad_type_id: ad.id } });
+      }
+      await tx.ad_types.deleteMany({ where: { newspaper_id: id } });
+
+      // 3️⃣ Create new ad types + sections + sizes
+      for (const ad of ad_types) {
+        const createdAdType = await tx.ad_types.create({
+          data: {
+            newspaper_id: id,
+            key: ad.key,
+            name: ad.name,
+            base_type: ad.base_type,
+            count_first_words: ad.count_first_words,
+            base_price: ad.base_price,
+            additional_word_price: ad.additional_word_price,
+            tint_color_price: ad.tint_color_price,
+            is_allow_combined: ad.is_allow_combined,
+            max_words: ad.max_words,
+            img_url: ad.img_url ?? null,
+            cs_col_bw_price: ad.cs_col_bw_price,
+            cs_col_bw_one_color_price: ad.cs_col_bw_one_color_price,
+            cs_col_bw_two_color_price: ad.cs_col_bw_two_color_price,
+            cs_col_full_color_price: ad.cs_col_full_color_price,
+            cs_page_bw_price: ad.cs_page_bw_price,
+            cs_page_bw_one_color_price: ad.cs_page_bw_one_color_price,
+            cs_page_bw_two_color_price: ad.cs_page_bw_two_color_price,
+            cs_page_full_color_price: ad.cs_page_full_color_price,
+            is_upload_image: ad.is_upload_image,
+            extra_notes1: ad.extra_notes1 ?? null,
+            extra_notes2: ad.extra_notes2 ?? null,
+            priority_price: ad.priority_price ?? null,
+            tax_amount_2: ad.tax_amount ?? null,
+          },
+        });
+
+        if (ad.sections && ad.sections.length > 0) {
+          for (const section of ad.sections) {
+            const createdSection = await tx.ad_sections.create({
+              data: {
+                ad_type_id: createdAdType.id,
+                name: section.name,
+                extra_notes: section.extra_notes ?? null,
+                is_available: section.is_available,
+              },
+            });
+
+            if (section.sizes && section.sizes.length > 0) {
+              await tx.ad_section_sizes.createMany({
+                data: section.sizes.map((sz: any) => ({
+                  section_id: createdSection.id,
+                  size_type: sz.size_type,
+                  width: sz.width ?? 0,
+                  height: sz.height ?? 0,
+                  color_option: sz.color_option,
+                  price: sz.price ?? 0,
+                  is_available: sz.is_available,
+                })),
+              });
+            }
+          }
         }
       }
 

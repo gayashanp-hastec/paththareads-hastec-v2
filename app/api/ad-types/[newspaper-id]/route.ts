@@ -18,12 +18,19 @@ export async function GET(
       where: { newspaper_id: newspaperId },
       include: {
         ad_type_categories: true,
+        ad_sections: {
+          orderBy: { id: "asc" },
+          include: {
+            ad_section_sizes: {
+              orderBy: { id: "asc" },
+            },
+          },
+        },
       },
-      orderBy: {
-        key: "asc", // <-- sort ascending by 'key'
-      },
+      orderBy: { key: "asc" },
     });
 
+    // Attach subcategories for each ad_type
     const adTypesWithSubcats = await Promise.all(
       adTypes.map(async (adType) => {
         const categoriesWithSubcats = await Promise.all(
@@ -38,9 +45,25 @@ export async function GET(
             };
           })
         );
+
         return {
           ...adType,
           categories: categoriesWithSubcats,
+          sections: adType.ad_sections.map((sec) => ({
+            id: sec.id,
+            name: sec.name,
+            extraNotes: sec.extra_notes,
+            isAvailable: sec.is_available,
+            sizes: sec.ad_section_sizes.map((sz) => ({
+              id: sz.id,
+              sizeType: sz.size_type,
+              width: Number(sz.width),
+              height: Number(sz.height),
+              colorOption: sz.color_option,
+              price: Number(sz.price),
+              isAvailable: sz.is_available,
+            })),
+          })),
         };
       })
     );

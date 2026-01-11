@@ -20,6 +20,7 @@ export async function GET() {
       combine_eng_price: true,
       combine_tam_price: true,
       combine_eng_tam_price: true,
+      allowed_weekdays: true,
     },
     orderBy: {
       name: "asc",
@@ -42,6 +43,7 @@ export async function GET() {
     combine_eng_price: n.combine_eng_price,
     combine_tam_price: n.combine_tam_price,
     combine_eng_tam_price: n.combine_eng_tam_price,
+    allowed_weekdays: n.allowed_weekdays || [],
   }));
 
   return NextResponse.json(formatted);
@@ -67,6 +69,7 @@ export async function POST(req: Request) {
       combine_eng_price,
       combine_tam_price,
       combine_eng_tam_price,
+      allowed_weekdays = [],
       ad_types = [], // optional
     } = body;
 
@@ -110,13 +113,14 @@ export async function POST(req: Request) {
           combine_eng_price,
           combine_tam_price,
           combine_eng_tam_price,
+          allowed_weekdays,
         },
       });
 
-      // 2️⃣ Create ad types (if provided)
-      if (ad_types.length > 0) {
-        await tx.ad_types.createMany({
-          data: ad_types.map((ad: any) => ({
+      // 2️⃣ Create ad types (one by one so we get IDs)
+      for (const ad of ad_types) {
+        const createdAdType = await tx.ad_types.create({
+          data: {
             newspaper_id: id,
             key: ad.key,
             name: ad.name,
@@ -141,8 +145,37 @@ export async function POST(req: Request) {
             extra_notes2: ad.extra_notes2 ?? null,
             priority_price: ad.priority_price ?? null,
             tax_amount_2: ad.tax_amount ?? null,
-          })),
+          },
         });
+
+        // 3️⃣ Create sections for this ad type
+        if (ad.sections && ad.sections.length > 0) {
+          for (const section of ad.sections) {
+            const createdSection = await tx.ad_sections.create({
+              data: {
+                ad_type_id: createdAdType.id,
+                name: section.name,
+                extra_notes: section.extra_notes ?? null,
+                is_available: section.is_available,
+              },
+            });
+
+            // 4️⃣ Create sizes for this section
+            if (section.sizes && section.sizes.length > 0) {
+              await tx.ad_section_sizes.createMany({
+                data: section.sizes.map((sz: any) => ({
+                  section_id: createdSection.id,
+                  size_type: sz.size_type,
+                  width: sz.width ?? 0,
+                  height: sz.height ?? 0,
+                  color_option: sz.color_option,
+                  price: sz.price ?? 0,
+                  is_available: sz.is_available,
+                })),
+              });
+            }
+          }
+        }
       }
 
       return newspaper;
