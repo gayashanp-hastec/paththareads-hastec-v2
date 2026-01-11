@@ -12,6 +12,24 @@ interface StepSelectAdTypeProps {
   updateFormData: (data: any) => void;
 }
 
+interface SectionSize {
+  id: number;
+  sizeType: string;
+  width: number;
+  height: number;
+  colorOption: string;
+  price: number;
+  isAvailable: boolean;
+}
+
+interface AdSection {
+  id: number;
+  name: string;
+  extraNotes?: string;
+  isAvailable: boolean;
+  sizes: SectionSize[];
+}
+
 interface AdType {
   id: number;
   newspaper_id: string;
@@ -42,6 +60,7 @@ interface AdType {
     category: string;
     subCategories: { name: string }[];
   }[];
+  sections: AdSection[];
 }
 
 export default function StepSelectAdType({
@@ -52,6 +71,7 @@ export default function StepSelectAdType({
   const [loading, setLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [selectedAdType, setSelectedAdType] = useState<AdType | null>(null);
+  const [selectedSection, setSelectedSection] = useState<number | null>(null);
 
   const [wordCount, setWordCount] = useState<number>(
     formData.adText?.split(" ").filter(Boolean).length || 0
@@ -86,6 +106,31 @@ export default function StepSelectAdType({
   const [newspaperDays, setnewspaperDays] = useState<string[]>([]);
 
   const selectedNewspaperId = formData.selectedNewspaper?.id;
+  const allowed_weekdays = formData.selectedNewspaper?.allowed_weekdays ?? [];
+  console.log("days here: ", allowed_weekdays);
+
+  // JS: Sunday=0 → ISO: Sunday=7
+  const getIsoWeekday = (date: Date) =>
+    date.getDay() === 0 ? 7 : date.getDay();
+
+  const isAllowedDate = (date: Date) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    return date >= today && allowed_weekdays.includes(getIsoWeekday(date));
+  };
+
+  const now = new Date();
+
+  const minDate =
+    now.getHours() >= 1 ? new Date(now.setDate(now.getDate() + 1)) : new Date();
+
+  const formatDateLocal = (date: Date) => {
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, "0");
+    const dd = String(date.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  };
 
   // Fetch ad types for selected newspaper
   useEffect(() => {
@@ -135,6 +180,57 @@ export default function StepSelectAdType({
       maxColHeight
     );
   };
+
+  const selectedSectionData = selectedAdType?.sections?.find(
+    (s) => s.id === selectedSection
+  );
+
+  const sizeTypeOptions = Array.from(
+    new Map(
+      (selectedSectionData?.sizes || []).map((sz) => [
+        sz.sizeType,
+        {
+          key: sz.sizeType,
+          label: sz.sizeType.replace(/_/g, " "),
+        },
+      ])
+    ).values()
+  );
+
+  const COLOR_LABEL_MAP: Record<string, { label: string; subLabel: string }> = {
+    bw: {
+      label: "Black & White",
+      subLabel: "(කළු සහ සුදු)",
+    },
+    bw1: {
+      label: "Black + 1 Color",
+      subLabel: "(කළු + වර්ණ 1ක්)",
+    },
+    bw2: {
+      label: "Black + 2 Colors",
+      subLabel: "(කළු + වර්ණ 2ක්)",
+    },
+    fc: {
+      label: "Full Color",
+      subLabel: "(සම්පූර්ණයෙන් වර්ණ කර)",
+    },
+  };
+
+  const colorOptions = Array.from(
+    new Map(
+      (selectedSectionData?.sizes || [])
+        .filter((sz) => sz.isAvailable && sz.sizeType === selectedSize)
+        .map((sz) => [
+          sz.colorOption,
+          {
+            key: sz.colorOption,
+            label: COLOR_LABEL_MAP[sz.colorOption]?.label ?? sz.colorOption,
+            subLabel: COLOR_LABEL_MAP[sz.colorOption]?.subLabel ?? "",
+            price: sz.price,
+          },
+        ])
+    ).values()
+  );
 
   // Word count & price calculation
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -354,26 +450,6 @@ export default function StepSelectAdType({
     return res.json();
   }
 
-  const DAY_MAP: Record<string, number> = {
-    sunday: 0,
-    monday: 1,
-    tuesday: 2,
-    wednesday: 3,
-    thursday: 4,
-    friday: 5,
-    saturday: 6,
-  };
-
-  function isAllowedDateByArray(date: Date, allowedDays: string[]) {
-    if (!allowedDays || allowedDays.length === 0) return true;
-
-    const allowedDayNumbers = allowedDays
-      .map((d) => DAY_MAP[d.toLowerCase()])
-      .filter((d) => d !== undefined);
-
-    return allowedDayNumbers.includes(date.getDay());
-  }
-
   useEffect(() => {
     if (selectedAdType?.key !== "casual") return;
 
@@ -436,22 +512,49 @@ export default function StepSelectAdType({
             ))}
       </div>
 
-      {selectedAdType && (
-        <div className="space-y-4 md:w-2/3 mx-auto md:mt-8">
-          {/* Publish Date */}
-          <div className="w-full">
-            <label className="block font-medium mb-1">
-              Publish Date{" "}
-              <span
-                className="text-sm"
-                style={{ fontFamily: "var(--font-sinhala), sans-serif" }}
-              >
-                (දැන්වීම පළ කරන දිනය)
-              </span>
-              <span className="text-red-500">*</span>
-            </label>
+      <div className="space-y-4 md:w-2/3 mx-auto md:mt-8">
+        {/* Fields for non-Casual Ads */}
+        {selectedAdType && selectedAdType?.key !== "casual" && (
+          <>
+            {/* Publish Date */}
+            <div className="w-full">
+              <label className="block font-medium mb-1">
+                Publish Date{" "}
+                <span
+                  className="text-sm"
+                  style={{ fontFamily: "var(--font-sinhala), sans-serif" }}
+                >
+                  (දැන්වීම පළ කරන දිනය)
+                </span>
+                <span className="text-red-500">*</span>
+              </label>
 
-            {/* <DatePicker
+              <DatePicker
+                selected={
+                  formData.publishDate
+                    ? new Date(formData.publishDate + "T00:00:00")
+                    : null
+                }
+                onChange={(date: Date | null) => {
+                  if (!date) return;
+
+                  updateFormData({
+                    publishDate: formatDateLocal(date), // ✅ NO timezone shift
+                  });
+                }}
+                filterDate={isAllowedDate}
+                minDate={minDate}
+                dateFormat="yyyy-MM-dd"
+                placeholderText="Select publish date"
+                className="
+    w-full rounded-lg border border-gray-300
+    px-3 py-2 text-sm
+    focus:outline-none focus:ring-2
+    focus:ring-[var(--color-primary-accent)]
+  "
+              />
+
+              {/* <DatePicker
               selected={
                 formData.publishDate ? new Date(formData.publishDate) : null
               }
@@ -468,378 +571,156 @@ export default function StepSelectAdType({
                focus:ring-2 focus:ring-primary-accent"
               calendarClassName="!text-sm"
             /> */}
-            <input
-              type="date"
-              min={today}
-              value={formData.publishDate || ""}
-              onChange={(e) => updateFormData({ publishDate: e.target.value })}
-              required
-              className="border border-gray-300 rounded-lg p-2 w-full md:w-1/5 focus:ring-2 focus:ring-primary-accent"
-            />
-          </div>
 
-          {/* Category Dropdown */}
-          {(selectedAdType.key === "classified" ||
-            selectedAdType.key === "photo_classified" ||
-            selectedAdType.key === "casual") && (
-            <div>
-              <label className="block font-medium mb-1 md:mt-8">
-                Category{" "}
+              {/* <input
+                type="date"
+                min={today}
+                value={formData.publishDate || ""}
+                onChange={(e) =>
+                  updateFormData({ publishDate: e.target.value })
+                }
+                required
+                className="border border-gray-300 rounded-lg p-2 w-full md:w-1/5 focus:ring-2 focus:ring-primary-accent"
+              /> */}
+            </div>
+
+            {/* Category Dropdown */}
+            {(selectedAdType.key === "classified" ||
+              selectedAdType.key === "photo_classified") && (
+              <div className="w-full md:w-1/4">
+                <label className="block font-medium mb-1 md:mt-8">
+                  Category{" "}
+                  <span
+                    className="text-sm"
+                    style={{
+                      fontFamily: "var(--font-sinhala), sans-serif",
+                    }}
+                  >
+                    (වර්ගීකරණය)
+                  </span>{" "}
+                  <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => {
+                    setSelectedCategory(e.target.value);
+                    updateFormData({ classifiedCategory: e.target.value });
+                    setSelectedSubCategory("");
+                    // console.log(formData.classifiedCategory);
+                    // console.log("cat: ", selectedCategory);
+                    // console.log("sub: ", selectedSubCategory);
+                    // console.log("type: ", selectedAdType.key);
+                  }}
+                  className="border border-gray-300 rounded-lg p-2 w-full focus:ring-2 focus:ring-primary-accent"
+                >
+                  <option value="">Select Category</option>
+                  {/* {selectedAdType.categories.map((cat) => (
+                  <option key={cat.category} value={cat.category}>
+                    {cat.category}
+                  </option>
+                ))} */}
+                  <option value="Real Estate">Real Estate</option>
+                  <option value="Health & Beauty">Health & Beauty</option>
+                  <option value="Automobile">Automobile</option>
+                  <option value="Personal">Personal</option>
+                  <option value="Employment">Employment</option>
+                  <option value="General">General</option>
+                  <option value="Trade">Trade</option>
+                </select>
+              </div>
+            )}
+
+            {/* Subcategory Dropdown */}
+            {selectedCategory && (
+              <div className="md:mt-8 w-full md:w-1/4">
+                <label className="block font-medium mb-1">
+                  Sub Category{" "}
+                  <span
+                    className="text-sm"
+                    style={{ fontFamily: "var(--font-sinhala), sans-serif" }}
+                  >
+                    (දැන්වීම් ස්වභාවය)
+                  </span>{" "}
+                </label>
+                <select
+                  value={selectedSubCategory}
+                  onChange={(e) => {
+                    setSelectedSubCategory(e.target.value);
+                    updateFormData({ subCategory: e.target.value });
+                  }}
+                  className="border border-gray-300 rounded-lg p-2 w-full focus:ring-2 focus:ring-primary-accent"
+                >
+                  <option value="">Select Subcategory</option>
+                  {subCategoryOptions.map((sub) => (
+                    <option key={sub} value={sub}>
+                      {sub}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* Advertisement Text */}
+            <div className="relative md:mt-8">
+              <label className="block font-medium mb-1">
+                Advertisement Text{" "}
                 <span
                   className="text-sm"
                   style={{
                     fontFamily: "var(--font-sinhala), sans-serif",
                   }}
                 >
-                  (වර්ගීකරණය)
+                  (දැන්වීම් විස්තරය)
                 </span>{" "}
                 <span className="text-red-500">*</span>
               </label>
-              <select
-                value={selectedCategory}
-                onChange={(e) => {
-                  setSelectedCategory(e.target.value);
-                  updateFormData({ classifiedCategory: e.target.value });
-                  setSelectedSubCategory("");
-                  // console.log(formData.classifiedCategory);
-                  // console.log("cat: ", selectedCategory);
-                  // console.log("sub: ", selectedSubCategory);
-                  // console.log("type: ", selectedAdType.key);
-                }}
-                className="border border-gray-300 rounded-lg p-2 w-full focus:ring-2 focus:ring-primary-accent"
-              >
-                <option value="">Select Category</option>
-                {/* {selectedAdType.categories.map((cat) => (
-                  <option key={cat.category} value={cat.category}>
-                    {cat.category}
-                  </option>
-                ))} */}
-                <option value="Real Estate">Real Estate</option>
-                <option value="Health & Beauty">Health & Beauty</option>
-                <option value="Automobile">Automobile</option>
-                <option value="Personal">Personal</option>
-                <option value="Employment">Employment</option>
-                <option value="General">General</option>
-                <option value="Trade">Trade</option>
-              </select>
-            </div>
-          )}
-
-          {/* Subcategory Dropdown */}
-          {selectedCategory && (
-            <div className="md:mt-8">
-              <label className="block font-medium mb-1">
-                Sub Category{" "}
-                <span
-                  className="text-sm"
-                  style={{ fontFamily: "var(--font-sinhala), sans-serif" }}
-                >
-                  (දැන්වීම් ස්වභාවය)
-                </span>{" "}
-              </label>
-              <select
-                value={selectedSubCategory}
-                onChange={(e) => {
-                  setSelectedSubCategory(e.target.value);
-                  updateFormData({ subCategory: e.target.value });
-                }}
-                className="border border-gray-300 rounded-lg p-2 w-full focus:ring-2 focus:ring-primary-accent"
-              >
-                <option value="">Select Subcategory</option>
-                {subCategoryOptions.map((sub) => (
-                  <option key={sub} value={sub}>
-                    {sub}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-          {selectedAdType.key === "casual" && (
-            <div className="md:mt-8">
-              <label className="block mb-2 font-medium">
-                I have my own artwork
-                <span
-                  className="text-sm ml-1"
-                  style={{ fontFamily: "var(--font-sinhala), sans-serif" }}
-                >
-                  (මගේම කලාකෘතියක් ඇත)
-                </span>
-              </label>
-
-              <div className="inline-flex rounded-full border border-gray-300 overflow-hidden">
-                {/* Yes Button */}
-                <button
-                  type="button"
-                  onClick={() => updateFormData({ hasOwnArtwork: true })}
-                  className={`px-4 py-2 text-sm font-semibold transition ${
-                    formData.hasOwnArtwork
-                      ? "bg-[var(--color-primary-accent)] text-white"
-                      : "bg-white text-[var(--color-primary-dark)] hover:bg-[var(--color-primary-accent)]/20"
-                  }`}
-                >
-                  Yes
-                </button>
-
-                {/* No Button */}
-                <button
-                  type="button"
-                  onClick={() => updateFormData({ hasOwnArtwork: false })}
-                  className={`px-4 py-2 text-sm font-semibold transition ${
-                    formData.hasOwnArtwork === false
-                      ? "bg-[var(--color-primary-accent)] text-white"
-                      : "bg-white text-[var(--color-primary-dark)] hover:bg-[var(--color-primary-accent)]/20"
-                  }`}
-                >
-                  No
-                </button>
+              <div className="absolute top-0 right-0 text-sm text-gray-500">
+                {wordCount}/{selectedAdType.max_words} words
               </div>
-            </div>
-          )}
-
-          {selectedAdType.key === "casual" && !formData.hasOwnArtwork && (
-            <>
-              {/* Advertisement Text */}
-              <div className="relative md:mt-8">
-                <label className="block font-medium mb-1">
-                  Advertisement Text{" "}
-                  <span
-                    className="text-sm"
-                    style={{
-                      fontFamily: "var(--font-sinhala), sans-serif",
-                    }}
-                  >
-                    (දැන්වීම් විස්තරය)
-                  </span>{" "}
-                  <span className="text-red-500">*</span>
-                </label>
-                <div className="absolute top-0 right-0 text-sm text-gray-500">
-                  {wordCount}/{selectedAdType.max_words} words
-                </div>
-                <textarea
-                  rows={5}
-                  placeholder="Type your advertisement here"
-                  value={formData.adText || ""}
-                  onChange={handleTextChange}
-                  required
-                  className="border border-gray-300 rounded-lg p-3 w-full focus:ring-2 focus:ring-primary-accent resize-none"
-                />
-                <p className="text-sm">
-                  To type in Sinhala, go to a{" "}
-                  <a
-                    href="https://ucsc.cmb.ac.lk/ltrl/services/feconverter/t1.html"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-800 hover:text-blue-600"
-                  >
-                    Sinhala typing tool
-                  </a>
-                  , type your advertisement, then copy and paste it here.{" "}
-                </p>
-                <p className="text-sm">
-                  <span
-                    className="text-xs"
-                    style={{
-                      fontFamily: "var(--font-sinhala), sans-serif",
-                    }}
-                  >
-                    (සිංහලෙන් ටයිප් කිරීමට,{" "}
-                    <a
-                      href="https://ucsc.cmb.ac.lk/ltrl/services/feconverter/t1.html"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-800 hover:text-blue-600"
-                    >
-                      සිංහල ටයිපින්{" "}
-                    </a>
-                    මෙවලමට පිවිස ඔබේ දැන්වීම ටයිප් කර, පිටපත් කර මෙහි ඇතුළත්
-                    කරන්න.)
-                  </span>{" "}
-                </p>
-              </div>
-            </>
-          )}
-
-          {selectedAdType.key !== "casual" && (
-            <>
-              {/* Advertisement Text */}
-              <div className="relative md:mt-8">
-                <label className="block font-medium mb-1">
-                  Advertisement Text{" "}
-                  <span
-                    className="text-sm"
-                    style={{
-                      fontFamily: "var(--font-sinhala), sans-serif",
-                    }}
-                  >
-                    (දැන්වීම් විස්තරය)
-                  </span>{" "}
-                  <span className="text-red-500">*</span>
-                </label>
-                <div className="absolute top-0 right-0 text-sm text-gray-500">
-                  {wordCount}/{selectedAdType.max_words} words
-                </div>
-                <textarea
-                  rows={5}
-                  placeholder="Type your advertisement here"
-                  value={formData.adText || ""}
-                  onChange={handleTextChange}
-                  required
-                  className="border border-gray-300 rounded-lg p-3 w-full focus:ring-2 focus:ring-primary-accent resize-none"
-                />
-                <p className="text-sm">
-                  To type in Sinhala, go to a{" "}
-                  <a
-                    href="https://ucsc.cmb.ac.lk/ltrl/services/feconverter/t1.html"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-800 hover:text-blue-600"
-                  >
-                    Sinhala typing tool
-                  </a>
-                  , type your advertisement, then copy and paste it here.{" "}
-                </p>
-                <p className="text-sm">
-                  <span
-                    className="text-xs"
-                    style={{
-                      fontFamily: "var(--font-sinhala), sans-serif",
-                    }}
-                  >
-                    (සිංහලෙන් ටයිප් කිරීමට,{" "}
-                    <a
-                      href="https://ucsc.cmb.ac.lk/ltrl/services/feconverter/t1.html"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-800 hover:text-blue-600"
-                    >
-                      සිංහල ටයිපින්{" "}
-                    </a>
-                    මෙවලමට පිවිස ඔබේ දැන්වීම ටයිප් කර, පිටපත් කර මෙහි ඇතුළත්
-                    කරන්න.)
-                  </span>{" "}
-                </p>
-              </div>
-            </>
-          )}
-
-          {selectedAdType.key === "casual" && !formData.hasOwnArtwork && (
-            <div className="md:mt-8">
-              <label className="block mb-2 font-medium">
-                Do you need an artwork designed?
-                <span
-                  className="text-sm ml-1"
-                  style={{ fontFamily: "var(--font-sinhala), sans-serif" }}
-                >
-                  (ඔබට කලාකෘතියක් නිර්මාණය කරගැනීමට අවශ්‍යද?)
-                </span>
-              </label>
-
-              <div className="inline-flex rounded-full border border-gray-300 overflow-hidden">
-                {/* Yes Button */}
-                <button
-                  type="button"
-                  onClick={() => updateFormData({ needArtwork: true })}
-                  className={`px-4 py-2 text-sm font-semibold transition ${
-                    formData.needArtwork
-                      ? "bg-[var(--color-primary-accent)] text-white"
-                      : "bg-white text-[var(--color-primary-dark)] hover:bg-[var(--color-primary-accent)]/20"
-                  }`}
-                >
-                  Yes
-                </button>
-
-                {/* No Button */}
-                <button
-                  type="button"
-                  onClick={() => updateFormData({ needArtwork: false })}
-                  className={`px-4 py-2 text-sm font-semibold transition ${
-                    formData.needArtwork === false
-                      ? "bg-[var(--color-primary-accent)] text-white"
-                      : "bg-white text-[var(--color-primary-dark)] hover:bg-[var(--color-primary-accent)]/20"
-                  }`}
-                >
-                  No
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Image Upload */}
-          {formData.hasOwnArtwork && selectedAdType.is_upload_image && (
-            <div className="md:mt-8">
-              <label className="block mb-2 font-medium">
-                Upload Image{" "}
-                <span
-                  className="text-sm"
-                  style={{ fontFamily: "var(--font-sinhala), sans-serif" }}
-                >
-                  (ඡායාරූප ඇතුලත් කරන්න)
-                </span>{" "}
-                <span className="text-red-500">*</span>
-              </label>
-
-              <input
-                type="file"
-                accept="image/*"
+              <textarea
+                rows={5}
+                placeholder="Type your advertisement here"
+                value={formData.adText || ""}
+                onChange={handleTextChange}
                 required
-                onChange={async (e) => {
-                  const file = e.target.files?.[0];
-                  if (!file) return;
-
-                  try {
-                    updateFormData({ uploading: true });
-
-                    const data = await uploadImageToCloudinary(file);
-
-                    updateFormData({
-                      uploadedImage: data.secure_url,
-                      uploading: false,
-                    });
-                  } catch (error) {
-                    console.error(error);
-                    updateFormData({ uploading: false });
-                    alert("Image upload failed. Please try again.");
-                  }
-                }}
-                className="w-full border border-gray-300 rounded-lg p-3
-               focus:ring-2 focus:ring-primary-accent
-               file:mr-4 file:py-2 file:px-4
-               file:rounded-full file:border-0
-               file:bg-primary-accent file:text-white
-               file:cursor-pointer
-               hover:file:bg-primary-accent/90
-               transition"
+                className="border border-gray-300 rounded-lg p-3 w-full focus:ring-2 focus:ring-primary-accent resize-none"
               />
-
-              {/* Optional status text (non-breaking, visual only) */}
-              {formData.uploading && (
-                <p className="text-sm text-gray-500 mt-2">Uploading image…</p>
-              )}
-
-              {formData.uploadedImage && !formData.uploading && (
-                <p className="text-sm text-green-600 mt-2">
-                  Image uploaded successfully
-                </p>
-              )}
-
-              {formData.uploadedImage && (
-                <img
-                  src={formData.uploadedImage}
-                  alt="Uploaded preview"
-                  className="mt-4 w-48 rounded-lg border"
-                />
-              )}
-
-              {selectedAdType.extra_notes1 && (
-                <p className="text-xs text-gray-500">
-                  {selectedAdType.extra_notes1}
-                </p>
-              )}
+              <p className="text-sm">
+                To type in Sinhala, go to a{" "}
+                <a
+                  href="https://ucsc.cmb.ac.lk/ltrl/services/feconverter/t1.html"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-800 hover:text-blue-600"
+                >
+                  Sinhala typing tool
+                </a>
+                , type your advertisement, then copy and paste it here.{" "}
+              </p>
+              <p className="text-sm">
+                <span
+                  className="text-xs"
+                  style={{
+                    fontFamily: "var(--font-sinhala), sans-serif",
+                  }}
+                >
+                  (සිංහලෙන් ටයිප් කිරීමට,{" "}
+                  <a
+                    href="https://ucsc.cmb.ac.lk/ltrl/services/feconverter/t1.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-800 hover:text-blue-600"
+                  >
+                    සිංහල ටයිපින්{" "}
+                  </a>
+                  මෙවලමට පිවිස ඔබේ දැන්වීම ටයිප් කර, පිටපත් කර මෙහි ඇතුළත්
+                  කරන්න.)
+                </span>{" "}
+              </p>
             </div>
-          )}
 
-          {selectedAdType.key !== "casual" &&
-            selectedAdType.is_upload_image && (
+            {/* Image uploads for types other than casual */}
+            {selectedAdType?.is_upload_image && (
               <div className="md:mt-8">
                 <label className="block mb-2 font-medium">
                   Upload Image{" "}
@@ -912,179 +793,741 @@ export default function StepSelectAdType({
               </div>
             )}
 
-          {selectedAdType.key === "casual" && (
-            <div className="mt-6 rounded-xl border border-gray-300 bg-white p-4 shadow-sm">
-              <h3 className="mb-1 font-normal text-[var(--color-primary-dark)] text-center">
-                Advertisement Size
-              </h3>
-              <h3
-                className="mb-2 font-normal text-[var(--color-primary-dark)] text-center text-sm"
-                style={{ fontFamily: "var(--font-sinhala), sans-serif" }}
-              >
-                (දැන්වීමේ ප්‍රමාණය)
-              </h3>
-              <div className="flex flex-col m-auto justify-center text-center mb-8">
-                <p className="text-sm">
-                  <button
-                    onClick={() => setIsOpen(true)}
-                    className="text-blue-800 hover:text-blue-600"
-                  >
-                    Learn more
-                  </button>
-                  &nbsp;about cost calculation for casual ads.
-                </p>
-              </div>
-
-              {/* Casual advertisement fields */}
-              <div className="flex flex-col md:flex-row gap-4">
-                {[
-                  {
-                    key: "full",
-                    label: "Full Page",
-                    subLabel: "(මුළු පිටුවම)",
-                  },
-                  // {
-                  //   key: "half_hr",
-                  //   label: "Half Page (Horizontal)",
-                  //   subLabel: "(භාග පිටුවක් (තිරස්))",
-                  // },
-                  // {
-                  //   key: "half_vr",
-                  //   label: "Half Page (Vertical)",
-                  //   subLabel: "(භාග පිටුවක් (සිරස්))",
-                  // },
-                  {
-                    key: "custom",
-                    label: "Customize",
-                    subLabel: "(ඔබගේ අවශ්‍යතාවය අනුව)",
-                  },
-                ].map((option) => (
-                  <label
-                    key={option.key}
-                    className={`cursor-pointer flex flex-col items-center justify-center sm:w-full md:w-1/2 border rounded-md p-3 text-center transition ${
-                      formData.adSizeType === option.key
-                        ? "bg-[var(--color-primary-dark)] text-white border-[var(--color-primary)]"
-                        : "bg-white text-[var(--color-primary-dark)] border-gray-300 hover:border-[var(--color-primary)]"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="adSizeType"
-                      value={option.key}
-                      className="hidden"
-                      checked={formData.adSizeType === option.key}
-                      onChange={() => {
-                        option.key === "full"
-                          ? updateFormData({
-                              noOfColumns: 0,
-                            })
-                          : updateFormData({
-                              noOfColumns: selectedColumns,
-                            });
-                        option.key === "custom"
-                          ? updateFormData({
-                              adHeight: minAdHeight,
-                            })
-                          : updateFormData({
-                              adHeight: 0,
-                            });
-                        updateFormData({
-                          adSizeType: option.key,
-                          // fullPageAd: option.key === "full",
-                          // halfPageAdHR: option.key === "half_hr",
-                          // halfPageAdVR: option.key === "half_vr",
-                          colorOption: "",
-                        });
-
-                        setselectedSize(option.key);
-                        setselectedColor(0);
-                      }}
-                    />
-                    <span className="font-semibold text-sm">
-                      {option.label}
-                    </span>
+            {/* Priority checkbox */}
+            {formData.selectedNewspaper.type?.toLowerCase() === "sunday" && (
+              <div className="flex flex-col md:flex-row gap-4 md:mt-8">
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={formData.priorityPrice}
+                    onChange={(e) =>
+                      updateFormData({ priorityPrice: e.target.checked })
+                    }
+                  />
+                  <span>
+                    Priority{" "}
                     <span
-                      className="text-xs mt-1"
-                      style={{ fontFamily: "var(--font-sinhala), sans-serif" }}
+                      className="text-sm"
+                      style={{
+                        fontFamily: "var(--font-sinhala), sans-serif",
+                      }}
                     >
-                      {option.subLabel}
+                      (ප්‍රමුඛ දැන්වීමකි)
+                    </span>{" "}
+                    {/* (LKR {selectedAdType.priority_price}) */}
+                  </span>
+                </label>
+                {selectedAdType.tint_color_price > 0 && (
+                  <label className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      checked={formData.backgroundColor}
+                      onChange={(e) =>
+                        updateFormData({ backgroundColor: e.target.checked })
+                      }
+                    />
+                    <span>
+                      Background Color{" "}
+                      <span
+                        className="text-sm"
+                        style={{
+                          fontFamily: "var(--font-sinhala), sans-serif",
+                        }}
+                      >
+                        (පසුබිම වර්ණගන්වන්න)
+                      </span>{" "}
+                      {/* (LKR {selectedAdType.tint_color_price}) */}
                     </span>
                   </label>
-                ))}
+                )}
               </div>
+            )}
 
-              {/* custom size fields */}
-              {formData.adSizeType == "custom" && (
-                <>
-                  <div className="w-full flex flex-col justify-center items-center">
-                    {/* No of Columns */}
-                    <div
-                      id="no1"
-                      className=" flex flex-col justify-center items-center md:w-1/2 mt-8"
+            {/* Language Combination Checkbox */}
+            {selectedAdType.key === "classified" &&
+              formData.selectedNewspaper?.is_lang_combine_allowed && (
+                <div className="my-4">
+                  <label className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      checked={formData.userLangCombineSelected}
+                      onChange={(e) => {
+                        console.log(
+                          "eng price",
+                          formData.selectedNewspaper.combine_eng_price
+                        );
+                        updateFormData({
+                          userLangCombineSelected: e.target.checked,
+                        });
+                      }}
+                    />
+                    <span>
+                      Combine with other papers{" "}
+                      <span
+                        className="text-sm"
+                        style={{
+                          fontFamily: "var(--font-sinhala), sans-serif",
+                        }}
+                      >
+                        (දමිළ හෝ ඉංග්‍රීසි පුවත්පත් වලද පල කරන්න)
+                      </span>{" "}
+                    </span>
+                  </label>
+                </div>
+              )}
+
+            {/* English and Tamil Language checkboxes */}
+            {selectedAdType.key === "classified" &&
+              formData.userLangCombineSelected && (
+                <div className="my-4 grid grid-cols-2">
+                  <label className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      checked={formData.userLangCombineSelected_Eng}
+                      onChange={(e) =>
+                        updateFormData({
+                          userLangCombineSelected_Eng: e.target.checked,
+                        })
+                      }
+                    />
+                    <span>
+                      Place Ad in English Paper
+                      <span
+                        className="text-sm"
+                        style={{
+                          fontFamily: "var(--font-sinhala), sans-serif",
+                        }}
+                      ></span>{" "}
+                    </span>
+                  </label>
+                  <label className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      checked={formData.userLangCombineSelected_Tam}
+                      onChange={(e) => {
+                        console.log(formData.selectedNespaper);
+                        updateFormData({
+                          userLangCombineSelected_Tam: e.target.checked,
+                        });
+                      }}
+                    />
+                    <span>
+                      Place Ad in Tamil Paper
+                      <span
+                        className="text-sm"
+                        style={{
+                          fontFamily: "var(--font-sinhala), sans-serif",
+                        }}
+                      ></span>{" "}
+                    </span>
+                  </label>
+                </div>
+              )}
+
+            {/* Post in website? checkbox */}
+            <div>
+              {selectedAdType.is_allow_combined && (
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={formData.combinedAd}
+                    onChange={(e) =>
+                      updateFormData({ combinedAd: e.target.checked })
+                    }
+                  />
+                  <span>
+                    Post in Website{" "}
+                    <span
+                      className="text-sm"
+                      style={{
+                        fontFamily: "var(--font-sinhala), sans-serif",
+                      }}
                     >
-                      <label className="block font-medium mb-2">
-                        No. of Columns{" "}
+                      (වෙබ් අඩවියේ පළකරන්න)
+                    </span>{" "}
+                  </span>
+                </label>
+              )}
+            </div>
+
+            {/* Special Notes */}
+            <div className=" md:mt-8">
+              <label className="block font-medium mb-1">
+                Special Notes{" "}
+                <span
+                  className="text-sm"
+                  style={{
+                    fontFamily: "var(--font-sinhala), sans-serif",
+                  }}
+                >
+                  (විශේෂ සටහන්)
+                </span>{" "}
+              </label>
+              <textarea
+                rows={2}
+                value={formData.specialNotes}
+                onChange={(e) =>
+                  updateFormData({ specialNotes: e.target.value })
+                }
+                className="border border-gray-300 rounded-lg p-2 w-full focus:ring-2 focus:ring-primary-accent resize-none"
+              />
+            </div>
+          </>
+        )}
+
+        {/* Fields for Casual Types */}
+        {selectedAdType && selectedAdType?.key === "casual" && (
+          <>
+            <h2 className="text-2xl font-bold text-center mb-2">
+              Select Ad Section
+            </h2>
+            <h2
+              style={{
+                fontFamily: "var(--font-sinhala), sans-serif",
+              }}
+              className="text-center"
+            >
+              <span>(දැන්වීම පළ කරන කොටස තෝරන්න)</span>
+            </h2>
+
+            {/* Ad Section grid */}
+            {selectedAdType?.sections?.length > 0 && (
+              <div className="mt-6 rounded-xl border border-gray-300 bg-white p-4 shadow-sm">
+                <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-thin">
+                  {selectedAdType.sections.map((section) => {
+                    const isSelected = selectedSection === section.id;
+
+                    return (
+                      <button
+                        key={section.id}
+                        type="button"
+                        disabled={!section.isAvailable}
+                        onClick={() => setSelectedSection(section.id)}
+                        className={`
+    min-w-[45%] sm:min-w-[45%] md:min-w-[23%] lg:min-w-[23%]
+    h-[110px] 
+    rounded-xl
+    border
+    px-4
+    py-6
+    flex flex-col items-center justify-center
+    text-center
+    transition-colors transition-shadow duration-200
+    focus:outline-none
+    ${
+      !section.isAvailable
+        ? `
+          bg-gray-50
+          border-gray-200
+          text-gray-400
+          cursor-not-allowed
+        `
+        : isSelected
+        ? `
+          bg-white
+          border-[var(--color-primary)]
+          shadow-[0_0_0_1px_var(--color-primary)]
+        `
+        : `
+          bg-white
+          border-gray-300
+          hover:border-[var(--color-primary-accent)]
+        `
+    }
+  `}
+                      >
+                        <h4 className="font-semibold text-[var(--color-primary-dark)]">
+                          {section.name}
+                        </h4>
+
+                        {section.extraNotes && (
+                          <p className="mt-1 text-xs text-[var(--color-text-highlight)] text-center">
+                            {section.extraNotes}
+                          </p>
+                        )}
+
+                        {!section.isAvailable && (
+                          <span className="mt-2 text-[10px] uppercase tracking-wide text-gray-500">
+                            Unavailable
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {selectedSectionData && (
+              <>
+                {/* Publish Date - Casual */}
+                <div className="w-full">
+                  <label className="block font-medium mb-1">
+                    Publish Date{" "}
+                    <span
+                      className="text-sm"
+                      style={{ fontFamily: "var(--font-sinhala), sans-serif" }}
+                    >
+                      (දැන්වීම පළ කරන දිනය)
+                    </span>
+                    <span className="text-red-500">*</span>
+                  </label>
+
+                  <DatePicker
+                    selected={
+                      formData.publishDate
+                        ? new Date(formData.publishDate + "T00:00:00")
+                        : null
+                    }
+                    onChange={(date: Date | null) => {
+                      if (!date) return;
+
+                      updateFormData({
+                        publishDate: formatDateLocal(date), // ✅ NO timezone shift
+                      });
+                    }}
+                    filterDate={isAllowedDate}
+                    minDate={minDate}
+                    dateFormat="yyyy-MM-dd"
+                    placeholderText="Select publish date"
+                    className="
+    w-full rounded-lg border border-gray-300
+    px-3 py-2 text-sm
+    focus:outline-none focus:ring-2
+    focus:ring-[var(--color-primary-accent)]
+  "
+                  />
+                </div>
+
+                {/* Category Dropdown - Casual */}
+                <div>
+                  <label className="block font-medium mb-1 md:mt-8">
+                    Category{" "}
+                    <span
+                      className="text-sm"
+                      style={{
+                        fontFamily: "var(--font-sinhala), sans-serif",
+                      }}
+                    >
+                      (වර්ගීකරණය)
+                    </span>{" "}
+                    <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={selectedCategory}
+                    onChange={(e) => {
+                      setSelectedCategory(e.target.value);
+                      updateFormData({ classifiedCategory: e.target.value });
+                      setSelectedSubCategory("");
+                    }}
+                    className="border border-gray-300 rounded-lg p-2 w-full focus:ring-2 focus:ring-primary-accent"
+                  >
+                    <option value="">Select Category</option>
+                    {/* {selectedAdType.categories.map((cat) => (
+                  <option key={cat.category} value={cat.category}>
+                    {cat.category}
+                  </option>
+                ))} */}
+                    <option value="Real Estate">Real Estate</option>
+                    <option value="Health & Beauty">Health & Beauty</option>
+                    <option value="Automobile">Automobile</option>
+                    <option value="Personal">Personal</option>
+                    <option value="Employment">Employment</option>
+                    <option value="General">General</option>
+                    <option value="Trade">Trade</option>
+                  </select>
+                </div>
+
+                {/* Subcategory Dropdown - Casual */}
+                {selectedCategory && (
+                  <div className="md:mt-8">
+                    <label className="block font-medium mb-1">
+                      Sub Category{" "}
+                      <span
+                        className="text-sm"
+                        style={{
+                          fontFamily: "var(--font-sinhala), sans-serif",
+                        }}
+                      >
+                        (දැන්වීම් ස්වභාවය)
+                      </span>{" "}
+                    </label>
+                    <select
+                      value={selectedSubCategory}
+                      onChange={(e) => {
+                        setSelectedSubCategory(e.target.value);
+                        updateFormData({ subCategory: e.target.value });
+                      }}
+                      className="border border-gray-300 rounded-lg p-2 w-full focus:ring-2 focus:ring-primary-accent"
+                    >
+                      <option value="">Select Subcategory</option>
+                      {subCategoryOptions.map((sub) => (
+                        <option key={sub} value={sub}>
+                          {sub}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* Has own Artwork? checkbox */}
+                <div className="md:mt-8">
+                  <label className="block mb-2 font-medium">
+                    I have my own artwork
+                    <span
+                      className="text-sm ml-1"
+                      style={{ fontFamily: "var(--font-sinhala), sans-serif" }}
+                    >
+                      (මගේම කලාකෘතියක් ඇත)
+                    </span>
+                  </label>
+
+                  <div className="inline-flex rounded-full border border-gray-300 overflow-hidden">
+                    {/* Yes Button */}
+                    <button
+                      type="button"
+                      onClick={() => updateFormData({ hasOwnArtwork: true })}
+                      className={`px-4 py-2 text-sm font-semibold transition ${
+                        formData.hasOwnArtwork
+                          ? "bg-[var(--color-primary-accent)] text-white"
+                          : "bg-white text-[var(--color-primary-dark)] hover:bg-[var(--color-primary-accent)]/20"
+                      }`}
+                    >
+                      Yes
+                    </button>
+
+                    {/* No Button */}
+                    <button
+                      type="button"
+                      onClick={() => updateFormData({ hasOwnArtwork: false })}
+                      className={`px-4 py-2 text-sm font-semibold transition ${
+                        formData.hasOwnArtwork === false
+                          ? "bg-[var(--color-primary-accent)] text-white"
+                          : "bg-white text-[var(--color-primary-dark)] hover:bg-[var(--color-primary-accent)]/20"
+                      }`}
+                    >
+                      No
+                    </button>
+                  </div>
+                </div>
+
+                {/* Advetisement Text & Need Artwork? Checkbox - Casual - Only when user doesn't have artwork */}
+                {!formData.hasOwnArtwork && (
+                  <>
+                    {/* Advertisement Text */}
+                    <div className="relative md:mt-8">
+                      <label className="block font-medium mb-1">
+                        Advertisement Text{" "}
                         <span
                           className="text-sm"
                           style={{
                             fontFamily: "var(--font-sinhala), sans-serif",
                           }}
                         >
-                          (තීරු ගණන)
+                          (දැන්වීම් විස්තරය)
                         </span>{" "}
                         <span className="text-red-500">*</span>
                       </label>
-
-                      <div className="flex flex-wrap gap-2 my-2">
-                        {Array.from(
-                          { length: noOfColumnsPerPage },
-                          (_, i) => i + 1
-                        ).map((num) => (
-                          <label key={num} className="cursor-pointer">
-                            <input
-                              type="radio"
-                              name="noOfColumns"
-                              value={num}
-                              checked={formData.noOfColumns === num}
-                              onChange={() => {
-                                updateFormData({ noOfColumns: num });
-                                setselectedColumns(num);
-                              }}
-                              className="hidden"
-                            />
-                            <div
-                              className={`flex h-10 w-10 items-center justify-center rounded-md border text-sm font-semibold transition ${
-                                formData.noOfColumns === num
-                                  ? "border-[var(--color-primary)] bg-[var(--color-primary)] text-white"
-                                  : "border-gray-300 bg-white text-gray-700 hover:border-[var(--color-primary)]"
-                              }`}
-                            >
-                              {num}
-                            </div>
-                          </label>
-                        ))}
+                      <div className="absolute top-0 right-0 text-sm text-gray-500">
+                        {wordCount}/{selectedAdType.max_words} words
                       </div>
-                    </div>
-
-                    {/* Ad Height */}
-                    <div
-                      id="no2"
-                      className="flex flex-col justify-center items-center md:w-1/2 mt-8"
-                    >
-                      <label className="block font-medium mb-2">
-                        Ad Height (cm){" "}
+                      <textarea
+                        rows={5}
+                        placeholder="Type your advertisement here"
+                        value={formData.adText || ""}
+                        onChange={handleTextChange}
+                        required
+                        className="border border-gray-300 rounded-lg p-3 w-full focus:ring-2 focus:ring-primary-accent resize-none"
+                      />
+                      <p className="text-sm">
+                        To type in Sinhala, go to a{" "}
+                        <a
+                          href="https://ucsc.cmb.ac.lk/ltrl/services/feconverter/t1.html"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-800 hover:text-blue-600"
+                        >
+                          Sinhala typing tool
+                        </a>
+                        , type your advertisement, then copy and paste it here.{" "}
+                      </p>
+                      <p className="text-sm">
                         <span
-                          className="text-sm"
+                          className="text-xs"
                           style={{
                             fontFamily: "var(--font-sinhala), sans-serif",
                           }}
                         >
-                          (උස සෙ.මී.)
+                          (සිංහලෙන් ටයිප් කිරීමට,{" "}
+                          <a
+                            href="https://ucsc.cmb.ac.lk/ltrl/services/feconverter/t1.html"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-800 hover:text-blue-600"
+                          >
+                            සිංහල ටයිපින්{" "}
+                          </a>
+                          මෙවලමට පිවිස ඔබේ දැන්වීම ටයිප් කර, පිටපත් කර මෙහි
+                          ඇතුළත් කරන්න.)
+                        </span>{" "}
+                      </p>
+                    </div>
+
+                    {/* Need Artwork? Checkbox */}
+                    <div className="md:mt-8">
+                      <label className="block mb-2 font-medium">
+                        Do you need an artwork designed?
+                        <span
+                          className="text-sm ml-1"
+                          style={{
+                            fontFamily: "var(--font-sinhala), sans-serif",
+                          }}
+                        >
+                          (ඔබට කලාකෘතියක් නිර්මාණය කරගැනීමට අවශ්‍යද?)
                         </span>
                       </label>
 
-                      <div className="flex items-center gap-4">
-                        {/* <input
+                      <div className="inline-flex rounded-full border border-gray-300 overflow-hidden">
+                        {/* Yes Button */}
+                        <button
+                          type="button"
+                          onClick={() => updateFormData({ needArtwork: true })}
+                          className={`px-4 py-2 text-sm font-semibold transition ${
+                            formData.needArtwork
+                              ? "bg-[var(--color-primary-accent)] text-white"
+                              : "bg-white text-[var(--color-primary-dark)] hover:bg-[var(--color-primary-accent)]/20"
+                          }`}
+                        >
+                          Yes
+                        </button>
+
+                        {/* No Button */}
+                        <button
+                          type="button"
+                          onClick={() => updateFormData({ needArtwork: false })}
+                          className={`px-4 py-2 text-sm font-semibold transition ${
+                            formData.needArtwork === false
+                              ? "bg-[var(--color-primary-accent)] text-white"
+                              : "bg-white text-[var(--color-primary-dark)] hover:bg-[var(--color-primary-accent)]/20"
+                          }`}
+                        >
+                          No
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* Upload input field for user's artwork - Casual */}
+                {formData.hasOwnArtwork && (
+                  <div className="md:mt-8">
+                    <label className="block mb-2 font-medium">
+                      Upload Image{" "}
+                      <span
+                        className="text-sm"
+                        style={{
+                          fontFamily: "var(--font-sinhala), sans-serif",
+                        }}
+                      >
+                        (ඡායාරූප ඇතුලත් කරන්න)
+                      </span>{" "}
+                      <span className="text-red-500">*</span>
+                    </label>
+
+                    <input
+                      type="file"
+                      accept="image/*"
+                      required
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+
+                        try {
+                          updateFormData({ uploading: true });
+
+                          const data = await uploadImageToCloudinary(file);
+
+                          updateFormData({
+                            uploadedImage: data.secure_url,
+                            uploading: false,
+                          });
+                        } catch (error) {
+                          console.error(error);
+                          updateFormData({ uploading: false });
+                          alert("Image upload failed. Please try again.");
+                        }
+                      }}
+                      className="w-full border border-gray-300 rounded-lg p-3
+               focus:ring-2 focus:ring-primary-accent
+               file:mr-4 file:py-2 file:px-4
+               file:rounded-full file:border-0
+               file:bg-primary-accent file:text-white
+               file:cursor-pointer
+               hover:file:bg-primary-accent/90
+               transition"
+                    />
+
+                    {/* Optional status text (non-breaking, visual only) */}
+                    {formData.uploading && (
+                      <p className="text-sm text-gray-500 mt-2">
+                        Uploading image…
+                      </p>
+                    )}
+
+                    {formData.uploadedImage && !formData.uploading && (
+                      <p className="text-sm text-green-600 mt-2">
+                        Image uploaded successfully
+                      </p>
+                    )}
+
+                    {formData.uploadedImage && (
+                      <img
+                        src={formData.uploadedImage}
+                        alt="Uploaded preview"
+                        className="mt-4 w-48 rounded-lg border"
+                      />
+                    )}
+
+                    {selectedAdType.extra_notes1 && (
+                      <p className="text-xs text-gray-500">
+                        {selectedAdType.extra_notes1}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* Advertisement Size Selector */}
+            {selectedSectionData && (
+              <>
+                <div className="mt-6 rounded-xl border border-gray-300 bg-white p-4 shadow-sm">
+                  <h3 className="mb-1 font-normal text-center text-[var(--color-primary-dark)]">
+                    Advertisement Size
+                  </h3>
+                  <h3
+                    className="mb-2 font-normal text-[var(--color-primary-dark)] text-center text-sm"
+                    style={{ fontFamily: "var(--font-sinhala), sans-serif" }}
+                  >
+                    (දැන්වීමේ ප්‍රමාණය)
+                  </h3>
+                  <div className="flex flex-col m-auto justify-center text-center mb-8">
+                    <p className="text-sm">
+                      <button
+                        onClick={() => setIsOpen(true)}
+                        className="text-blue-800 hover:text-blue-600"
+                      >
+                        Learn more
+                      </button>
+                      &nbsp;about cost calculation for casual ads.
+                    </p>
+                  </div>
+
+                  <div className="flex flex-col md:flex-row gap-4 mt-4">
+                    {sizeTypeOptions.map((option) => (
+                      <label
+                        key={option.key}
+                        className={`cursor-pointer flex flex-col items-center justify-center w-full md:w-1/2 border rounded-lg p-4 text-center transition ${
+                          formData.adSizeType === option.key
+                            ? "bg-[var(--color-primary-dark)] text-white border-primary"
+                            : "bg-white text-[var(--color-primary-dark)] border-gray-300 hover:border-[var(--color-primary-accent)]"
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="adSizeType"
+                          value={option.key}
+                          className="hidden"
+                          checked={formData.adSizeType === option.key}
+                          onChange={() => {
+                            updateFormData({
+                              adSizeType: option.key,
+                              colorOption: "",
+                            });
+                            setselectedSize(option.key);
+                            setselectedColor(0);
+                          }}
+                        />
+
+                        <span className="font-semibold text-sm capitalize">
+                          {option.label}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {formData.adSizeType == "custom" && (
+                  <>
+                    <div className="w-full flex flex-col justify-center items-center">
+                      {/* No of Columns */}
+                      <div
+                        id="no1"
+                        className=" flex flex-col justify-center items-center md:w-1/2 mt-8"
+                      >
+                        <label className="block font-medium mb-2">
+                          No. of Columns{" "}
+                          <span
+                            className="text-sm"
+                            style={{
+                              fontFamily: "var(--font-sinhala), sans-serif",
+                            }}
+                          >
+                            (තීරු ගණන)
+                          </span>{" "}
+                          <span className="text-red-500">*</span>
+                        </label>
+
+                        <div className="flex flex-wrap gap-2 my-2">
+                          {Array.from(
+                            { length: noOfColumnsPerPage },
+                            (_, i) => i + 1
+                          ).map((num) => (
+                            <label key={num} className="cursor-pointer">
+                              <input
+                                type="radio"
+                                name="noOfColumns"
+                                value={num}
+                                checked={formData.noOfColumns === num}
+                                onChange={() => {
+                                  updateFormData({ noOfColumns: num });
+                                  setselectedColumns(num);
+                                }}
+                                className="hidden"
+                              />
+                              <div
+                                className={`flex h-10 w-10 items-center justify-center rounded-md border text-sm font-semibold transition ${
+                                  formData.noOfColumns === num
+                                    ? "border-[var(--color-primary)] bg-[var(--color-primary)] text-white"
+                                    : "border-gray-300 bg-white text-gray-700 hover:border-[var(--color-primary)]"
+                                }`}
+                              >
+                                {num}
+                              </div>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Ad Height */}
+                      <div
+                        id="no2"
+                        className="flex flex-col justify-center items-center md:w-1/2 mt-8"
+                      >
+                        <label className="block font-medium mb-2">
+                          Ad Height (cm){" "}
+                          <span
+                            className="text-sm"
+                            style={{
+                              fontFamily: "var(--font-sinhala), sans-serif",
+                            }}
+                          >
+                            (උස සෙ.මී.)
+                          </span>
+                        </label>
+
+                        <div className="flex items-center gap-4">
+                          {/* <input
                           type="range"
                           min={minAdHeight}
                           max={maxColHeight}
@@ -1102,57 +1545,57 @@ export default function StepSelectAdType({
                           {formData.adHeight} (cm){" "}
                         </label> */}
 
-                        <div className="flex items-center gap-4 my-2">
-                          {/* Minus button */}
-                          <button
-                            type="button"
-                            onClick={() => {
-                              updateFormData({
-                                adHeight: Math.max(
-                                  minAdHeight,
-                                  formData.adHeight - 1
-                                ),
-                              });
-                            }}
-                            disabled={formData.adHeight <= minAdHeight}
-                            className="h-10 w-10 rounded-md border border-gray-300 text-lg font-bold
+                          <div className="flex items-center gap-4 my-2">
+                            {/* Minus button */}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                updateFormData({
+                                  adHeight: Math.max(
+                                    minAdHeight,
+                                    formData.adHeight - 1
+                                  ),
+                                });
+                              }}
+                              disabled={formData.adHeight <= minAdHeight}
+                              className="h-10 w-10 rounded-md border border-gray-300 text-lg font-bold
                hover:border-[var(--color-primary)]
                disabled:opacity-40 disabled:cursor-not-allowed"
-                          >
-                            −
-                          </button>
+                            >
+                              −
+                            </button>
 
-                          {/* Value display */}
-                          <div className="min-w-[80px] text-center font-semibold">
-                            {formData.adHeight} cm
+                            {/* Value display */}
+                            <div className="min-w-[80px] text-center font-semibold">
+                              {formData.adHeight} cm
+                            </div>
+
+                            {/* Plus button */}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                updateFormData({
+                                  adHeight: Math.min(
+                                    maxColHeight,
+                                    formData.adHeight + 1
+                                  ),
+                                });
+                              }}
+                              disabled={formData.adHeight >= maxColHeight}
+                              className="h-10 w-10 rounded-md border border-gray-300 text-lg font-bold
+               hover:border-[var(--color-primary)]
+               disabled:opacity-40 disabled:cursor-not-allowed"
+                            >
+                              +
+                            </button>
                           </div>
 
-                          {/* Plus button */}
-                          <button
-                            type="button"
-                            onClick={() => {
-                              updateFormData({
-                                adHeight: Math.min(
-                                  maxColHeight,
-                                  formData.adHeight + 1
-                                ),
-                              });
-                            }}
-                            disabled={formData.adHeight >= maxColHeight}
-                            className="h-10 w-10 rounded-md border border-gray-300 text-lg font-bold
-               hover:border-[var(--color-primary)]
-               disabled:opacity-40 disabled:cursor-not-allowed"
-                          >
-                            +
-                          </button>
-                        </div>
-
-                        {/* <div className="mt-1 text-xs text-gray-500">
+                          {/* <div className="mt-1 text-xs text-gray-500">
                           Min: {minAdHeight} cm &nbsp;|&nbsp; Max:{" "}
                           {maxColHeight} cm
                         </div> */}
 
-                        {/* <input
+                          {/* <input
                         type="number"
                         min={minAdHeight}
                         max={maxColHeight}
@@ -1168,337 +1611,135 @@ export default function StepSelectAdType({
                         }
                         className="w-20 h-10 rounded-md border border-gray-300 text-center text-sm font-semibold focus:border-[var(--color-primary)] focus:outline-none"
                       /> */}
-                      </div>
+                        </div>
 
-                      <div className="mt-1 text-xs text-gray-500">
-                        Min: {minAdHeight} cm &nbsp;|&nbsp; Max: {maxColHeight}{" "}
-                        cm
+                        <div className="mt-1 text-xs text-gray-500">
+                          Min: {minAdHeight} cm &nbsp;|&nbsp; Max:{" "}
+                          {maxColHeight} cm
+                        </div>
                       </div>
                     </div>
+                    {/* <div className="flex w-1/4"></div> */}
+                  </>
+                )}
+
+                {/* Ad Color Selector */}
+                {selectedSize !== "" && (
+                  <div className="mt-6 rounded-xl border border-gray-300 bg-white p-4 shadow-sm">
+                    <h3 className="mb-1 font-normal text-[var(--color-primary-dark)] text-center">
+                      Advertisement Color Options
+                    </h3>
+                    <h3
+                      className="mb-8 font-normal text-[var(--color-primary-dark)] text-center text-sm"
+                      style={{ fontFamily: "var(--font-sinhala), sans-serif" }}
+                    >
+                      (දැන්වීමේ වර්ණ)
+                    </h3>
+
+                    <div className="flex flex-col md:flex-row gap-4">
+                      {colorOptions.map((option) => {
+                        const isCustom = selectedSize === "custom";
+
+                        return (
+                          <label
+                            key={option.key}
+                            className={`cursor-pointer flex flex-col items-center justify-center sm:w-full md:w-1/4
+          border rounded-lg p-3 text-center transition
+          ${
+            formData.colorOption === option.key
+              ? "bg-[var(--color-primary-dark)] text-white border-[var(--color-primary)]"
+              : "bg-white text-[var(--color-primary-dark)] border-gray-300 hover:border-[var(--color-primary-accent)]"
+          }
+        `}
+                          >
+                            <input
+                              type="radio"
+                              name="colorOption"
+                              value={option.key}
+                              className="hidden"
+                              checked={formData.colorOption === option.key}
+                              onChange={() => {
+                                updateFormData({
+                                  colorOption: option.key,
+                                });
+                                setselectedColor(option.price);
+                              }}
+                            />
+
+                            <span className="font-semibold text-sm">
+                              {option.label}
+                            </span>
+
+                            {option.subLabel && (
+                              <span
+                                className="text-xs mt-1"
+                                style={{
+                                  fontFamily: "var(--font-sinhala), sans-serif",
+                                }}
+                              >
+                                {option.subLabel}
+                              </span>
+                            )}
+
+                            <span
+                              className="text-xs mt-1 text-[var(--color-text-dark-highlight)]"
+                              style={{
+                                fontFamily: "var(--font-sinhala), sans-serif",
+                              }}
+                            >
+                              {option.price} LKR
+                              {isCustom ? " per Column" : ""}
+                            </span>
+                          </label>
+                        );
+                      })}
+                    </div>
                   </div>
-                  {/* <div className="flex w-1/4"></div> */}
-                </>
-              )}
-            </div>
-          )}
-          {/* <AdGridCanvas
+                )}
+              </>
+            )}
+          </>
+        )}
+
+        {selectedAdType && (
+          <>
+            {/* <AdGridCanvas
             noOfColumnsPerPage={noOfColumnsPerPage}
             maxColHeight={maxColHeight}
           /> */}
 
-          {selectedAdType.key === "casual" && selectedSize !== "" && (
-            <div className="mt-6 rounded-xl border border-gray-300 bg-white p-4 shadow-sm">
-              <h3 className="mb-1 font-normal text-[var(--color-primary-dark)] text-center">
-                Advertisement Color Options
-              </h3>
-              <h3
-                className="mb-8 font-normal text-[var(--color-primary-dark)] text-center text-sm"
-                style={{ fontFamily: "var(--font-sinhala), sans-serif" }}
-              >
-                (දැන්වීමේ වර්ණ)
+            {/* Pricing */}
+            <div className="bg-gray-100 p-5 rounded-xl shadow-sm sm:max-w-md w-full mx-auto">
+              <h3 className="text-lg font-semibold mb-3 text-[var(--color-primary-dark)]">
+                Price
               </h3>
 
-              <div className="flex flex-col md:flex-row gap-4">
-                {[
-                  {
-                    key: "bw",
-                    label: "Black & White",
-                    subLabel: "(කළු සහ සුදු)",
-                    price:
-                      formData.adSizeType === "custom"
-                        ? selectedAdType.cs_col_bw_price
-                        : formData.adSizeType === "full"
-                        ? selectedAdType.cs_page_bw_price
-                        : 0,
-                  },
-                  {
-                    key: "bw1",
-                    label: "Black + 1 Color",
-                    subLabel: "(කළු + වර්ණ 1ක්)",
-                    price:
-                      formData.adSizeType === "custom"
-                        ? selectedAdType.cs_col_bw_one_color_price
-                        : formData.adSizeType === "full"
-                        ? selectedAdType.cs_page_bw_one_color_price
-                        : 0,
-                  },
-                  {
-                    key: "bw2",
-                    label: "Black + 2 Colors",
-                    subLabel: "(කළු + වර්ණ 2ක්)",
-                    price:
-                      formData.adSizeType === "custom"
-                        ? selectedAdType.cs_col_bw_two_color_price
-                        : formData.adSizeType === "full"
-                        ? selectedAdType.cs_page_bw_two_color_price
-                        : 0,
-                  },
-                  {
-                    key: "full",
-                    label: "Full Color",
-                    subLabel: "(සම්පූර්ණයෙන් වර්ණ කර)",
-                    price:
-                      formData.adSizeType === "custom"
-                        ? selectedAdType.cs_col_full_color_price
-                        : formData.adSizeType === "full"
-                        ? selectedAdType.cs_page_full_color_price
-                        : 0,
-                  },
-                ].map((option) => (
-                  <label
-                    key={option.key}
-                    className={`cursor-pointer flex flex-col items-center justify-center sm:w-full md:w-1/4 border rounded-md p-3 text-center transition ${
-                      formData.colorOption === option.key
-                        ? "bg-[var(--color-primary-dark)] text-white border-[var(--color-primary)]"
-                        : "bg-white text-[var(--color-primary-dark)] border-gray-300 hover:border-[var(--color-primary)]"
-                    }`}
+              <ul className="divide-y divide-gray-200">
+                {priceBreakdown.map((item, i) => (
+                  <li
+                    key={i}
+                    className="flex justify-between py-2 text-sm text-[var(--color-text)]"
                   >
-                    <input
-                      type="radio"
-                      name="colorOption"
-                      value={option.key}
-                      className="hidden"
-                      checked={formData.colorOption === option.key}
-                      onChange={() => {
-                        updateFormData({
-                          colorOption: option.key,
-                          // fullPageAd: option.key === "full",
-                          // halfPageAdHR: option.key === "half_hr",
-                          // halfPageAdVR: option.key === "half_vr",
-                        });
-                        setselectedColor(option.price);
-                      }}
-                    />
-                    <span className="font-semibold text-sm">
-                      {option.label}
+                    <span>{item.label}</span>
+                    <span className="font-medium">
+                      LKR {item.amount.toLocaleString()}
                     </span>
-                    <span
-                      className="text-xs mt-1"
-                      style={{ fontFamily: "var(--font-sinhala), sans-serif" }}
-                    >
-                      {option.subLabel}
-                    </span>
-                    {formData.adSizeType && (
-                      <span
-                        className="text-xs mt-1"
-                        style={{
-                          fontFamily: "var(--font-sinhala), sans-serif",
-                        }}
-                      >
-                        {option.price} LKR per Column
-                      </span>
-                    )}
-                  </label>
+                  </li>
                 ))}
-              </div>
-            </div>
-          )}
-          {/* {console.log("before tint", formData)} */}
-          {formData.selectedNewspaper.type?.toLowerCase() === "sunday" && (
-            <div className="flex flex-col md:flex-row gap-4 md:mt-8">
-              <label className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  checked={formData.priorityPrice}
-                  onChange={(e) =>
-                    updateFormData({ priorityPrice: e.target.checked })
-                  }
-                />
-                <span>
-                  Priority{" "}
-                  <span
-                    className="text-sm"
-                    style={{
-                      fontFamily: "var(--font-sinhala), sans-serif",
-                    }}
-                  >
-                    (ප්‍රමුඛ දැන්වීමකි)
-                  </span>{" "}
-                  {/* (LKR {selectedAdType.priority_price}) */}
+              </ul>
+
+              <div className="mt-4 pt-3 border-t border-gray-300 flex justify-between items-center">
+                <span className="text-base font-semibold text-[var(--color-primary-dark)]">
+                  Total
                 </span>
-              </label>
-              {selectedAdType.tint_color_price > 0 && (
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    checked={formData.backgroundColor}
-                    onChange={(e) =>
-                      updateFormData({ backgroundColor: e.target.checked })
-                    }
-                  />
-                  <span>
-                    Background Color{" "}
-                    <span
-                      className="text-sm"
-                      style={{
-                        fontFamily: "var(--font-sinhala), sans-serif",
-                      }}
-                    >
-                      (පසුබිම වර්ණගන්වන්න)
-                    </span>{" "}
-                    {/* (LKR {selectedAdType.tint_color_price}) */}
-                  </span>
-                </label>
-              )}
-            </div>
-          )}
-
-          {selectedAdType.key === "classified" &&
-            formData.selectedNewspaper?.is_lang_combine_allowed && (
-              <div className="my-4">
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    checked={formData.userLangCombineSelected}
-                    onChange={(e) => {
-                      console.log(
-                        "eng price",
-                        formData.selectedNewspaper.combine_eng_price
-                      );
-                      updateFormData({
-                        userLangCombineSelected: e.target.checked,
-                      });
-                    }}
-                  />
-                  <span>
-                    Combine with other papers{" "}
-                    <span
-                      className="text-sm"
-                      style={{
-                        fontFamily: "var(--font-sinhala), sans-serif",
-                      }}
-                    >
-                      (දමිළ හෝ ඉංග්‍රීසි පුවත්පත් වලද පල කරන්න)
-                    </span>{" "}
-                  </span>
-                </label>
-              </div>
-            )}
-
-          {selectedAdType.key === "classified" &&
-            formData.userLangCombineSelected && (
-              <div className="my-4 grid grid-cols-2">
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    checked={formData.userLangCombineSelected_Eng}
-                    onChange={(e) =>
-                      updateFormData({
-                        userLangCombineSelected_Eng: e.target.checked,
-                      })
-                    }
-                  />
-                  <span>
-                    Place Ad in English Paper
-                    <span
-                      className="text-sm"
-                      style={{
-                        fontFamily: "var(--font-sinhala), sans-serif",
-                      }}
-                    ></span>{" "}
-                  </span>
-                </label>
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    checked={formData.userLangCombineSelected_Tam}
-                    onChange={(e) => {
-                      console.log(formData.selectedNespaper);
-                      updateFormData({
-                        userLangCombineSelected_Tam: e.target.checked,
-                      });
-                    }}
-                  />
-                  <span>
-                    Place Ad in Tamil Paper
-                    <span
-                      className="text-sm"
-                      style={{
-                        fontFamily: "var(--font-sinhala), sans-serif",
-                      }}
-                    ></span>{" "}
-                  </span>
-                </label>
-              </div>
-            )}
-
-          <div>
-            {selectedAdType.is_allow_combined && (
-              <label className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  checked={formData.combinedAd}
-                  onChange={(e) =>
-                    updateFormData({ combinedAd: e.target.checked })
-                  }
-                />
-                <span>
-                  Post in Website{" "}
-                  <span
-                    className="text-sm"
-                    style={{
-                      fontFamily: "var(--font-sinhala), sans-serif",
-                    }}
-                  >
-                    (වෙබ් අඩවියේ පළකරන්න)
-                  </span>{" "}
+                <span className="text-base font-bold text-[var(--color-primary)]">
+                  LKR {totalPrice.toLocaleString()}
                 </span>
-              </label>
-            )}
-          </div>
-
-          {/* Special Notes */}
-          <div className=" md:mt-8">
-            <label className="block font-medium mb-1">
-              Special Notes{" "}
-              <span
-                className="text-sm"
-                style={{
-                  fontFamily: "var(--font-sinhala), sans-serif",
-                }}
-              >
-                (විශේෂ සටහන්)
-              </span>{" "}
-            </label>
-            <textarea
-              rows={2}
-              value={formData.specialNotes}
-              onChange={(e) => updateFormData({ specialNotes: e.target.value })}
-              className="border border-gray-300 rounded-lg p-2 w-full focus:ring-2 focus:ring-primary-accent resize-none"
-            />
-          </div>
-
-          {/* Pricing */}
-          <div className="bg-gray-100 p-5 rounded-xl shadow-sm sm:max-w-md w-full mx-auto">
-            <h3 className="text-lg font-semibold mb-3 text-[var(--color-primary-dark)]">
-              Price
-            </h3>
-
-            <ul className="divide-y divide-gray-200">
-              {priceBreakdown.map((item, i) => (
-                <li
-                  key={i}
-                  className="flex justify-between py-2 text-sm text-[var(--color-text)]"
-                >
-                  <span>{item.label}</span>
-                  <span className="font-medium">
-                    LKR {item.amount.toLocaleString()}
-                  </span>
-                </li>
-              ))}
-            </ul>
-
-            <div className="mt-4 pt-3 border-t border-gray-300 flex justify-between items-center">
-              <span className="text-base font-semibold text-[var(--color-primary-dark)]">
-                Total
-              </span>
-              <span className="text-base font-bold text-[var(--color-primary)]">
-                LKR {totalPrice.toLocaleString()}
-              </span>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </div>
 
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">

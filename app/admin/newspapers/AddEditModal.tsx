@@ -30,6 +30,24 @@ const DEFAULT_AD_TYPE = {
   csPageBWOneColorPrice: 0,
   csPageBWTwoColorPrice: 0,
   csPageFullColorPrice: 0,
+  sections: [],
+};
+
+const EMPTY_SECTION = {
+  name: "",
+  extraNotes: "",
+  isAvailable: true,
+  sizes: [],
+};
+
+const EMPTY_SIZE = {
+  sizeType: "",
+  width: 0,
+  height: 0,
+  colorOption: "",
+  price: 0,
+  isSaved: false,
+  isAvailable: true,
 };
 
 const AD_TYPE_OPTIONS = [
@@ -56,17 +74,9 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
       combine_eng_price: 0,
       combine_tam_price: 0,
       combine_eng_tam_price: 0,
+      // allowed_weekdays: [],
     }
   );
-
-  const CATEGORY_SUGGESTIONS = [
-    "Real Estate",
-    "Automobile",
-    "Employment",
-    "Trade",
-    "Health & Beauty",
-    "Personal",
-  ];
 
   const [typeError, setTypeError] = useState(false);
   const [errors, setErrors] = useState<{ name?: string }>({});
@@ -107,6 +117,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
       extraNotes2: t.extra_notes2 || "",
       categories: "",
       colorOptions: [],
+      sections: [],
     }));
   });
 
@@ -119,6 +130,48 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
     updated[index][key] = value;
     setAdTypes(updated);
   };
+
+  const addSection = (adTypeIndex: number) => {
+    const updated = [...adTypes];
+
+    if (!updated[adTypeIndex].sections) {
+      updated[adTypeIndex].sections = [];
+    }
+
+    updated[adTypeIndex].sections.push({ ...EMPTY_SECTION });
+    setAdTypes(updated);
+  };
+
+  const addSize = (adTypeIndex: number, sectionIndex: number) => {
+    const updated = [...adTypes];
+    updated[adTypeIndex].sections[sectionIndex].sizes.push({ ...EMPTY_SIZE });
+    setAdTypes(updated);
+  };
+
+  const updateSize = (
+    adTypeIndex: number,
+    sectionIndex: number,
+    sizeIndex: number,
+    key: string,
+    value: any
+  ) => {
+    const updated = [...adTypes];
+    updated[adTypeIndex].sections[sectionIndex].sizes[sizeIndex][key] = value;
+    setAdTypes(updated);
+  };
+
+  // ISO weekday numbers
+  const WEEKDAYS = [
+    { id: 1, label: "Mon", full: "Monday" },
+    { id: 2, label: "Tue", full: "Tuesday" },
+    { id: 3, label: "Wed", full: "Wednesday" },
+    { id: 4, label: "Thu", full: "Thursday" },
+    { id: 5, label: "Fri", full: "Friday" },
+    { id: 6, label: "Sat", full: "Saturday" },
+    { id: 7, label: "Sun", full: "Sunday" },
+  ];
+
+  const [allowed_weekdays, setallowed_weekdays] = useState<number[]>([]);
 
   /* --------------------------------------------------
      IMAGE UPLOAD (COMMENTED FOR NOW)
@@ -178,6 +231,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
       combine_eng_price: Number(form.combine_eng_price),
       combine_tam_price: Number(form.combine_tam_price),
       combine_eng_tam_price: Number(form.combine_eng_tam_price),
+      allowed_weekdays,
       ad_types: adTypes.map((t) => ({
         key: t.typeKey,
         name: t.name,
@@ -202,6 +256,19 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
         cs_page_full_color_price: Number(t.csPageFullColorPrice),
         extra_notes1: t.extraNotes1 || null,
         extra_notes2: t.extraNotes2 || null,
+        sections: t.sections.map((s: any) => ({
+          name: s.name,
+          extra_notes: s.extraNotes,
+          is_available: s.isAvailable,
+          sizes: s.sizes.map((z: any) => ({
+            size_type: z.sizeType,
+            width: z.width,
+            height: z.height,
+            color_option: z.colorOption,
+            price: z.price,
+            is_available: z.isAvailable,
+          })),
+        })),
       })),
     };
 
@@ -234,7 +301,6 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
 
   useEffect(() => {
     if (!item?.id) return;
-    console.log(form);
 
     const loadForEdit = async () => {
       try {
@@ -243,7 +309,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
 
         const data = await res.json();
 
-        // 1️⃣ Populate newspaper form (EXACT prisma → frontend mapping)
+        // 1️⃣ Populate newspaper form
         setForm({
           name: data.name,
           name_sinhala: data.name_sinhala,
@@ -258,9 +324,10 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
           combine_eng_price: data.combine_eng_price,
           combine_tam_price: data.combine_tam_price,
           combine_eng_tam_price: data.combine_eng_tam_price,
+          allowed_weekdays: data.allowed_weekdays || [],
         });
 
-        // 2️⃣ Populate ad types
+        // 2️⃣ Populate ad types with sections + sizes
         if (Array.isArray(data.ad_types)) {
           setAdTypes(
             data.ad_types.map((t: any) => ({
@@ -289,6 +356,24 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
               extraNotes2: t.extra_notes2 || "",
               categories: "",
               colorOptions: [],
+              sections: Array.isArray(t.ad_sections)
+                ? t.ad_sections.map((sec: any) => ({
+                    name: sec.name,
+                    extraNotes: sec.extra_notes || "",
+                    isAvailable: sec.is_available,
+                    sizes: Array.isArray(sec.ad_section_sizes)
+                      ? sec.ad_section_sizes.map((sz: any) => ({
+                          sizeType: sz.size_type,
+                          width: sz.width,
+                          height: sz.height,
+                          colorOption: sz.color_option,
+                          price: sz.price,
+                          isSaved: true, // mark existing sizes as saved
+                          isAvailable: sz.is_available,
+                        }))
+                      : [],
+                  }))
+                : [],
             }))
           );
         }
@@ -300,6 +385,12 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
 
     loadForEdit();
   }, [item?.id]);
+
+  useEffect(() => {
+    if (form.type === "Daily") setallowed_weekdays([1, 2, 3, 4, 5, 6, 7]);
+    if (form.type === "Sunday") setallowed_weekdays([7]);
+    if (form.type === "Weekly") setallowed_weekdays([1]); // default Monday
+  }, [form.type]);
 
   // components/NewspaperSkeleton.tsx
   function NewspaperSkeleton() {
@@ -375,11 +466,11 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                 Newspaper Details
               </h3>
 
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 mb-6">
                 {/* Name */}
                 <div>
                   <label className="block text-sm font-medium text-[var(--color-text)]">
-                    Newspaper Name
+                    Newspaper Name <span className="text-red-600">*</span>
                   </label>
                   <input
                     type="text"
@@ -433,7 +524,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                   </label>
                   <select
                     disabled={!!item}
-                    className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[var(--color-primary)] focus:outline-none disabled:bg-gray-100"
+                    className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none disabled:bg-gray-100"
                     value={form.type}
                     onChange={(e) => setForm({ ...form, type: e.target.value })}
                   >
@@ -443,7 +534,48 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                     <option>Monthly</option>
                   </select>
                 </div>
+                <div>
+                  <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                    Publishing Days
+                  </label>
 
+                  <div className="grid grid-cols-7 gap-2">
+                    {WEEKDAYS.map((day) => {
+                      const isSelected = allowed_weekdays.includes(day.id);
+
+                      return (
+                        <button
+                          key={day.id}
+                          type="button"
+                          onClick={() => {
+                            setallowed_weekdays((prev) =>
+                              isSelected
+                                ? prev.filter((d) => d !== day.id)
+                                : [...prev, day.id].sort()
+                            );
+                          }}
+                          className={`
+            h-8 rounded-lg border text-sm font-medium transition-all
+            flex flex-col items-center justify-center
+            ${
+              isSelected
+                ? "bg-[var(--color-primary-dark)] text-white border-[var(--color-primary)]"
+                : "bg-white text-[var(--color-primary-dark)] border-gray-300 hover:border-[var(--color-primary-accent)]"
+            }
+          `}
+                        >
+                          <span>{day.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <p className="mt-2 text-xs text-[var(--color-text-highlight)]">
+                    Only future dates matching these days will be selectable
+                  </p>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
                 {/* Metrics */}
                 {[
                   ["Columns per Page", "noColPerPage"],
@@ -453,12 +585,12 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                   ["Tint Additional Charge", "tintAdditionalCharge"],
                 ].map(([label, key]) => (
                   <div key={key}>
-                    <label className="block text-sm font-medium text-[var(--color-text)]">
+                    <label className="block text-sm font-medium text-text">
                       {label}
                     </label>
                     <input
                       type="number"
-                      className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[var(--color-primary)] focus:outline-none"
+                      className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none"
                       value={(form as any)[key]}
                       onChange={(e) =>
                         setForm({ ...form, [key]: Number(e.target.value) })
@@ -537,7 +669,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                   onClick={addNewAdType}
                   className="rounded-lg bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-white transition hover:bg-[var(--color-primary-dark)]"
                 >
-                  + Add Type
+                  Add New Type
                 </button>
               </div>
 
@@ -554,15 +686,16 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                 ];
 
                 const CASUAL_PRICE_FIELDS = [
-                  ["B&W Price (Per Column)", "csColBWPrice"],
-                  ["B&W + 1 Color (Per Column)", "csColBWOneColorPrice"],
-                  ["B&W + 2 Colors (Per Column)", "csColBWTwoColorPrice"],
-                  ["Full Color (Per Column)", "csColFullColorPrice"],
+                  // ["B&W Price (Per Column)", "csColBWPrice"],
+                  // ["B&W + 1 Color (Per Column)", "csColBWOneColorPrice"],
+                  // ["B&W + 2 Colors (Per Column)", "csColBWTwoColorPrice"],
+                  // ["Full Color (Per Column)", "csColFullColorPrice"],
 
-                  ["B&W Price (Full Page)", "csPageBWPrice"],
-                  ["B&W + 1 Color (Full Page)", "csPageBWOneColorPrice"],
-                  ["B&W + 2 Colors (Full Page)", "csPageBWTwoColorPrice"],
-                  ["Full Color (Full Page)", "csPageFullColorPrice"],
+                  // ["B&W Price (Full Page)", "csPageBWPrice"],
+                  // ["B&W + 1 Color (Full Page)", "csPageBWOneColorPrice"],
+                  // ["B&W + 2 Colors (Full Page)", "csPageBWTwoColorPrice"],
+                  // ["Full Color (Full Page)", "csPageFullColorPrice"],
+                  ["Tax Amount (Vat %)", "taxAmount"],
                 ];
 
                 const priceFields =
@@ -579,7 +712,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                       Ad Type #{index + 1}
                     </h4>
 
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-4 my-4">
                       {/* Type Selector */}
                       <div>
                         <label className="block text-sm font-medium text-[var(--color-text)]">
@@ -605,8 +738,8 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                         ["Display Name", "name", "text"],
                         ["Base Type", "baseType", "text"],
                         ["Max Words", "maxWords", "number"],
-                        ["Priority Price", "priorityPrice", "number"],
-                        ["Tax", "taxAmount", "number"],
+                        // ["Priority Price", "priorityPrice", "number"],
+                        // ["Tax", "taxAmount", "number"],
                       ].map(([label, key, type]) => (
                         <div key={key as string}>
                           <label className="block text-sm font-medium text-[var(--color-text)]">
@@ -628,7 +761,8 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                           />
                         </div>
                       ))}
-
+                    </div>
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
                       {/* CONDITIONAL PRICE FIELDS */}
                       {priceFields.map(([label, key]) => (
                         <div key={key}>
@@ -645,9 +779,259 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                           />
                         </div>
                       ))}
+                    </div>
 
+                    {t.typeKey === "casual" && (
+                      <>
+                        {/* AD SIZES TABLE */}
+                        <div className="mt-6 space-y-6">
+                          <div className="w-full flex justify-center">
+                            <button
+                              type="button"
+                              onClick={() => addSection(index)}
+                              className="rounded-md bg-primary-dark px-4 py-2 text-sm text-gray-100"
+                            >
+                              Add New Section
+                            </button>
+                          </div>
+
+                          {t.sections?.map((section: any, sIndex: number) => (
+                            <div key={sIndex} className="rounded-lg border p-4">
+                              {/* SECTION HEADER */}
+                              <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+                                <input
+                                  type="text"
+                                  placeholder="Section name (Main, Thaksalawa...)"
+                                  className="rounded border px-3 py-2 text-sm"
+                                  value={section.name}
+                                  onChange={(e) => {
+                                    const updated = [...adTypes];
+                                    updated[index].sections[sIndex].name =
+                                      e.target.value;
+                                    setAdTypes(updated);
+                                  }}
+                                />
+
+                                <input
+                                  type="text"
+                                  placeholder="Extra notes"
+                                  className="md:col-span-2 rounded border px-3 py-2 text-sm"
+                                  value={section.extraNotes}
+                                  onChange={(e) => {
+                                    const updated = [...adTypes];
+                                    updated[index].sections[sIndex].extraNotes =
+                                      e.target.value;
+                                    setAdTypes(updated);
+                                  }}
+                                />
+
+                                <div className="flex items-center gap-2">
+                                  <label className="text-sm">Active</label>
+                                  <input
+                                    type="checkbox"
+                                    checked={section.isAvailable ?? true}
+                                    onChange={(e) => {
+                                      const updated = [...adTypes];
+                                      updated[index].sections[
+                                        sIndex
+                                      ].isAvailable = e.target.checked;
+                                      setAdTypes(updated);
+                                    }}
+                                    className="h-5 w-5 accent-[var(--color-primary)]"
+                                  />
+                                </div>
+                              </div>
+
+                              {/* ADD SIZE */}
+                              <div className="w-full flex justify-center mt-4">
+                                <button
+                                  type="button"
+                                  onClick={() => addSize(index, sIndex)}
+                                  className="mt-4 text-sm rounded-md border-primary border-1 px-4 py-2 text-primary-dark! hover:text-primary! !bg-transparent"
+                                >
+                                  Add New Size
+                                </button>
+                              </div>
+
+                              {/* SIZES TABLE */}
+                              <div className="mt-3 overflow-x-auto">
+                                <table className="w-full border text-sm">
+                                  <thead className="bg-gray-100">
+                                    <tr>
+                                      <th className="border p-2">Size Type</th>
+                                      <th className="border p-2">Width</th>
+                                      <th className="border p-2">Height</th>
+                                      <th className="border p-2">Color</th>
+                                      <th className="border p-2">Price</th>
+                                      <th className="border p-2">✔</th>
+                                      <th className="border p-2">
+                                        Active
+                                      </th>{" "}
+                                      {/* New column */}
+                                    </tr>
+                                  </thead>
+
+                                  <tbody>
+                                    {section.sizes.map(
+                                      (sz: any, zIndex: number) => (
+                                        <tr
+                                          key={zIndex}
+                                          className={
+                                            !sz.isAvailable ? "opacity-50" : ""
+                                          }
+                                        >
+                                          <td className="border p-2">
+                                            <select
+                                              className="w-full rounded border px-2 py-1"
+                                              value={sz.sizeType}
+                                              onChange={(e) =>
+                                                updateSize(
+                                                  index,
+                                                  sIndex,
+                                                  zIndex,
+                                                  "sizeType",
+                                                  e.target.value
+                                                )
+                                              }
+                                              disabled={!sz.isAvailable} // disable if inactive
+                                            >
+                                              <option value="">Select</option>
+                                              <option>full_page</option>
+                                              <option>half_page</option>
+                                              <option>1/4_page</option>
+                                              <option>solus_hr</option>
+                                              <option>solus_vr</option>
+                                              <option>strip_hr</option>
+                                              <option>strip_vr</option>
+                                              <option>custom</option>
+                                            </select>
+                                          </td>
+
+                                          <td className="border p-2">
+                                            <input
+                                              type="number"
+                                              className="w-full rounded border px-2 py-1"
+                                              value={sz.width}
+                                              onChange={(e) =>
+                                                updateSize(
+                                                  index,
+                                                  sIndex,
+                                                  zIndex,
+                                                  "width",
+                                                  Number(e.target.value)
+                                                )
+                                              }
+                                              disabled={!sz.isAvailable}
+                                            />
+                                          </td>
+
+                                          <td className="border p-2">
+                                            <input
+                                              type="number"
+                                              className="w-full rounded border px-2 py-1"
+                                              value={sz.height}
+                                              onChange={(e) =>
+                                                updateSize(
+                                                  index,
+                                                  sIndex,
+                                                  zIndex,
+                                                  "height",
+                                                  Number(e.target.value)
+                                                )
+                                              }
+                                              disabled={!sz.isAvailable}
+                                            />
+                                          </td>
+
+                                          <td className="border p-2">
+                                            <select
+                                              className="w-full rounded border px-2 py-1"
+                                              value={sz.colorOption}
+                                              onChange={(e) =>
+                                                updateSize(
+                                                  index,
+                                                  sIndex,
+                                                  zIndex,
+                                                  "colorOption",
+                                                  e.target.value
+                                                )
+                                              }
+                                              disabled={!sz.isAvailable}
+                                            >
+                                              <option value="">Select</option>
+                                              <option>bw</option>
+                                              <option>bw1</option>
+                                              <option>bw2</option>
+                                              <option>fc</option>
+                                            </select>
+                                          </td>
+
+                                          <td className="border p-2">
+                                            <input
+                                              type="number"
+                                              className="w-full rounded border px-2 py-1"
+                                              value={sz.price}
+                                              onChange={(e) =>
+                                                updateSize(
+                                                  index,
+                                                  sIndex,
+                                                  zIndex,
+                                                  "price",
+                                                  Number(e.target.value)
+                                                )
+                                              }
+                                              disabled={!sz.isAvailable}
+                                            />
+                                          </td>
+
+                                          <td className="border p-2 text-center">
+                                            <input
+                                              type="checkbox"
+                                              checked={sz.isSaved}
+                                              onChange={(e) =>
+                                                updateSize(
+                                                  index,
+                                                  sIndex,
+                                                  zIndex,
+                                                  "isSaved",
+                                                  e.target.checked
+                                                )
+                                              }
+                                              disabled={!sz.isAvailable}
+                                            />
+                                          </td>
+
+                                          {/* Active / Inactive toggle */}
+                                          <td className="border p-2 text-center">
+                                            <input
+                                              type="checkbox"
+                                              checked={sz.isAvailable ?? true}
+                                              onChange={(e) => {
+                                                const updated = [...adTypes];
+                                                updated[index].sections[
+                                                  sIndex
+                                                ].sizes[zIndex].isAvailable =
+                                                  e.target.checked;
+                                                setAdTypes(updated);
+                                              }}
+                                              className="h-5 w-5 accent-[var(--color-primary)]"
+                                            />
+                                          </td>
+                                        </tr>
+                                      )
+                                    )}
+                                  </tbody>
+                                </table>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    )}
+
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-4 my-4">
                       {/* Toggles */}
-                      <div className="flex items-center gap-2 md:col-span-2">
+                      <div className="flex items-center gap-2 md:col-span-4">
                         <div id="reqImg" className="flex items-center gap-1">
                           <input
                             className="h-5 w-5 accent-[var(--color-primary)]"

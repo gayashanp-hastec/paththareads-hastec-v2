@@ -24,6 +24,7 @@ interface Newspaper {
   is_allow_language_combined: false;
   combine_eng_price: false;
   combine_tam_price: false;
+  allowed_weekdays: [];
 }
 
 interface AdType {

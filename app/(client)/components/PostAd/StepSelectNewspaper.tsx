@@ -74,6 +74,7 @@ export default function StepSelectNewspaper({
         is_lang_combine_allowed: paper.is_lang_combine_allowed,
         combine_eng_price: paper.combine_eng_price,
         combine_tam_price: paper.combine_tam_price,
+        allowed_weekdays: paper.allowed_weekdays,
       },
     });
     console.log("select newspaper form data output", formData);
