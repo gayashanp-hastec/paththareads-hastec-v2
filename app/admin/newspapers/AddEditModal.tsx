@@ -55,6 +55,7 @@ const EMPTY_SIZE = {
   price: 0,
   isSaved: false,
   isAvailable: true,
+  error: "",
 };
 
 const AD_TYPE_OPTIONS = [
@@ -660,6 +661,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                       <input
                         type="number"
                         min={0}
+                        step={50}
                         className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[var(--color-primary)] focus:outline-none"
                         value={(form as any)[key]}
                         onChange={(e) =>
@@ -709,15 +711,6 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                 ];
 
                 const CASUAL_PRICE_FIELDS = [
-                  // ["B&W Price (Per Column)", "csColBWPrice"],
-                  // ["B&W + 1 Color (Per Column)", "csColBWOneColorPrice"],
-                  // ["B&W + 2 Colors (Per Column)", "csColBWTwoColorPrice"],
-                  // ["Full Color (Per Column)", "csColFullColorPrice"],
-
-                  // ["B&W Price (Full Page)", "csPageBWPrice"],
-                  // ["B&W + 1 Color (Full Page)", "csPageBWOneColorPrice"],
-                  // ["B&W + 2 Colors (Full Page)", "csPageBWTwoColorPrice"],
-                  // ["Full Color (Full Page)", "csPageFullColorPrice"],
                   ["Tax Amount (Vat %)", "taxAmount"],
                 ];
 
@@ -758,12 +751,36 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
 
                       {/* Static Fields */}
                       {[
-                        ["Display Name", "name", "text"],
-                        ["Base Type", "baseType", "text"],
-                        ["Max Words", "maxWords", "number"],
-                        // ["Priority Price", "priorityPrice", "number"],
+                        [
+                          "Display Name",
+                          "name",
+                          "text",
+                          "The name displayed to the user",
+                        ],
+                        [
+                          "Base Type (Optional)",
+                          "baseType",
+                          "text",
+                          "classified or casual",
+                        ],
+                        [
+                          "Max Words",
+                          "maxWords",
+                          "number",
+                          "Maximum words allowed",
+                        ],
+                        ...(form.type === "Sunday"
+                          ? [
+                              [
+                                "Priority Price",
+                                "priorityPrice",
+                                "number",
+                                "Priority Price",
+                              ],
+                            ]
+                          : []),
                         // ["Tax", "taxAmount", "number"],
-                      ].map(([label, key, type]) => (
+                      ].map(([label, key, type, placeholder]) => (
                         <div key={key as string}>
                           <label className="block text-sm font-medium text-[var(--color-text)]">
                             {label}
@@ -781,6 +798,9 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                                   : e.target.value
                               )
                             }
+                            {...(type === "number"
+                              ? { step: 5, min: 0 }
+                              : { placeholder: placeholder as string })}
                           />
                         </div>
                       ))}
@@ -897,148 +917,188 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                                   <tbody>
                                     {section.sizes.map(
                                       (sz: any, zIndex: number) => (
-                                        <tr
-                                          key={zIndex}
-                                          className={
-                                            !sz.isAvailable ? "opacity-50" : ""
-                                          }
-                                        >
-                                          <td className="border p-2">
-                                            <select
-                                              className="w-full rounded border px-2 py-1"
-                                              value={sz.sizeType}
-                                              onChange={(e) =>
-                                                updateSize(
-                                                  index,
-                                                  sIndex,
-                                                  zIndex,
-                                                  "sizeType",
-                                                  e.target.value
-                                                )
-                                              }
-                                              disabled={!sz.isAvailable} // disable if inactive
-                                            >
-                                              <option>full_page</option>
-                                              <option>half_page</option>
-                                              <option>1/4_page</option>
-                                              <option>solus_hr</option>
-                                              <option>solus_vr</option>
-                                              <option>strip_hr</option>
-                                              <option>strip_vr</option>
-                                              <option>custom</option>
-                                            </select>
-                                          </td>
+                                        <>
+                                          <tr
+                                            key={zIndex}
+                                            className={
+                                              !sz.isAvailable
+                                                ? "opacity-50"
+                                                : ""
+                                            }
+                                          >
+                                            <td className="border p-2">
+                                              <select
+                                                className="w-full rounded border px-2 py-1"
+                                                value={sz.sizeType}
+                                                onChange={(e) =>
+                                                  updateSize(
+                                                    index,
+                                                    sIndex,
+                                                    zIndex,
+                                                    "sizeType",
+                                                    e.target.value
+                                                  )
+                                                }
+                                                disabled={!sz.isAvailable} // disable if inactive
+                                              >
+                                                <option>- Select Size -</option>
+                                                <option>full_page</option>
+                                                <option>half_page</option>
+                                                <option>1/4_page</option>
+                                                <option>solus_hr</option>
+                                                <option>solus_vr</option>
+                                                <option>strip_hr</option>
+                                                <option>strip_vr</option>
+                                                <option>custom</option>
+                                              </select>
+                                            </td>
 
-                                          <td className="border p-2">
-                                            <input
-                                              type="number"
-                                              className="w-full rounded border px-2 py-1"
-                                              value={sz.width}
-                                              onChange={(e) =>
-                                                updateSize(
-                                                  index,
-                                                  sIndex,
-                                                  zIndex,
-                                                  "width",
-                                                  Number(e.target.value)
-                                                )
-                                              }
-                                              disabled={!sz.isAvailable}
-                                            />
-                                          </td>
+                                            <td className="border p-2">
+                                              <input
+                                                type="number"
+                                                className="w-full rounded border px-2 py-1"
+                                                value={sz.width}
+                                                onChange={(e) =>
+                                                  updateSize(
+                                                    index,
+                                                    sIndex,
+                                                    zIndex,
+                                                    "width",
+                                                    Number(e.target.value)
+                                                  )
+                                                }
+                                                disabled={!sz.isAvailable}
+                                              />
+                                            </td>
 
-                                          <td className="border p-2">
-                                            <input
-                                              type="number"
-                                              className="w-full rounded border px-2 py-1"
-                                              value={sz.height}
-                                              onChange={(e) =>
-                                                updateSize(
-                                                  index,
-                                                  sIndex,
-                                                  zIndex,
-                                                  "height",
-                                                  Number(e.target.value)
-                                                )
-                                              }
-                                              disabled={!sz.isAvailable}
-                                            />
-                                          </td>
+                                            <td className="border p-2">
+                                              <input
+                                                type="number"
+                                                className="w-full rounded border px-2 py-1"
+                                                value={sz.height}
+                                                onChange={(e) =>
+                                                  updateSize(
+                                                    index,
+                                                    sIndex,
+                                                    zIndex,
+                                                    "height",
+                                                    Number(e.target.value)
+                                                  )
+                                                }
+                                                disabled={!sz.isAvailable}
+                                              />
+                                            </td>
 
-                                          <td className="border p-2">
-                                            <select
-                                              className="w-full rounded border px-2 py-1"
-                                              value={sz.colorOption}
-                                              onChange={(e) =>
-                                                updateSize(
-                                                  index,
-                                                  sIndex,
-                                                  zIndex,
-                                                  "colorOption",
-                                                  e.target.value
-                                                )
-                                              }
-                                              disabled={!sz.isAvailable}
-                                            >
-                                              <option>bw</option>
-                                              <option>bw1</option>
-                                              <option>bw2</option>
-                                              <option>fc</option>
-                                            </select>
-                                          </td>
+                                            <td className="border p-2">
+                                              <select
+                                                className="w-full rounded border px-2 py-1"
+                                                value={sz.colorOption}
+                                                onChange={(e) =>
+                                                  updateSize(
+                                                    index,
+                                                    sIndex,
+                                                    zIndex,
+                                                    "colorOption",
+                                                    e.target.value
+                                                  )
+                                                }
+                                                disabled={!sz.isAvailable}
+                                              >
+                                                <option>
+                                                  - Select Color -
+                                                </option>
+                                                <option>bw</option>
+                                                <option>bw1</option>
+                                                <option>bw2</option>
+                                                <option>fc</option>
+                                              </select>
+                                            </td>
 
-                                          <td className="border p-2">
-                                            <input
-                                              type="number"
-                                              className="w-full rounded border px-2 py-1"
-                                              value={sz.price}
-                                              onChange={(e) =>
-                                                updateSize(
-                                                  index,
-                                                  sIndex,
-                                                  zIndex,
-                                                  "price",
-                                                  Number(e.target.value)
-                                                )
-                                              }
-                                              disabled={!sz.isAvailable}
-                                            />
-                                          </td>
+                                            <td className="border p-2">
+                                              <input
+                                                type="number"
+                                                step={1000}
+                                                className="w-full rounded border px-2 py-1"
+                                                value={sz.price}
+                                                onChange={(e) =>
+                                                  updateSize(
+                                                    index,
+                                                    sIndex,
+                                                    zIndex,
+                                                    "price",
+                                                    Number(e.target.value)
+                                                  )
+                                                }
+                                                disabled={!sz.isAvailable}
+                                              />
+                                            </td>
 
-                                          <td className="border p-2 text-center">
-                                            <input
-                                              type="checkbox"
-                                              checked={sz.isSaved}
-                                              onChange={(e) =>
-                                                updateSize(
-                                                  index,
-                                                  sIndex,
-                                                  zIndex,
-                                                  "isSaved",
-                                                  e.target.checked
-                                                )
-                                              }
-                                              disabled={!sz.isAvailable}
-                                            />
-                                          </td>
+                                            <td className="border p-2 text-center">
+                                              <input
+                                                type="checkbox"
+                                                checked={sz.isSaved}
+                                                onChange={(e) => {
+                                                  const checked =
+                                                    e.target.checked;
+                                                  const updated = [...adTypes];
+                                                  const row =
+                                                    updated[index].sections[
+                                                      sIndex
+                                                    ].sizes[zIndex];
 
-                                          {/* Active / Inactive toggle */}
-                                          <td className="border p-2 text-center">
-                                            <input
-                                              type="checkbox"
-                                              checked={sz.isAvailable ?? true}
-                                              onChange={(e) => {
-                                                const updated = [...adTypes];
-                                                updated[index].sections[
-                                                  sIndex
-                                                ].sizes[zIndex].isAvailable =
-                                                  e.target.checked;
-                                                setAdTypes(updated);
-                                              }}
-                                              className="h-5 w-5 accent-[var(--color-primary)]"
-                                            />
-                                          </td>
-                                        </tr>
+                                                  if (checked) {
+                                                    // ✅ validation rules
+                                                    if (
+                                                      !row.sizeType ||
+                                                      !row.colorOption ||
+                                                      row.price <= 0
+                                                    ) {
+                                                      row.error =
+                                                        "Please select size and color before saving.";
+                                                      row.isSaved = false;
+                                                    } else {
+                                                      row.error = "";
+                                                      row.isSaved = true;
+                                                    }
+                                                  } else {
+                                                    row.isSaved = false;
+                                                    row.error = "";
+                                                  }
+
+                                                  setAdTypes(updated);
+                                                }}
+                                                disabled={!sz.isAvailable}
+                                              />
+                                            </td>
+
+                                            {/* Active / Inactive toggle */}
+                                            <td className="border p-2 text-center">
+                                              <input
+                                                type="checkbox"
+                                                checked={sz.isAvailable ?? true}
+                                                onChange={(e) => {
+                                                  const updated = [...adTypes];
+                                                  updated[index].sections[
+                                                    sIndex
+                                                  ].sizes[zIndex].isAvailable =
+                                                    e.target.checked;
+                                                  setAdTypes(updated);
+                                                }}
+                                                className="h-5 w-5 accent-[var(--color-primary)]"
+                                              />
+                                            </td>
+                                          </tr>
+                                          {sz.error && (
+                                            <tr>
+                                              <td
+                                                colSpan={7}
+                                                className="border px-3 py-2 text-xs text-red-600 bg-red-50"
+                                              >
+                                                {sz.error}
+                                              </td>
+                                            </tr>
+                                          )}
+                                        </>
                                       )
                                     )}
                                   </tbody>
