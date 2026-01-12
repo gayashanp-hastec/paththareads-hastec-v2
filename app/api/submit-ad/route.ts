@@ -135,6 +135,7 @@ export async function POST(req: Request) {
           color_option: advertisement.color_option,
           has_artwork: advertisement.has_artwork,
           need_artwork: advertisement.need_artwork,
+          section_id: advertisement.sectionId,
         },
       });
     }
