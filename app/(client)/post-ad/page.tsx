@@ -10,6 +10,7 @@ import StepSelectAdType from "../components/PostAd/StepSelectAdType";
 import StepAdvertiserDetails from "../components/PostAd/StepAdvertiserDetails";
 import StepSubmittedForReview from "../components/PostAd/StepSubmittedForReview";
 import { checkProfanity } from "@/lib/profanity";
+import { format } from "path";
 
 // ---------------- Types ----------------
 interface Newspaper {
@@ -68,6 +69,7 @@ interface FormData {
   hasOwnArtwork: boolean;
   needArtwork: boolean;
   uploadedImage: File | null;
+  sectionId: number;
   is_allow_language_combined: boolean;
   userLangCombineSelected: boolean;
   userLangCombineSelected_Tam: boolean;
@@ -124,6 +126,7 @@ export default function PostAdPage() {
     uploadedImage: null,
     hasOwnArtwork: false,
     needArtwork: false,
+    sectionId: 0,
     is_allow_language_combined: false,
     userLangCombineSelected: false,
     userLangCombineSelected_Eng: false,
@@ -285,6 +288,7 @@ export default function PostAdPage() {
   // ---------------- Step Navigation ----------------
   const nextStep = async () => {
     const isValid = await validateStep();
+    console.log("at payload", formData.sectionId);
     if (!isValid) return;
     if (currentStep < 3) setCurrentStep((prev) => prev + 1);
   };
@@ -297,12 +301,6 @@ export default function PostAdPage() {
   const handleSubmitForReview = async () => {
     const isValid = await validateStep();
     if (!isValid) return;
-
-    // // Runtime check for selectedNewspaper
-    // if (!formData.selectedNewspaper) {
-    //   toast.error("Please select a newspaper.");
-    //   return;
-    // }
 
     setIsSubmitting(true);
 
@@ -336,6 +334,7 @@ export default function PostAdPage() {
           need_artwork: formData.needArtwork,
           is_publish_eng: formData.userLangCombineSelected_Eng,
           is_publish_tam: formData.userLangCombineSelected_Tam,
+          section_id: formData.sectionId,
         },
       };
 
