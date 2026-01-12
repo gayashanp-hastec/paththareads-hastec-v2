@@ -159,6 +159,7 @@ export default function StepSelectAdType({
       hasOwnArtwork: false,
       needArtwork: false,
       uploadedImage: null,
+      sectionId: 0,
       noOfColumns: 1,
       adHeight: formData.selectedNewspaper.min_ad_height,
       userLangCombineSelected: false,
@@ -262,6 +263,7 @@ export default function StepSelectAdType({
     }
   };
 
+  // price matrix - hook
   useEffect(() => {
     if (!selectedAdType) return;
 
@@ -273,10 +275,10 @@ export default function StepSelectAdType({
       let basePrice = 0;
 
       // FULL PAGE → color only
-      if (formData.adSizeType === "full") {
-        basePrice = 0;
-        basePrice = selectedColor;
-      }
+      // if (formData.adSizeType === "full") {
+      //   basePrice = 0;
+      //   basePrice = selectedColor;
+      // }
 
       // CUSTOM SIZE → columns × height × color
       if (formData.adSizeType === "custom") {
@@ -285,6 +287,11 @@ export default function StepSelectAdType({
           (formData.noOfColumns || 1) * //line 1
           (formData.adHeight || minAdHeight) * //line 2
           (selectedColor || 0);
+      }
+
+      if (formData.adSizeType !== "custom") {
+        basePrice = 0;
+        basePrice = selectedColor;
       }
 
       breakdown.push({ label: "Base Price", amount: basePrice });
@@ -405,7 +412,7 @@ export default function StepSelectAdType({
       .catch(() => setSubCategoryOptions([]));
   }, [selectedCategory]);
 
-  const today = new Date().toISOString().split("T")[0];
+  // const today = new Date().toISOString().split("T")[0];
 
   function AdTypeSkeleton() {
     return (
@@ -553,41 +560,13 @@ export default function StepSelectAdType({
     focus:ring-[var(--color-primary-accent)]
   "
               />
-
-              {/* <DatePicker
-              selected={
-                formData.publishDate ? new Date(formData.publishDate) : null
-              }
-              onChange={(date: Date | null) =>
-                updateFormData({
-                  publishDate: date ? date.toISOString().split("T")[0] : "",
-                })
-              }
-              filterDate={(date) => isAllowedDateByArray(date, newspaperDays)}
-              minDate={new Date()}
-              dateFormat="yyyy-MM-dd"
-              placeholderText="Select date"
-              className="border border-gray-300 rounded-lg p-2 w-full
-               focus:ring-2 focus:ring-primary-accent"
-              calendarClassName="!text-sm"
-            /> */}
-
-              {/* <input
-                type="date"
-                min={today}
-                value={formData.publishDate || ""}
-                onChange={(e) =>
-                  updateFormData({ publishDate: e.target.value })
-                }
-                required
-                className="border border-gray-300 rounded-lg p-2 w-full md:w-1/5 focus:ring-2 focus:ring-primary-accent"
-              /> */}
             </div>
 
             {/* Category Dropdown */}
             {(selectedAdType.key === "classified" ||
-              selectedAdType.key === "photo_classified") && (
-              <div className="w-full md:w-1/4">
+              selectedAdType.key === "photo_classified" ||
+              selectedAdType.key === "marriage") && (
+              <div className="w-full md:w-1/2">
                 <label className="block font-medium mb-1 md:mt-8">
                   Category{" "}
                   <span
@@ -619,46 +598,67 @@ export default function StepSelectAdType({
                     {cat.category}
                   </option>
                 ))} */}
-                  <option value="Real Estate">Real Estate</option>
-                  <option value="Health & Beauty">Health & Beauty</option>
-                  <option value="Automobile">Automobile</option>
-                  <option value="Personal">Personal</option>
-                  <option value="Employment">Employment</option>
-                  <option value="General">General</option>
-                  <option value="Trade">Trade</option>
+                  {selectedAdType.key === "classified" && (
+                    <>
+                      <option value="Real Estate">Real Estate</option>
+                      <option value="Health & Beauty">Health & Beauty</option>
+                      <option value="Automobile">Automobile</option>
+                      <option value="Personal">Personal</option>
+                      <option value="Employment">Employment</option>
+                      <option value="General">General</option>
+                      <option value="Trade">Trade</option>
+                    </>
+                  )}
+                  {selectedAdType.key === "marriage" && (
+                    <>
+                      <option value="Brides">Brides</option>
+                      <option value="Bridegrooms">Bridegrooms</option>
+                      <option value="Brides and Grooms">
+                        Brides/Bridegrooms
+                      </option>
+                    </>
+                  )}
+                  {selectedAdType.key === "photo_classified" && (
+                    <>
+                      <option value="Machinery">Machinery</option>
+                      <option value="Vehicles">Vehicles</option>
+                    </>
+                  )}
                 </select>
               </div>
             )}
 
             {/* Subcategory Dropdown */}
-            {selectedCategory && (
-              <div className="md:mt-8 w-full md:w-1/4">
-                <label className="block font-medium mb-1">
-                  Sub Category{" "}
-                  <span
-                    className="text-sm"
-                    style={{ fontFamily: "var(--font-sinhala), sans-serif" }}
+            {selectedAdType.key !== "marriage" &&
+              selectedAdType.key !== "photo_classified" &&
+              selectedCategory && (
+                <div className="md:mt-8 w-full md:w-1/2">
+                  <label className="block font-medium mb-1">
+                    Sub Category{" "}
+                    <span
+                      className="text-sm"
+                      style={{ fontFamily: "var(--font-sinhala), sans-serif" }}
+                    >
+                      (දැන්වීම් ස්වභාවය)
+                    </span>{" "}
+                  </label>
+                  <select
+                    value={selectedSubCategory}
+                    onChange={(e) => {
+                      setSelectedSubCategory(e.target.value);
+                      updateFormData({ subCategory: e.target.value });
+                    }}
+                    className="border border-gray-300 rounded-lg p-2 w-full focus:ring-2 focus:ring-primary-accent"
                   >
-                    (දැන්වීම් ස්වභාවය)
-                  </span>{" "}
-                </label>
-                <select
-                  value={selectedSubCategory}
-                  onChange={(e) => {
-                    setSelectedSubCategory(e.target.value);
-                    updateFormData({ subCategory: e.target.value });
-                  }}
-                  className="border border-gray-300 rounded-lg p-2 w-full focus:ring-2 focus:ring-primary-accent"
-                >
-                  <option value="">Select Subcategory</option>
-                  {subCategoryOptions.map((sub) => (
-                    <option key={sub} value={sub}>
-                      {sub}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
+                    <option value="">Select Subcategory</option>
+                    {subCategoryOptions.map((sub) => (
+                      <option key={sub} value={sub}>
+                        {sub}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
             {/* Advertisement Text */}
             <div className="relative md:mt-8">
@@ -1002,7 +1002,11 @@ export default function StepSelectAdType({
                         key={section.id}
                         type="button"
                         disabled={!section.isAvailable}
-                        onClick={() => setSelectedSection(section.id)}
+                        onClick={() => {
+                          setSelectedSection(section.id);
+                          updateFormData({ sectionId: section.id });
+                          console.log("check section id: ", formData.sectionId);
+                        }}
                         className={`
     min-w-[45%] sm:min-w-[45%] md:min-w-[23%] lg:min-w-[23%]
     h-[110px] 
