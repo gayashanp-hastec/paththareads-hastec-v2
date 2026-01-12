@@ -270,9 +270,11 @@ model ad_types {
 }
 
 model ad_categories {
-  id                Int                 @id @default(autoincrement())
-  name              String              @unique
-  ad_sub_categories ad_sub_categories[]
+  id                 Int                 @id @default(autoincrement())
+  name               String              @unique
+  nw_ad_type_id      Int?
+  newspaper_ad_types newspaper_ad_types? @relation(fields: [nw_ad_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_ad_types_categories")
+  ad_sub_categories  ad_sub_categories[]
 }
 
 model ad_sub_categories {
@@ -293,7 +295,9 @@ model casual_ads {
   color_option     String         @db.VarChar(20)
   has_artwork      Boolean
   need_artwork     Boolean
+  section_id       Int?
   advertisements   advertisements @relation(fields: [reference_number], references: [reference_number], onDelete: Cascade, onUpdate: NoAction, map: "fk_casual_ads_advertisement")
+  ad_sections      ad_sections?   @relation(fields: [section_id], references: [id], onDelete: NoAction, map: "fk_section_casual")
 }
 
 model classified_ads {
@@ -324,6 +328,15 @@ model ad_sections {
   is_available     Boolean?           @default(true)
   ad_section_sizes ad_section_sizes[]
   ad_types         ad_types           @relation(fields: [ad_type_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_ad_sections_ad_type")
+  casual_ads       casual_ads[]
+}
+
+model newspaper_ad_types {
+  id                Int             @id @default(autoincrement())
+  ad_type_name      String
+  ad_type_name_code String?
+  is_available      Boolean?        @default(true)
+  ad_categories     ad_categories[]
 }
 
 enum role_enum {
