@@ -81,14 +81,22 @@ export default function AdminAdvertisementsPending() {
         ad.status.toLowerCase().includes(search.toLowerCase()) ||
         ad.advertiser_name.toLowerCase().includes(search.toLowerCase())
     );
-    updated.sort((a, b) =>
-      sortKey === "created_at"
-        ? new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        : a[sortKey as keyof AdminAdvertisementsPending] >
-          b[sortKey as keyof AdminAdvertisementsPending]
-        ? 1
-        : -1
-    );
+    updated.sort((a, b) => {
+      if (sortKey === "created_at") {
+        return (
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+      }
+
+      const aValue = String(
+        a[sortKey as keyof AdminAdvertisementsPending] ?? ""
+      );
+      const bValue = String(
+        b[sortKey as keyof AdminAdvertisementsPending] ?? ""
+      );
+
+      return aValue.localeCompare(bValue);
+    });
     setFilteredAds(updated);
   }, [search, ads, sortKey]);
 
