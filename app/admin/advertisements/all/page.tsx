@@ -3,16 +3,36 @@
 import { useEffect, useState } from "react";
 import Sidebar from "../../components/Sidebar";
 import { X } from "lucide-react";
+import {
+  CheckCircle,
+  XCircle,
+  RefreshCw,
+  Printer,
+  Image as ImageIcon,
+} from "lucide-react";
 
 interface Advertisement {
   reference_number: string;
   newspaper_name: string;
-  advertiser_id: number;
+  advertiser_name: string;
+
   ad_type: string;
+  classified_category?: string;
+  subcategory?: string;
+
+  publish_date?: string;
   created_at: string;
-  status: string;
+  updated_at?: string;
+
   advertisement_text: string;
-  upload_image: string;
+  special_notes?: string;
+
+  background_color?: boolean;
+  post_in_web?: boolean;
+
+  upload_image?: string;
+  price?: string;
+  status: string;
 }
 
 export default function AdminAdvertisements() {
@@ -29,6 +49,9 @@ export default function AdminAdvertisements() {
   const ITEMS_PER_PAGE = 15;
 
   const [requestImageChange, setRequestImageChange] = useState(false);
+
+  const ACTION_BTN_CLASS =
+    "flex items-center justify-center gap-2 w-40 px-4 py-2.5 rounded-lg shadow text-sm font-medium transition";
 
   // Fetch ads
   useEffect(() => {
@@ -131,6 +154,16 @@ export default function AdminAdvertisements() {
     }
   };
 
+  function InfoRow({ label, value }: { label: string; value?: string }) {
+    if (!value) return null;
+    return (
+      <div>
+        <p className="text-xs uppercase tracking-wide text-gray-400">{label}</p>
+        <p className="mt-0.5 text-sm text-gray-800">{value}</p>
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen text-violet-950 bg-gray-50">
       <Sidebar />
@@ -143,47 +176,49 @@ export default function AdminAdvertisements() {
         <h2 className="text-2xl font-bold">Advertisements</h2>
 
         {/* Filter controls */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-3">
+        <div className="flex flex-col gap-4 rounded-2xl bg-white p-4 shadow sm:flex-row sm:items-center sm:justify-between">
+          {/* Search */}
           <input
             type="text"
-            placeholder="Search by reference, paper, or status..."
-            className="border rounded-lg px-4 py-2 w-full md:w-1/2"
+            placeholder="Search by reference, name, paper, or status..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            className="w-full rounded-xl border px-4 py-2 text-sm
+               focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]
+               sm:max-w-md"
           />
 
-          <select
-            onChange={(e) =>
-              setFilteredAds(
-                ads.filter((ad) =>
-                  e.target.value === "all"
-                    ? true
-                    : ad.status.toLowerCase() === e.target.value.toLowerCase()
+          <div className="flex flex-wrap gap-3">
+            {/* Status Filter */}
+            <select
+              onChange={(e) =>
+                setFilteredAds(
+                  ads.filter((ad) =>
+                    e.target.value === "all"
+                      ? true
+                      : ad.status.toLowerCase() === e.target.value.toLowerCase()
+                  )
                 )
-              )
-            }
-            className="border rounded-lg px-3 py-2 w-full md:w-1/4"
-            defaultValue="all"
-          >
-            <option value="all">Show All Statuses</option>
-            <option value="pending">Pending</option>
-            <option value="resubmitted">Resubmitted</option>
-            <option value="approved">Approved</option>
-            <option value="paymentpending">Payment Pending</option>
-            <option value="revision">Revision</option>
-            <option value="declined">Declined</option>
-            <option value="canelled">Cancelled</option>
-            <option value="print">Sent to Print</option>
-          </select>
-          <select
-            value={sortKey}
-            onChange={(e) => setSortKey(e.target.value)}
-            className="border rounded-lg px-3 py-2"
-          >
-            <option value="created_at">Sort by Date</option>
-            <option value="newspaper_name">Sort by Newspaper</option>
-            <option value="status">Sort by Status</option>
-          </select>
+              }
+              defaultValue="all"
+              className="rounded-xl border px-4 py-2 text-sm"
+            >
+              <option value="all">Show All Statuses</option>
+              <option value="pending">Pending</option>
+              <option value="resubmitted">Resubmitted</option>
+            </select>
+
+            {/* Sort */}
+            <select
+              value={sortKey}
+              onChange={(e) => setSortKey(e.target.value)}
+              className="rounded-xl border px-4 py-2 text-sm"
+            >
+              <option value="created_at">Sort by Date</option>
+              <option value="newspaper_name">Sort by Newspaper</option>
+              <option value="status">Sort by Status</option>
+            </select>
+          </div>
         </div>
 
         {/* Table */}
@@ -192,8 +227,9 @@ export default function AdminAdvertisements() {
             <thead className="bg-gray-100 text-gray-700 uppercase text-xs">
               <tr>
                 <th className="px-4 py-3">Reference</th>
+                <th className="px-4 py-3">Advertiser Name</th>
                 <th className="px-4 py-3">Newspaper</th>
-                <th className="px-4 py-3">Advertiser ID</th>
+                {/* <th className="px-4 py-3">Advertiser ID</th> */}
                 <th className="px-4 py-3">Type</th>
                 <th className="px-4 py-3">Created</th>
                 <th className="px-4 py-3">Status</th>
@@ -219,8 +255,11 @@ export default function AdminAdvertisements() {
                     <td className="px-4 py-2 font-mono">
                       {ad.reference_number}
                     </td>
+                    <td className="px-4 py-2 font-mono">
+                      {ad.advertiser_name}
+                    </td>
                     <td className="px-4 py-2">{ad.newspaper_name}</td>
-                    <td className="px-4 py-2">{ad.advertiser_id}</td>
+                    {/* <td className="px-4 py-2">{ad.advertiser_id}</td> */}
                     <td className="px-4 py-2">{ad.ad_type}</td>
                     <td className="px-4 py-2">
                       {new Date(ad.created_at).toLocaleDateString()}
@@ -270,131 +309,244 @@ export default function AdminAdvertisements() {
 
         {/* Modal */}
         {isModalOpen && selectedAd && (
-          <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-            <div className="bg-white w-full max-w-4xl p-8 rounded-2xl shadow-2xl relative animate-fadeIn border border-gray-100">
-              {/* Close button */}
-              <button
-                onClick={closeModal}
-                className="absolute top-4 right-4 text-gray-500 hover:text-black transition"
-              >
-                <X className="w-6 h-6" />
-              </button>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
+            <div className="relative w-full max-w-5xl overflow-hidden rounded-2xl bg-white shadow-2xl border border-gray-100 animate-fadeIn">
+              {/* Header */}
+              <div className="flex items-start justify-between px-8 py-6 border-b bg-(--color-primary-dark) text-white">
+                <div>
+                  <h3 className="text-xl font-semibold">
+                    Ref:{" "}
+                    <span className="font-mono">
+                      {selectedAd.reference_number}
+                    </span>
+                  </h3>
+                  <p className="mt-1 opacity-80">
+                    Advertiser:{" "}
+                    <span className="font-bold">
+                      {selectedAd.advertiser_name}
+                    </span>
+                  </p>
+                  <p className="mt-1 opacity-80">
+                    Created at:{" "}
+                    <span className="font-bold">
+                      {new Date(selectedAd.created_at).toLocaleString()}
+                    </span>
+                  </p>
+                </div>
 
-              <h3 className="text-2xl font-semibold mb-6 text-gray-800">
-                Advertisement Details
-              </h3>
-              <div className="flex justify-between">
-                <p className="mb-3">
-                  Reference:{" "}
-                  <span className="font-mono text-gray-800">
-                    {selectedAd.reference_number}
+                <div className="flex items-center gap-4">
+                  <span
+                    className={`rounded-full px-3 py-1 text-xm font-medium
+                    ${
+                      selectedAd.status === "Approved"
+                        ? "bg-green-500/20 text-green-300"
+                        : selectedAd.status === "Declined"
+                        ? "bg-red-500/20 text-red-300"
+                        : "bg-yellow-500/20 text-yellow-300"
+                    }
+                  `}
+                  >
+                    {selectedAd.status}
                   </span>
-                </p>
-                <p>Advertisement type: {selectedAd.ad_type}</p>
-                <p>
-                  Status: <span className="font-bold">{selectedAd.status}</span>
-                </p>
+
+                  <button
+                    onClick={closeModal}
+                    className="text-white/70 hover:text-white transition"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
               </div>
 
-              {["Pending", "Revision", "Resubmitted", "UpdateImage"].includes(
-                selectedAd.status
-              ) && (
-                <textarea
-                  value={editedText}
-                  onChange={(e) => setEditedText(e.target.value)}
-                  className="w-full border rounded-xl p-4 h-48 focus:ring-2 focus:ring-blue-300 outline-none text-gray-800 resize-none"
-                />
-              )}
+              {/* Content */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-8">
+                {/* Left: Details */}
+                <div className="lg:col-span-1 space-y-5 text-sm">
+                  <InfoRow
+                    label="Newspaper"
+                    value={selectedAd.newspaper_name}
+                  />
+                  <InfoRow label="Category" value={selectedAd.ad_type} />
+                  <InfoRow
+                    label="Category"
+                    value={selectedAd.classified_category}
+                  />
+                  <InfoRow label="Subcategory" value={selectedAd.subcategory} />
+                  {selectedAd.publish_date && (
+                    <>
+                      <InfoRow
+                        label="Date to be Published"
+                        value={new Date(selectedAd.publish_date).toDateString()}
+                      />
+                    </>
+                  )}
+                  {selectedAd.special_notes && (
+                    <div>
+                      <p className="font-medium text-[var(--color-text-dark-highlight)]">
+                        Special Notes
+                      </p>
+                      <p className="mt-1 text-gray-600 leading-relaxed">
+                        {selectedAd.special_notes}
+                      </p>
+                    </div>
+                  )}
+                </div>
 
-              {["Approved", "Cancelled", "Declined", "PaymentPending"].includes(
-                selectedAd.status
-              ) && (
-                <textarea
-                  value={editedText}
-                  readOnly
-                  onChange={(e) => setEditedText(e.target.value)}
-                  className="w-full border rounded-xl p-4 h-48 focus:ring-2 focus:ring-blue-300 outline-none text-gray-800 resize-none"
-                />
-              )}
+                {/* Right: Editable Text */}
+                <div className="lg:col-span-2">
+                  <p className="mb-2 text-sm font-medium text-[var(--color-text-dark-highlight)]">
+                    Advertisement Content
+                  </p>
 
-              {selectedAd?.upload_image && (
-                <div className="flex py-2">
+                  <textarea
+                    value={editedText}
+                    onChange={(e) => setEditedText(e.target.value)}
+                    className="w-full h-56 rounded-xl border border-gray-300 p-4 text-gray-800
+                               focus:ring-2 focus:ring-[var(--color-primary)] outline-none resize-none"
+                  />
+                </div>
+              </div>
+
+              {/* Image */}
+              {selectedAd.upload_image && (
+                <div className="px-8 pb-4 flex items-center justify-between gap-4 border-t">
                   <a
                     href={selectedAd.upload_image}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-[var(--color-primary-dark)] no-underline hover:underline my-2 mr-5 border-2 px-6 border-[var(--color-primary)] rounded-lg"
+                    className="text-sm font-medium text-[var(--color-primary-dark)] hover:underline"
                   >
-                    View image
+                    View Uploaded Image
                   </a>
-                  <div className="flex py-2">
-                    <label>Request Image Change </label>
+
+                  <label className="flex items-center gap-2 text-sm">
                     <input
-                      className="m-2"
                       type="checkbox"
                       checked={requestImageChange}
                       onChange={(e) => setRequestImageChange(e.target.checked)}
                     />
-                  </div>
+                    Request Image Change
+                  </label>
                 </div>
               )}
 
-              <div className="flex justify-end gap-3 mt-6">
-                {["Pending", "Revision", "Resubmitted", "UpdateImage"].includes(
-                  selectedAd.status
-                ) && (
-                  <button
-                    onClick={() => updateStatus("Declined")}
-                    className="bg-red-500 hover:bg-red-600 text-white px-6 py-2.5 rounded-lg shadow transition"
-                  >
-                    Decline
-                  </button>
+              {/* Footer Actions */}
+              {/* Footer Actions */}
+              <div className="border-t bg-gray-50 px-8 py-6">
+                {/* Read-only text when finalized */}
+                {[
+                  "Approved",
+                  "Cancelled",
+                  "Declined",
+                  "PaymentPending",
+                ].includes(selectedAd.status) && (
+                  <textarea
+                    value={editedText}
+                    readOnly
+                    className="mb-4 w-full h-40 rounded-xl border p-4 text-gray-800 resize-none bg-gray-100"
+                  />
                 )}
 
-                {["Pending", "Revision", "Resubmitted", "UpdateImage"].includes(
-                  selectedAd.status
-                ) &&
-                  (isTextChanged || requestImageChange) && (
-                    <button
-                      onClick={() => updateStatus("Revision")}
-                      className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2.5 rounded-lg shadow transition"
+                {/* Image section */}
+                {selectedAd?.upload_image && (
+                  <div className="mb-4 flex items-center justify-between">
+                    <a
+                      href={selectedAd.upload_image}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 rounded-lg border border-[var(--color-primary)]
+                   px-4 py-2 text-sm font-medium text-[var(--color-primary-dark)]
+                   hover:bg-[var(--color-primary-accent)] hover:text-white transition"
                     >
-                      Resubmit
+                      <ImageIcon className="w-4 h-4" />
+                      View Image
+                    </a>
+
+                    <label className="flex items-center gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={requestImageChange}
+                        onChange={(e) =>
+                          setRequestImageChange(e.target.checked)
+                        }
+                      />
+                      Request Image Change
+                    </label>
+                  </div>
+                )}
+
+                {/* Action buttons */}
+                <div className="flex flex-wrap justify-end gap-3">
+                  {[
+                    "Pending",
+                    "Revision",
+                    "Resubmitted",
+                    "UpdateImage",
+                  ].includes(selectedAd.status) && (
+                    <button
+                      onClick={() => updateStatus("Declined")}
+                      className={`${ACTION_BTN_CLASS} bg-red-600 text-white hover:bg-red-700`}
+                    >
+                      <XCircle className="w-4 h-4" />
+                      Decline
                     </button>
                   )}
 
-                {["Pending", "Resubmitted", "UpdateImage"].includes(
-                  selectedAd.status
-                ) &&
-                  !isTextChanged &&
-                  !requestImageChange && (
+                  {[
+                    "Pending",
+                    "Revision",
+                    "Resubmitted",
+                    "UpdateImage",
+                  ].includes(selectedAd.status) &&
+                    (isTextChanged || requestImageChange) && (
+                      <button
+                        onClick={() => updateStatus("Revision")}
+                        className={`${ACTION_BTN_CLASS} bg-blue-600 text-white hover:bg-blue-700`}
+                      >
+                        <RefreshCw className="w-4 h-4" />
+                        Resubmit
+                      </button>
+                    )}
+
+                  {["Pending", "Resubmitted", "UpdateImage"].includes(
+                    selectedAd.status
+                  ) &&
+                    !isTextChanged &&
+                    !requestImageChange && (
+                      <button
+                        onClick={() => updateStatus("Approved")}
+                        className={`${ACTION_BTN_CLASS} bg-green-600 text-white hover:bg-green-700`}
+                      >
+                        <CheckCircle className="w-4 h-4" />
+                        Approve
+                      </button>
+                    )}
+
+                  {["Approved"].includes(selectedAd.status) && (
                     <button
-                      onClick={() => updateStatus("Approved")}
-                      className="bg-green-500 hover:bg-green-600 text-white px-6 py-2.5 rounded-lg shadow transition"
+                      onClick={async () => {
+                        if (!selectedAd) return;
+
+                        const res = await fetch("/api/ads/print", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({
+                            advertisement_text: editedText,
+                            reference_number: selectedAd.reference_number,
+                          }),
+                        });
+
+                        const blob = await res.blob();
+                        const url = URL.createObjectURL(blob);
+                        window.open(url, "_blank");
+                      }}
+                      className={`${ACTION_BTN_CLASS} bg-[var(--color-primary-dark)] text-white hover:bg-[var(--color-primary)]`}
                     >
-                      Approve
+                      <Printer className="w-4 h-4" />
+                      Print
                     </button>
                   )}
-                <button
-                  onClick={async () => {
-                    if (!selectedAd) return;
-
-                    const res = await fetch("/api/ads/print", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({
-                        advertisement_text: editedText,
-                        reference_number: selectedAd.reference_number,
-                      }),
-                    });
-
-                    const blob = await res.blob();
-                    const url = URL.createObjectURL(blob);
-                    window.open(url, "_blank");
-                  }}
-                >
-                  Print
-                </button>
+                </div>
               </div>
             </div>
           </div>
