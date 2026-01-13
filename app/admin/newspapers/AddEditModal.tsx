@@ -746,12 +746,6 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
 
               {adTypes.map((t, index) => {
                 const DEFAULT_PRICE_FIELDS = [
-                  [
-                    "First Word Count",
-                    "countFirstWords",
-                    "number",
-                    "No of words before user is charged for additional words",
-                  ],
                   ["Base Price", "basePrice", "number", "Cost of first words"],
                   [
                     "Additional Word Price",
@@ -846,6 +840,16 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                                 "priorityPrice",
                                 "number",
                                 "Priority Price",
+                              ],
+                            ]
+                          : []),
+                        ...(t.typeKey !== "casual"
+                          ? [
+                              [
+                                "First Word Count",
+                                "countFirstWords",
+                                "number",
+                                "No of words before user is charged for additional words",
                               ],
                             ]
                           : []),
