@@ -64,6 +64,7 @@ const AD_TYPE_OPTIONS = [
   "casual",
   "death_notice",
   "marriage",
+  "name_notice",
 ];
 
 export default function AddEditModal({ item, onClose, onSaved }: any) {
@@ -89,6 +90,8 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
   const [typeError, setTypeError] = useState(false);
   const [errors, setErrors] = useState<{ name?: string }>({});
   const [isSaving, setIsSaving] = useState(false);
+
+  const [modalAlert, setModalAlert] = useState<string | null>(null);
 
   const validate = () => {
     const newErrors: any = {};
@@ -131,7 +134,38 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
   });
 
   const addNewAdType = () => {
-    setAdTypes([...adTypes, { ...DEFAULT_AD_TYPE }]);
+    // Find first available type that isn't already selected
+    const usedTypes = adTypes.map((t) => t.typeKey);
+    const firstAvailableType =
+      AD_TYPE_OPTIONS.find((opt) => !usedTypes.includes(opt)) ||
+      AD_TYPE_OPTIONS[0];
+
+    setAdTypes([
+      ...adTypes,
+      { ...DEFAULT_AD_TYPE, typeKey: firstAvailableType },
+    ]);
+  };
+
+  const handleAddNewAdType = () => {
+    const usedTypes = adTypes.map((t) => t.typeKey);
+    const firstAvailableType = AD_TYPE_OPTIONS.find(
+      (opt) => !usedTypes.includes(opt)
+    );
+
+    if (!firstAvailableType) {
+      // Show inline alert instead of toast
+      setModalAlert("All ad types have already been added for this newspaper!");
+      return;
+    }
+
+    // Clear any previous alert
+    setModalAlert(null);
+
+    // Add new ad type
+    setAdTypes([
+      ...adTypes,
+      { ...DEFAULT_AD_TYPE, typeKey: firstAvailableType },
+    ]);
   };
 
   const updateAdType = (index: number, key: string, value: any) => {
@@ -413,6 +447,14 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
     });
   }, [form.type, item]);
 
+  const updateAdTypeSafe = (index: number, updater: (prev: any) => any) => {
+    setAdTypes((prev) => {
+      const next = [...prev];
+      next[index] = updater(next[index]);
+      return next;
+    });
+  };
+
   // components/NewspaperSkeleton.tsx
   function NewspaperSkeleton() {
     return (
@@ -691,7 +733,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                   Types of Ads
                 </h3>
                 <button
-                  onClick={addNewAdType}
+                  onClick={handleAddNewAdType}
                   className="rounded-lg bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-white transition hover:bg-[var(--color-primary-dark)]"
                 >
                   Add New Type
@@ -704,10 +746,25 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
 
               {adTypes.map((t, index) => {
                 const DEFAULT_PRICE_FIELDS = [
-                  ["First Word Count", "countFirstWords"],
-                  ["Base Price", "basePrice"],
-                  ["Additional Word Price", "additionalWordPrice"],
-                  ["Tint Color Price", "tintColorPrice"],
+                  [
+                    "First Word Count",
+                    "countFirstWords",
+                    "number",
+                    "No of words before user is charged for additional words",
+                  ],
+                  ["Base Price", "basePrice", "number", "Cost of first words"],
+                  [
+                    "Additional Word Price",
+                    "additionalWordPrice",
+                    "number",
+                    "Price for each additional word",
+                  ],
+                  [
+                    "Tint Color Price",
+                    "tintColorPrice",
+                    "number",
+                    "Cost for tint",
+                  ],
                 ];
 
                 const CASUAL_PRICE_FIELDS = [
@@ -737,15 +794,28 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                         <select
                           className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
                           value={t.typeKey}
-                          onChange={(e) => {
-                            updateAdType(index, "typeKey", e.target.value);
-                          }}
+                          onChange={(e) =>
+                            updateAdType(index, "typeKey", e.target.value)
+                          }
                         >
-                          {AD_TYPE_OPTIONS.map((opt) => (
-                            <option key={opt} value={opt}>
-                              {opt}
-                            </option>
-                          ))}
+                          {AD_TYPE_OPTIONS.map((opt) => {
+                            // Check if this option is already selected in another ad type
+                            const isDisabled = adTypes.some(
+                              (other, otherIndex) =>
+                                otherIndex !== index && other.typeKey === opt
+                            );
+
+                            return (
+                              <option
+                                key={opt}
+                                value={opt}
+                                disabled={isDisabled}
+                                title={isDisabled ? "Already selected" : ""}
+                              >
+                                {opt}
+                              </option>
+                            );
+                          })}
                         </select>
                       </div>
 
@@ -769,7 +839,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                           "number",
                           "Maximum words allowed",
                         ],
-                        ...(form.type === "Sunday"
+                        ...(form.type === "Sunday" && t.typeKey === "classified"
                           ? [
                               [
                                 "Priority Price",
@@ -780,30 +850,78 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                             ]
                           : []),
                         // ["Tax", "taxAmount", "number"],
-                      ].map(([label, key, type, placeholder]) => (
-                        <div key={key as string}>
-                          <label className="block text-sm font-medium text-[var(--color-text)]">
-                            {label}
-                          </label>
-                          <input
-                            type={type as string}
-                            className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-                            value={(t as any)[key] ?? ""}
-                            onChange={(e) =>
-                              updateAdType(
-                                index,
-                                key,
-                                type === "number"
-                                  ? Number(e.target.value)
-                                  : e.target.value
-                              )
-                            }
-                            {...(type === "number"
-                              ? { step: 5, min: 0 }
-                              : { placeholder: placeholder as string })}
-                          />
-                        </div>
-                      ))}
+                      ].map(([label, key, type, placeholder]) => {
+                        const isMaxWords = key === "maxWords";
+                        const isFirstWordCount = key === "countFirstWords";
+
+                        // Dynamic warning
+                        const warning =
+                          isFirstWordCount && t.countFirstWords > t.maxWords
+                            ? `First Word Count cannot exceed Max Words (${t.maxWords})`
+                            : "";
+                        const maxFirst = 0;
+                        return (
+                          <div key={key as string}>
+                            <label className="block text-sm font-medium text-[var(--color-text)]">
+                              {label}
+                            </label>
+
+                            <input
+                              type={type as string}
+                              className={`mt-1 w-full rounded-lg border px-3 py-2 text-sm ${
+                                warning ? "border-red-500" : "border-gray-300"
+                              }`}
+                              value={(t as any)[key] ?? ""}
+                              onChange={(e) => {
+                                let value: any =
+                                  type === "number"
+                                    ? Number(e.target.value)
+                                    : e.target.value;
+
+                                // If updating Max Words, update normally
+                                if (isMaxWords) {
+                                  updateAdType(index, key, value);
+
+                                  // Ensure First Word Count doesn't exceed new Max Words
+                                  if (t.countFirstWords > value) {
+                                    updateAdType(
+                                      index,
+                                      "countFirstWords",
+                                      value
+                                    );
+                                  }
+                                  return;
+                                }
+
+                                // Prevent First Word Count from exceeding Max Words
+                                if (isFirstWordCount) {
+                                  if (value > t.maxWords) {
+                                    value = t.maxWords;
+                                  }
+                                }
+
+                                updateAdType(index, key, value);
+                              }}
+                              {...(type === "number"
+                                ? {
+                                    step: 1,
+                                    min: 0,
+                                    max: isFirstWordCount
+                                      ? t.maxWords
+                                      : undefined,
+                                  }
+                                : { placeholder: placeholder as string })}
+                            />
+
+                            {/* Warning message */}
+                            {warning && (
+                              <p className="mt-1 text-xs text-red-500 font-medium">
+                                {warning}
+                              </p>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
                       {/* CONDITIONAL PRICE FIELDS */}
@@ -1179,7 +1297,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
               {adTypes.length > 0 && (
                 <div className="mb-4 flex justify-center items-center">
                   <button
-                    onClick={addNewAdType}
+                    onClick={handleAddNewAdType}
                     className="rounded-lg bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-white transition hover:bg-[var(--color-primary-dark)]"
                   >
                     Add Next Type
@@ -1217,6 +1335,29 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
             <p className="text-sm font-medium text-gray-700">
               Saving newspaper, please wait...
             </p>
+          </div>
+        </div>
+      )}
+      {modalAlert && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="rounded-lg bg-white px-6 py-5 shadow-xl flex flex-col items-center gap-4 max-w-sm w-full">
+            {/* Optional Icon */}
+            <div className="h-10 w-10 text-red-500 flex items-center justify-center">
+              ⚠️
+            </div>
+
+            {/* Text */}
+            <p className="text-sm font-medium text-gray-700 text-center">
+              {modalAlert}
+            </p>
+
+            {/* OK Button */}
+            <button
+              onClick={() => setModalAlert(null)}
+              className="mt-2 rounded-lg bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-white transition hover:bg-[var(--color-primary-dark)]"
+            >
+              OK
+            </button>
           </div>
         </div>
       )}
