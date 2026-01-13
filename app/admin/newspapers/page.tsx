@@ -14,6 +14,7 @@ interface NewspaperItem {
   colHeight: number;
   minAdHeight: number;
   tintAdditionalCharge: number;
+  created_at: string;
 }
 
 export default function AdminNewspapers() {
@@ -22,6 +23,19 @@ export default function AdminNewspapers() {
   const [editItem, setEditItem] = useState<NewspaperItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("created_desc");
+
+  const ITEMS_PER_ROW = {
+    base: 1,
+    sm: 2,
+    xl: 3,
+  };
+
+  const MAX_ROWS = 3;
+
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Load data
   const loadData = async () => {
@@ -40,6 +54,71 @@ export default function AdminNewspapers() {
     await fetch(`/api/newspapers/${id}`, { method: "DELETE" });
     loadData();
   };
+
+  const filteredList = list
+    .filter((paper) => {
+      const matchesSearch = paper.name
+        .toLowerCase()
+        .includes(search.toLowerCase());
+
+      const matchesType =
+        typeFilter === "all" || paper.type.toLowerCase() === typeFilter;
+
+      return matchesSearch && matchesType;
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case "name_asc":
+          return a.name.localeCompare(b.name);
+        case "name_desc":
+          return b.name.localeCompare(a.name);
+        case "type":
+          return a.type.localeCompare(b.type);
+        case "created_asc":
+          return (
+            new Date(a.created_at ?? 0).getTime() -
+            new Date(b.created_at ?? 0).getTime()
+          );
+        case "created_desc":
+        default:
+          return (
+            new Date(b.created_at ?? 0).getTime() -
+            new Date(a.created_at ?? 0).getTime()
+          );
+      }
+    });
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, typeFilter, sortBy]);
+
+  const getColumns = () => {
+    if (typeof window === "undefined") return 1;
+    if (window.innerWidth >= 1280) return 3; // xl
+    if (window.innerWidth >= 640) return 2; // sm
+    return 1;
+  };
+
+  const [columns, setColumns] = useState(getColumns());
+
+  useEffect(() => {
+    const onResize = () => setColumns(getColumns());
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  const itemsPerPage = columns * MAX_ROWS;
+
+  const totalPages = Math.ceil(filteredList.length / itemsPerPage);
+
+  const paginatedList = filteredList.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [currentPage]);
 
   function NewspaperSkeleton() {
     return (
@@ -82,13 +161,58 @@ export default function AdminNewspapers() {
           </button>
         </div>
 
+        {/* Filter/sort bar */}
+        <div className="flex flex-col gap-4 rounded-2xl bg-white p-4 shadow sm:flex-row sm:items-center sm:justify-between">
+          {/* Search */}
+          <input
+            type="text"
+            placeholder="Search newspaper name..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full rounded-xl border px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 sm:max-w-xs"
+          />
+
+          <div className="flex flex-wrap gap-3">
+            {/* Type Filter */}
+            <select
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value)}
+              className="rounded-xl border px-4 py-2 text-sm"
+            >
+              <option value="all">All Types</option>
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+              <option value="sunday">Sunday</option>
+              <option value="monthly">Monthly</option>
+            </select>
+
+            {/* Sort */}
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="rounded-xl border px-4 py-2 text-sm"
+            >
+              <option value="created_desc">Newest First</option>
+              <option value="created_asc">Oldest First</option>
+              <option value="name_asc">Name A–Z</option>
+              <option value="name_desc">Name Z–A</option>
+              <option value="type">Type</option>
+            </select>
+          </div>
+
+          {/* Result Count */}
+          <div className="text-sm text-gray-500">
+            {filteredList.length} result(s)
+          </div>
+        </div>
+
         {/* Grid */}
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
           {loading
             ? Array.from({ length: 6 }).map((_, i) => (
                 <NewspaperSkeleton key={i} />
               ))
-            : list.map((paper) => (
+            : paginatedList.map((paper) => (
                 <div
                   key={paper.id}
                   className="group relative flex flex-col rounded-2xl border border-[rgba(0,0,0,0.05)] bg-white p-6 transition
@@ -159,6 +283,49 @@ export default function AdminNewspapers() {
                 </div>
               ))}
         </div>
+
+        {!loading && filteredList.length === 0 && (
+          <div className="col-span-full rounded-xl bg-white p-10 text-center text-gray-500">
+            No newspapers found
+          </div>
+        )}
+
+        {totalPages > 1 && (
+          <div className="mt-8 flex items-center justify-center gap-2">
+            <button
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((p) => p - 1)}
+              className="rounded-lg border px-3 py-1.5 text-sm disabled:opacity-40"
+            >
+              Prev
+            </button>
+
+            {Array.from({ length: totalPages }).map((_, i) => {
+              const page = i + 1;
+              return (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`rounded-lg px-3 py-1.5 text-sm transition ${
+                    page === currentPage
+                      ? "bg-blue-600 text-white"
+                      : "border hover:bg-gray-100"
+                  }`}
+                >
+                  {page}
+                </button>
+              );
+            })}
+
+            <button
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage((p) => p + 1)}
+              className="rounded-lg border px-3 py-1.5 text-sm disabled:opacity-40"
+            >
+              Next
+            </button>
+          </div>
+        )}
       </main>
 
       {modalOpen && (
