@@ -21,6 +21,7 @@ export async function GET() {
       combine_tam_price: true,
       combine_eng_tam_price: true,
       allowed_weekdays: true,
+      created_at: true,
     },
     orderBy: {
       name: "asc",
@@ -44,6 +45,7 @@ export async function GET() {
     combine_tam_price: n.combine_tam_price,
     combine_eng_tam_price: n.combine_eng_tam_price,
     allowed_weekdays: n.allowed_weekdays || [],
+    created_at: n.created_at,
   }));
 
   return NextResponse.json(formatted);

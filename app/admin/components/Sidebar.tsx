@@ -41,7 +41,7 @@ export default function Sidebar() {
       href: "/admin/advertisements",
       subItems: [
         { name: "Pending", href: "/admin/advertisements/pending" },
-        { name: "Approved", href: "/admin/advertisements/approved" },
+        // { name: "Approved", href: "/admin/advertisements/approved" },
         { name: "All", href: "/admin/advertisements/all" },
       ],
     },
