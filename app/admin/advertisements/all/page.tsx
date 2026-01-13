@@ -74,13 +74,19 @@ export default function AdminAdvertisements() {
         ad.newspaper_name.toLowerCase().includes(search.toLowerCase()) ||
         ad.status.toLowerCase().includes(search.toLowerCase())
     );
-    updated.sort((a, b) =>
-      sortKey === "created_at"
-        ? new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        : a[sortKey as keyof Advertisement] > b[sortKey as keyof Advertisement]
-        ? 1
-        : -1
-    );
+    updated.sort((a, b) => {
+      if (sortKey === "created_at") {
+        return (
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+      }
+
+      const aValue = String(a[sortKey as keyof Advertisement] ?? "");
+      const bValue = String(b[sortKey as keyof Advertisement] ?? "");
+
+      return aValue.localeCompare(bValue);
+    });
+
     setFilteredAds(updated);
   }, [search, ads, sortKey]);
 
