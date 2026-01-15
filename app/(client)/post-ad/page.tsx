@@ -63,6 +63,7 @@ interface FormData {
   backgroundColor: boolean;
   combinedAd: boolean;
   priorityPrice: boolean;
+
   specialNotes: string;
   deathCertificate: File | null;
   photoCategory: string | null;
@@ -335,6 +336,7 @@ export default function PostAdPage() {
           is_publish_eng: formData.userLangCombineSelected_Eng,
           is_publish_tam: formData.userLangCombineSelected_Tam,
           section_id: formData.sectionId,
+          is_priority: formData.priorityPrice,
         },
       };
 
