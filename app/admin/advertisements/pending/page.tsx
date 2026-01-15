@@ -7,6 +7,7 @@ import { CheckCircle, XCircle, RefreshCw } from "lucide-react";
 
 interface AdminAdvertisementsPending {
   reference_number: string;
+
   newspaper_name: string;
   advertiser_name: string;
 
@@ -14,19 +15,34 @@ interface AdminAdvertisementsPending {
   classified_category?: string;
   subcategory?: string;
 
-  publish_date?: string;
+  publish_date?: string | null;
   created_at: string;
-  updated_at?: string;
+  updated_at?: string | null;
 
   advertisement_text: string;
-  special_notes?: string;
+  special_notes?: string | null;
 
-  background_color?: boolean;
-  post_in_web?: boolean;
+  background_color?: boolean | null;
+  post_in_web?: boolean | null;
+  upload_image?: string | null;
 
-  upload_image?: string;
-  price?: string;
+  price?: number | null;
   status: string;
+
+  casual_ad?: {
+    ad_size: string;
+    no_of_columns: number;
+    ad_height: number;
+    color_option: string;
+    has_artwork: boolean;
+    need_artwork: boolean;
+  } | null;
+
+  classified_ad?: {
+    is_publish_eng: boolean;
+    is_publish_tam: boolean;
+    is_priority: boolean;
+  } | null;
 }
 
 export default function AdminAdvertisementsPending() {
@@ -45,7 +61,7 @@ export default function AdminAdvertisementsPending() {
   const [requestImageChange, setRequestImageChange] = useState(false);
 
   const ACTION_BTN_CLASS =
-    "flex items-center justify-center gap-2 w-40 px-4 py-2.5 rounded-lg shadow text-sm font-medium transition";
+    "flex items-center justify-center gap-2 w-40 px-1 py-2.5 rounded-lg shadow text-sm font-medium transition";
 
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 10;
@@ -155,6 +171,20 @@ export default function AdminAdvertisementsPending() {
   };
 
   const isTextChanged = editedText.trim() !== originalText.trim();
+
+  const formatPublishDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+
+    const weekday = date.toLocaleDateString("en-US", {
+      weekday: "long",
+    });
+
+    return `${day}.${month}.${year} (${weekday})`;
+  };
 
   function InfoRow({ label, value }: { label: string; value?: string }) {
     if (!value) return null;
@@ -326,15 +356,13 @@ export default function AdminAdvertisementsPending() {
 
                 <div className="flex items-center gap-4">
                   <span
-                    className={`rounded-full px-3 py-1 text-xm font-medium
-          ${
-            selectedAd.status === "Approved"
-              ? "bg-green-500/20 text-green-300"
-              : selectedAd.status === "Declined"
-              ? "bg-red-500/20 text-red-300"
-              : "bg-yellow-500/20 text-yellow-300"
-          }
-        `}
+                    className={`rounded-full px-3 py-1 text-xm font-medium ${
+                      selectedAd.status === "Approved"
+                        ? "bg-green-500/20 text-green-300"
+                        : selectedAd.status === "Declined"
+                        ? "bg-red-500/20 text-red-300"
+                        : "bg-yellow-500/20 text-yellow-300"
+                    }`}
                   >
                     {selectedAd.status}
                   </span>
@@ -349,57 +377,144 @@ export default function AdminAdvertisementsPending() {
               </div>
 
               {/* Content */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-8">
-                {/* Left: Details */}
-                <div className="lg:col-span-1 space-y-5 text-sm">
-                  <InfoRow
-                    label="Newspaper"
-                    value={selectedAd.newspaper_name}
-                  />
-                  <InfoRow label="Category" value={selectedAd.ad_type} />
-                  <InfoRow
-                    label="Category"
-                    value={selectedAd.classified_category}
-                  />
-                  <InfoRow label="Subcategory" value={selectedAd.subcategory} />
-                  {selectedAd.publish_date && (
-                    <>
-                      <InfoRow
-                        label="Date to be Published"
-                        value={new Date(selectedAd.publish_date).toDateString()}
-                      />
-                    </>
-                  )}
-                  {selectedAd.special_notes && (
+              {selectedAd && (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-8">
+                  {/* Left: Details */}
+                  <div className="lg:col-span-1 space-y-4 text-sm">
                     <div>
-                      <p className="font-medium text-[var(--color-text-dark-highlight)]">
-                        Special Notes
-                      </p>
-                      <p className="mt-1 text-gray-600 leading-relaxed">
-                        {selectedAd.special_notes}
-                      </p>
+                      <InfoRow
+                        label="Newspaper"
+                        value={selectedAd.newspaper_name}
+                      />
+                      <div className="flex">
+                        <span
+                          className={`rounded-full px-3 py-1 text-xm font-medium ${
+                            selectedAd.classified_ad?.is_publish_eng
+                              ? "bg-blue-500/20 text-blue-500"
+                              : ""
+                          }`}
+                        >
+                          {selectedAd.classified_ad?.is_publish_eng
+                            ? "English" //later add newspaper names here
+                            : ""}
+                        </span>
+                        <span
+                          className={`rounded-full px-3 py-1 text-xm font-medium ${
+                            selectedAd.classified_ad?.is_publish_tam
+                              ? "bg-yellow-500/20 text-yellow-500"
+                              : ""
+                          }`}
+                        >
+                          {selectedAd.classified_ad?.is_publish_tam
+                            ? "Tamil" //later add newspaper names here
+                            : ""}
+                        </span>
+                      </div>
                     </div>
-                  )}
-                </div>
 
-                {/* Right: Editable Text */}
-                <div className="lg:col-span-2">
-                  <p className="mb-2 text-sm font-medium text-[var(--color-text-dark-highlight)]">
-                    Advertisement Content
-                  </p>
+                    {selectedAd.publish_date && (
+                      <>
+                        <InfoRow
+                          label="Date to be Published"
+                          value={formatPublishDate(selectedAd.publish_date)}
+                        />
+                      </>
+                    )}
+                    <InfoRow label="Ad Type" value={selectedAd.ad_type} />
+                    <InfoRow
+                      label="Category"
+                      value={selectedAd.classified_category}
+                    />
+                    <InfoRow
+                      label="Subcategory"
+                      value={selectedAd.subcategory}
+                    />
+                    {selectedAd.ad_type === "casual" &&
+                      selectedAd.casual_ad && (
+                        <>
+                          <InfoRow
+                            label="Ad Size"
+                            value={selectedAd.casual_ad.ad_size}
+                          />
 
-                  <textarea
-                    value={editedText}
-                    onChange={(e) => setEditedText(e.target.value)}
-                    className="w-full h-56 rounded-xl border border-gray-300 p-4 text-gray-800
+                          {selectedAd.casual_ad.ad_size.toLowerCase() ===
+                            "custom" && (
+                            <>
+                              <InfoRow
+                                label="No of Columns"
+                                value={selectedAd.casual_ad.no_of_columns.toString()}
+                              />
+                              <InfoRow
+                                label="Ad height (cm)"
+                                value={selectedAd.casual_ad.ad_height.toString()}
+                              />
+                            </>
+                          )}
+
+                          <InfoRow
+                            label="Color Option"
+                            value={selectedAd.casual_ad.color_option}
+                          />
+
+                          <div>
+                            <span
+                              className={`rounded-full px-3 py-1 text-xm font-medium ${
+                                selectedAd.casual_ad.has_artwork
+                                  ? "bg-green-500/20 text-green-300"
+                                  : selectedAd.casual_ad.need_artwork
+                                  ? "bg-red-500/20 text-red-300"
+                                  : "bg-yellow-500/20 text-yellow-300"
+                              }`}
+                            >
+                              {selectedAd.casual_ad.has_artwork
+                                ? "Has Artwork"
+                                : selectedAd.casual_ad.need_artwork
+                                ? "Need Artwork"
+                                : ""}
+                            </span>
+                          </div>
+                        </>
+                      )}
+
+                    {selectedAd.classified_ad?.is_priority && (
+                      <div>
+                        <span className="rounded-full px-3 py-1 text-xm font-medium bg-red-500/20 text-red-500">
+                          Priority
+                        </span>
+                      </div>
+                    )}
+
+                    {selectedAd.special_notes && (
+                      <div>
+                        <p className="font-medium text-[var(--color-text-dark-highlight)]">
+                          Special Notes
+                        </p>
+                        <p className="mt-1 text-gray-600 leading-relaxed">
+                          {selectedAd.special_notes}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Right: Editable Text */}
+                  <div className="lg:col-span-2">
+                    <p className="mb-2 text-sm font-medium text-[var(--color-text-dark-highlight)]">
+                      Advertisement Content
+                    </p>
+
+                    <textarea
+                      value={editedText}
+                      onChange={(e) => setEditedText(e.target.value)}
+                      className="w-full h-56 rounded-xl border border-gray-300 p-4 text-gray-800
                      focus:ring-2 focus:ring-[var(--color-primary)] outline-none resize-none"
-                  />
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Image */}
               {selectedAd.upload_image && (
-                <div className="px-8 pb-4 flex items-center justify-between gap-4 border-t">
+                <div className="px-8 py-4 flex items-center justify-between gap-4 border-t">
                   <a
                     href={selectedAd.upload_image}
                     target="_blank"
