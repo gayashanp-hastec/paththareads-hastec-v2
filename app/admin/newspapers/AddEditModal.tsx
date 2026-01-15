@@ -759,10 +759,21 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                     "number",
                     "Cost for tint",
                   ],
+                  [
+                    "Tax Amount (Vat %)",
+                    "taxAmount",
+                    "number",
+                    "Cost for tint",
+                  ],
                 ];
 
                 const CASUAL_PRICE_FIELDS = [
-                  ["Tax Amount (Vat %)", "taxAmount"],
+                  [
+                    "Tax Amount (Vat %)",
+                    "taxAmount",
+                    "number",
+                    "Cost for tint",
+                  ],
                 ];
 
                 const priceFields =
