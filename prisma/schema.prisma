@@ -305,6 +305,7 @@ model classified_ads {
   reference_number String         @db.Char(16)
   is_publish_eng   Boolean        @default(false)
   is_publish_tam   Boolean        @default(false)
+  is_priority      Boolean?       @default(false)
   advertisements   advertisements @relation(fields: [reference_number], references: [reference_number], onDelete: Cascade, onUpdate: NoAction, map: "fk_classified_ads_advertisement")
 }
 
