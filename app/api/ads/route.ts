@@ -53,6 +53,7 @@ export async function GET() {
         select: {
           is_publish_eng: true,
           is_publish_tam: true,
+          is_priority: true,
         },
       },
     },
@@ -101,6 +102,7 @@ export async function GET() {
         ? {
             is_publish_eng: ad.classified_ads[0].is_publish_eng,
             is_publish_tam: ad.classified_ads[0].is_publish_tam,
+            is_priority: ad.classified_ads[0].is_priority,
           }
         : null,
   }));
