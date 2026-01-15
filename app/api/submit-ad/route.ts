@@ -149,6 +149,7 @@ export async function POST(req: Request) {
           reference_number: referenceNumber,
           is_publish_eng: advertisement.is_publish_eng ?? false,
           is_publish_tam: advertisement.is_publish_tam ?? false,
+          is_priority: advertisement.is_priority ?? false,
         },
       });
     }
