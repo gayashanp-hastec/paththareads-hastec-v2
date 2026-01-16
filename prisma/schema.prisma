@@ -259,7 +259,7 @@ model ad_types {
   cs_page_bw_one_color_price Int                     @default(0)
   cs_page_bw_two_color_price Int                     @default(0)
   cs_page_full_color_price   Int                     @default(0)
-  tax_amount_2               Decimal?                @default(0.00) @db.Decimal(3, 2)
+  tax_amount_2               Decimal?                @default(0.00) @db.Decimal(5, 2)
   ad_sections                ad_sections[]
   ad_type_categories         ad_type_categories[]
   ad_type_color_options      ad_type_color_options[]

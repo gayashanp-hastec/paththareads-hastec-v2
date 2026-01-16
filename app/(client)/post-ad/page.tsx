@@ -262,8 +262,13 @@ export default function PostAdPage() {
           toast.error("NIC is required.");
           return false;
         }
-        if (formData.advertiserNIC.trim().length > 12) {
-          toast.error("NIC cannot exceed 12 characters.");
+        if (
+          formData.advertiserNIC.trim().length > 12 ||
+          formData.advertiserNIC.trim().length < 10
+        ) {
+          toast.error(
+            "NIC must be a minimum of 10 characters and cannot exceed 12."
+          );
           return false;
         }
         if (!formData.advertiserEmail.trim()) {
