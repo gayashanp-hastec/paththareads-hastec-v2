@@ -79,17 +79,21 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
       minAdHeight: 0,
       tintAdditionalCharge: 0,
       newspaperimg: "", // kept but unused
+      language: "",
       is_lang_combine_allowed: false,
       combine_eng_price: 0,
       combine_tam_price: 0,
       combine_eng_tam_price: 0,
       allowed_weekdays: [],
-    }
+      allowed_month_days: [],
+    },
   );
 
   const [typeError, setTypeError] = useState(false);
   const [errors, setErrors] = useState<{ name?: string }>({});
   const [isSaving, setIsSaving] = useState(false);
+
+  const [adTypeOptions, setAdTypeOptions] = useState<string[]>([]);
 
   const [modalAlert, setModalAlert] = useState<string | null>(null);
 
@@ -106,7 +110,11 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
     return item.ad_types.map((t: any) => ({
       typeKey: t.key,
       name: t.name,
-      baseType: t.base_type,
+      // baseType: t.base_type,
+      baseType:
+        (t.base_type || "").toLowerCase() === "casual"
+          ? "casual"
+          : "classified",
       countFirstWords: t.count_first_words,
       basePrice: t.base_price,
       priorityPrice: t.priority_price,
@@ -149,7 +157,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
   const handleAddNewAdType = () => {
     const usedTypes = adTypes.map((t) => t.typeKey);
     const firstAvailableType = AD_TYPE_OPTIONS.find(
-      (opt) => !usedTypes.includes(opt)
+      (opt) => !usedTypes.includes(opt),
     );
 
     if (!firstAvailableType) {
@@ -196,7 +204,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
     sectionIndex: number,
     sizeIndex: number,
     key: string,
-    value: any
+    value: any,
   ) => {
     const updated = [...adTypes];
     updated[adTypeIndex].sections[sectionIndex].sizes[sizeIndex][key] = value;
@@ -213,6 +221,8 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
     { id: 6, label: "Sat", full: "Saturday" },
     { id: 7, label: "Sun", full: "Sunday" },
   ];
+
+  const MONTH_DAYS = Array.from({ length: 31 }, (_, i) => i + 1);
 
   // const [allowed_weekdays, setallowed_weekdays] = useState<number[]>([]);
 
@@ -271,10 +281,12 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
       min_ad_height: Number(form.minAdHeight),
       tint_additional_charge: Number(form.tintAdditionalCharge),
       newspaper_img: null, // image upload disabled
+      language: form.language,
       is_lang_combine_allowed: Boolean(form.is_lang_combine_allowed),
       combine_eng_price: Number(form.combine_eng_price),
       combine_tam_price: Number(form.combine_tam_price),
       combine_eng_tam_price: Number(form.combine_eng_tam_price),
+      allowed_month_days: form.allowed_month_days,
       allowed_weekdays: form.allowed_weekdays,
       ad_types: adTypes.map((t) => ({
         key: t.typeKey,
@@ -323,7 +335,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
           method: item?.id ? "PUT" : "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
-        }
+        },
       );
 
       if (!res.ok) {
@@ -334,7 +346,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
       toast.success(
         item?.id
           ? "Newspaper updated successfully"
-          : "Newspaper created successfully"
+          : "Newspaper created successfully",
       );
       onSaved();
     } catch (err: any) {
@@ -366,10 +378,12 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
           minAdHeight: data.min_ad_height,
           tintAdditionalCharge: data.tint_additional_charge,
           newspaperimg: data.newspaper_img || "",
+          language: data.language,
           is_lang_combine_allowed: data.is_lang_combine_allowed,
           combine_eng_price: data.combine_eng_price,
           combine_tam_price: data.combine_tam_price,
           combine_eng_tam_price: data.combine_eng_tam_price,
+          allowed_month_days: data.allowed_month_days,
           allowed_weekdays: data.allowed_weekdays,
         });
 
@@ -420,7 +434,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                       : [],
                   }))
                 : [],
-            }))
+            })),
           );
         }
       } catch (err) {
@@ -454,6 +468,25 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
       return next;
     });
   };
+
+  useEffect(() => {
+    async function fetchAdTypes() {
+      try {
+        const res = await fetch("/api/ad-types?limit=100");
+        const json = await res.json();
+
+        const codes = json.data
+          .map((item: any) => item.ad_type_name_code)
+          .filter(Boolean); // safety
+
+        setAdTypeOptions(codes);
+      } catch (err) {
+        console.error("Failed to load ad type options", err);
+      }
+    }
+
+    fetchAdTypes();
+  }, []);
 
   // components/NewspaperSkeleton.tsx
   function NewspaperSkeleton() {
@@ -558,7 +591,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                   <label className="flex items-center justify-between text-sm font-medium text-[var(--color-text)]">
                     <span>Newspaper Name (Sinhala)</span>
 
-                    <span className="text-sm border-1 rounded py-.05 px-2 border-[var(--color-primary-accent)]">
+                    <span className="text-sm border-1 rounded py-.05 px-4 border-[var(--color-primary-accent)]">
                       <a
                         href="https://ucsc.cmb.ac.lk/ltrl/services/feconverter/t1.html"
                         target="_blank"
@@ -582,8 +615,14 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
 
                 {/* Type */}
                 <div>
-                  <label className="block text-sm font-medium text-[var(--color-text)]">
-                    Type
+                  <label className="block font-medium text-[var(--color-text)]">
+                    Type{"  "}
+                    <span
+                      className="text-sm text-primary"
+                      title="Cannot be changed after saved!"
+                    >
+                      ⓘ
+                    </span>
                   </label>
                   <select
                     disabled={!!item}
@@ -597,51 +636,93 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                     <option>Monthly</option>
                   </select>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
-                    Publishing Days
-                  </label>
+                {form.type != "Monthly" && (
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                      Publishing Days
+                    </label>
 
-                  <div className="grid grid-cols-7 gap-2">
-                    {WEEKDAYS.map((day) => {
-                      const isSelected = form.allowed_weekdays.includes(day.id); // ✅ use form state
+                    <div className="grid grid-cols-7 gap-2">
+                      {WEEKDAYS.map((day) => {
+                        const isSelected = form.allowed_weekdays.includes(
+                          day.id,
+                        ); // ✅ use form state
 
-                      return (
-                        <button
-                          key={day.id}
-                          type="button"
-                          onClick={() =>
-                            setForm((prev: any) => ({
-                              ...prev,
-                              allowed_weekdays: isSelected
-                                ? prev.allowed_weekdays.filter(
-                                    (d: any) => d !== day.id
-                                  )
-                                : [...prev.allowed_weekdays, day.id].sort(),
-                            }))
-                          }
-                          className={`
-            h-8 rounded-lg border text-sm font-medium transition-all
-            flex flex-col items-center justify-center
-            ${
-              isSelected
-                ? "bg-[var(--color-primary-dark)] text-white border-[var(--color-primary)]"
-                : "bg-white text-[var(--color-primary-dark)] border-gray-300 hover:border-[var(--color-primary-accent)]"
-            }
-          `}
-                        >
-                          <span>{day.label}</span>
-                        </button>
-                      );
-                    })}
+                        return (
+                          <button
+                            key={day.id}
+                            type="button"
+                            onClick={() =>
+                              setForm((prev: any) => ({
+                                ...prev,
+                                allowed_weekdays: isSelected
+                                  ? prev.allowed_weekdays.filter(
+                                      (d: any) => d !== day.id,
+                                    )
+                                  : [...prev.allowed_weekdays, day.id].sort(),
+                              }))
+                            }
+                            className={`h-8 rounded-lg border text-sm font-medium transition-all flex flex-col items-center justify-center ${isSelected ? "bg-[var(--color-primary-dark)] text-white border-[var(--color-primary)]" : "bg-white text-[var(--color-primary-dark)] border-gray-300 hover:border-[var(--color-primary-accent)]"}`}
+                          >
+                            <span>{day.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <p className="mt-2 text-xs text-[var(--color-text-highlight)]">
+                      Only future dates matching these days will be selectable
+                    </p>
                   </div>
+                )}
+                {form.type === "Monthly" && (
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Publishing Dates (Monthly)
+                    </label>
 
-                  <p className="mt-2 text-xs text-[var(--color-text-highlight)]">
-                    Only future dates matching these days will be selectable
-                  </p>
-                </div>
+                    <div className="grid grid-cols-7 gap-2">
+                      {MONTH_DAYS.map((day) => {
+                        const isSelected =
+                          form.allowed_month_days.includes(day);
+
+                        return (
+                          <button
+                            key={day}
+                            type="button"
+                            onClick={() =>
+                              setForm((prev: any) => ({
+                                ...prev,
+                                allowed_month_days: isSelected
+                                  ? prev.allowed_month_days.filter(
+                                      (d: number) => d !== day,
+                                    )
+                                  : [...prev.allowed_month_days, day].sort(
+                                      (a, b) => a - b,
+                                    ),
+                              }))
+                            }
+                            className={`h-8 rounded-lg border text-sm font-medium transition-all
+              ${
+                isSelected
+                  ? "bg-[var(--color-primary-dark)] text-white"
+                  : "bg-white border-gray-300"
+              }`}
+                          >
+                            {day}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <p className="mt-2 text-xs text-gray-500">
+                      If a selected date doesn’t exist in a month (e.g. 31st in
+                      February), it will be skipped automatically.
+                    </p>
+                  </div>
+                )}
               </div>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-5">
                 {/* Metrics */}
                 {[
                   ["Columns per Page", "noColPerPage"],
@@ -666,7 +747,8 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                 ))}
               </div>
               {/* Allow Combined Languages */}
-              <div className="mt-8 mb-4">
+
+              {/* <div className="mt-8 mb-4">
                 <label className="flex items-center gap-2 text-sm font-medium text-[var(--color-text)]">
                   <input
                     type="checkbox"
@@ -688,9 +770,83 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                   />
                   Allow Combined Languages
                 </label>
+              </div> */}
+
+              <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                {/* LEFT: Language Selector */}
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-[var(--color-text)]">
+                    Newspaper Language
+                  </label>
+
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { key: "SI", label: "Sinhala" },
+                      { key: "EN", label: "English" },
+                      { key: "TA", label: "Tamil" },
+                    ].map((lang) => {
+                      const isSelected = form.language === lang.key;
+
+                      return (
+                        <button
+                          key={lang.key}
+                          type="button"
+                          onClick={() =>
+                            setForm((prev: any) => ({
+                              ...prev,
+                              language: lang.key,
+                            }))
+                          }
+                          className={`h-9 rounded-lg border text-sm font-medium transition-all
+              ${
+                isSelected
+                  ? "bg-[var(--color-primary-dark)] text-white"
+                  : "bg-white border-gray-300 hover:border-[var(--color-primary)]"
+              }`}
+                        >
+                          {lang.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <p className="mt-2 text-xs text-gray-500">
+                    Select the primary publishing language for this newspaper.
+                  </p>
+                </div>
+
+                {/* RIGHT: Allow Combined Languages */}
+                <div className="mt-6 md:mt-0">
+                  <label className="flex items-center gap-2 text-sm font-medium text-[var(--color-text)]">
+                    <input
+                      type="checkbox"
+                      checked={form.is_lang_combine_allowed}
+                      onChange={(e) =>
+                        setForm({
+                          ...form,
+                          is_lang_combine_allowed: e.target.checked,
+                          ...(e.target.checked
+                            ? {}
+                            : {
+                                combine_eng_price: 0,
+                                combine_tam_price: 0,
+                                combine_eng_tam_price: 0,
+                              }),
+                        })
+                      }
+                      className="h-4 w-4 accent-[var(--color-primary)] cursor-pointer"
+                    />
+                    Allow Combined Languages
+                  </label>
+
+                  <p className="mt-2 text-xs text-gray-500">
+                    Enable pricing for combined-language advertisements.
+                  </p>
+                </div>
               </div>
+
               {form.is_lang_combine_allowed && (
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                <div className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-3">
                   {[
                     ["English Paper Price", "combine_eng_price"],
                     ["Tamil Paper Price", "combine_tam_price"],
@@ -803,11 +959,15 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                             updateAdType(index, "typeKey", e.target.value)
                           }
                         >
-                          {AD_TYPE_OPTIONS.map((opt) => {
-                            // Check if this option is already selected in another ad type
+                          <option value="" disabled>
+                            Select ad type
+                          </option>
+
+                          {adTypeOptions.map((opt) => {
+                            // Disable if already selected in another row
                             const isDisabled = adTypes.some(
                               (other, otherIndex) =>
-                                otherIndex !== index && other.typeKey === opt
+                                otherIndex !== index && other.typeKey === opt,
                             );
 
                             return (
@@ -817,13 +977,45 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                                 disabled={isDisabled}
                                 title={isDisabled ? "Already selected" : ""}
                               >
-                                {opt}
+                                {opt.replace(/_/g, " ")}
                               </option>
                             );
                           })}
                         </select>
                       </div>
 
+                      <div>
+                        <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
+                          Base Type
+                        </label>
+
+                        <div className="flex gap-6">
+                          {["classified", "casual"].map((option) => {
+                            const isChecked = t.baseType === option;
+
+                            return (
+                              <label
+                                key={option}
+                                className="flex items-center gap-2 text-sm cursor-pointer"
+                              >
+                                <input
+                                  type="radio"
+                                  name={`baseType-${index}`}
+                                  value={option}
+                                  checked={isChecked}
+                                  onChange={() =>
+                                    updateAdType(index, "baseType", option)
+                                  }
+                                  className="accent-[var(--color-primary)]"
+                                />
+
+                                {option.charAt(0).toUpperCase() +
+                                  option.slice(1)}
+                              </label>
+                            );
+                          })}
+                        </div>
+                      </div>
                       {/* Static Fields */}
                       {[
                         [
@@ -832,12 +1024,12 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                           "text",
                           "The name displayed to the user",
                         ],
-                        [
-                          "Base Type (Optional)",
-                          "baseType",
-                          "text",
-                          "classified or casual",
-                        ],
+                        // [
+                        //   "Base Type (Optional)",
+                        //   "baseType",
+                        //   "text",
+                        //   "classified or casual",
+                        // ],
                         [
                           "Max Words",
                           "maxWords",
@@ -902,7 +1094,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                                     updateAdType(
                                       index,
                                       "countFirstWords",
-                                      value
+                                      value,
                                     );
                                   }
                                   return;
@@ -938,6 +1130,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                         );
                       })}
                     </div>
+
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
                       {/* CONDITIONAL PRICE FIELDS */}
                       {priceFields.map(([label, key]) => (
@@ -1069,7 +1262,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                                                     sIndex,
                                                     zIndex,
                                                     "sizeType",
-                                                    e.target.value
+                                                    e.target.value,
                                                   )
                                                 }
                                                 disabled={!sz.isAvailable} // disable if inactive
@@ -1097,7 +1290,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                                                     sIndex,
                                                     zIndex,
                                                     "width",
-                                                    Number(e.target.value)
+                                                    Number(e.target.value),
                                                   )
                                                 }
                                                 disabled={!sz.isAvailable}
@@ -1115,7 +1308,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                                                     sIndex,
                                                     zIndex,
                                                     "height",
-                                                    Number(e.target.value)
+                                                    Number(e.target.value),
                                                   )
                                                 }
                                                 disabled={!sz.isAvailable}
@@ -1132,7 +1325,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                                                     sIndex,
                                                     zIndex,
                                                     "colorOption",
-                                                    e.target.value
+                                                    e.target.value,
                                                   )
                                                 }
                                                 disabled={!sz.isAvailable}
@@ -1159,7 +1352,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                                                     sIndex,
                                                     zIndex,
                                                     "price",
-                                                    Number(e.target.value)
+                                                    Number(e.target.value),
                                                   )
                                                 }
                                                 disabled={!sz.isAvailable}
@@ -1232,7 +1425,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                                             </tr>
                                           )}
                                         </>
-                                      )
+                                      ),
                                     )}
                                   </tbody>
                                 </table>
@@ -1255,7 +1448,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                               updateAdType(
                                 index,
                                 "isUploadImage",
-                                e.target.checked
+                                e.target.checked,
                               )
                             }
                           />
