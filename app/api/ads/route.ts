@@ -29,6 +29,9 @@ export async function GET() {
       advertisers: {
         select: {
           name: true,
+          nic: true,
+          phone: true,
+          address: true,
         },
       },
 
@@ -85,6 +88,9 @@ export async function GET() {
     status: ad.status,
 
     advertiser_name: ad.advertisers?.name ?? "—",
+    advertiser_nic: ad.advertisers?.nic ?? "—",
+    advertiser_phone: ad.advertisers?.phone ?? "—",
+    advertiser_address: ad.advertisers?.address ?? "—",
 
     casual_ad: ad.casual_ads
       ? {

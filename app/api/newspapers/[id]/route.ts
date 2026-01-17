@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 ---------------------------------------- */
 export async function GET(
   req: Request,
-  context: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await context.params;
@@ -14,7 +14,7 @@ export async function GET(
     if (!id) {
       return NextResponse.json(
         { message: "Missing newspaper id" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -38,7 +38,7 @@ export async function GET(
     if (!newspaper) {
       return NextResponse.json(
         { message: "Newspaper not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -47,7 +47,7 @@ export async function GET(
     console.error("GET /newspapers/[id] error:", error);
     return NextResponse.json(
       { message: "Failed to fetch newspaper" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -57,7 +57,7 @@ export async function GET(
 ---------------------------------------- */
 export async function PUT(
   req: Request,
-  context: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await context.params;
@@ -77,6 +77,7 @@ export async function PUT(
       combine_eng_price,
       combine_tam_price,
       combine_eng_tam_price,
+      allowed_month_days = [],
       allowed_weekdays = [],
       ad_types = [],
     } = body;
@@ -85,7 +86,7 @@ export async function PUT(
     if (!existing) {
       return NextResponse.json(
         { message: "Newspaper not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -112,8 +113,9 @@ export async function PUT(
           combine_tam_price,
           combine_eng_tam_price,
           allowed_weekdays,
+          allowed_month_days,
         },
-      })
+      }),
     );
 
     /* ----------------------------------------
@@ -128,7 +130,7 @@ export async function PUT(
             },
           },
         },
-      })
+      }),
     );
 
     ops.push(
@@ -138,13 +140,13 @@ export async function PUT(
             newspaper_id: id,
           },
         },
-      })
+      }),
     );
 
     ops.push(
       prisma.ad_types.deleteMany({
         where: { newspaper_id: id },
-      })
+      }),
     );
 
     /* ----------------------------------------
@@ -200,7 +202,7 @@ export async function PUT(
               })),
             },
           },
-        })
+        }),
       );
     }
 
@@ -220,7 +222,7 @@ export async function PUT(
         message: "Failed to update newspaper",
         error: error?.message,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -230,7 +232,7 @@ export async function PUT(
 ---------------------------------------- */
 export async function DELETE(
   req: Request,
-  context: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await context.params;
@@ -239,7 +241,7 @@ export async function DELETE(
     if (!existing) {
       return NextResponse.json(
         { message: "Newspaper not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -250,7 +252,7 @@ export async function DELETE(
     console.error("DELETE /newspapers/[id] error:", error);
     return NextResponse.json(
       { message: "Failed to delete newspaper" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

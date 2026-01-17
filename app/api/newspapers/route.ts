@@ -21,6 +21,7 @@ export async function GET() {
       combine_tam_price: true,
       combine_eng_tam_price: true,
       allowed_weekdays: true,
+      allowed_month_days: true,
       created_at: true,
     },
     orderBy: {
@@ -45,6 +46,7 @@ export async function GET() {
     combine_tam_price: n.combine_tam_price,
     combine_eng_tam_price: n.combine_eng_tam_price,
     allowed_weekdays: n.allowed_weekdays || [],
+    allowed_month_days: n.allowed_month_days || [],
     created_at: n.created_at,
   }));
 
@@ -71,6 +73,7 @@ export async function POST(req: Request) {
       combine_eng_price,
       combine_tam_price,
       combine_eng_tam_price,
+      allowed_month_days = [],
       allowed_weekdays = [],
       ad_types = [], // optional
     } = body;
@@ -92,7 +95,7 @@ export async function POST(req: Request) {
     ) {
       return NextResponse.json(
         { message: "Missing required fields" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -116,6 +119,7 @@ export async function POST(req: Request) {
           combine_tam_price,
           combine_eng_tam_price,
           allowed_weekdays,
+          allowed_month_days,
         },
       });
 
@@ -185,7 +189,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json(
       { message: "Newspaper created successfully", data: result },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error: any) {
     console.error("POST /newspapers error:", error);
@@ -195,7 +199,7 @@ export async function POST(req: Request) {
         message: "Failed to create newspaper",
         error: error?.message,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
