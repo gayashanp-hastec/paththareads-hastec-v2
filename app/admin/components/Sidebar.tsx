@@ -8,31 +8,53 @@ import { ChevronDown, ChevronUp, LogOut } from "lucide-react";
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const [isAdMenuOpen, setIsAdMenuOpen] = useState(false);
-  const [pendingCount, setPendingCount] = useState(0);
   const router = useRouter();
 
-  // Fetch pending ads count
+  // Track open state per menu
+  const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({});
+  const [pendingCount, setPendingCount] = useState(0);
+
+  /* ---------------- Fetch Pending Ads Count ---------------- */
   useEffect(() => {
     const fetchPendingCount = async () => {
       try {
         const res = await fetch("/api/ads");
         const data = await res.json();
         const count = data.filter(
-          (ad: any) => ad.status.toLowerCase() === "pending"
+          (ad: any) => ad.status?.toLowerCase() === "pending"
         ).length;
         setPendingCount(count);
-      } catch (error) {
-        console.error("Failed to fetch pending ads count:", error);
+      } catch (err) {
+        console.error("Failed to fetch pending ads count", err);
       }
     };
 
     fetchPendingCount();
-
-    // Optional: refresh every 30s
-    // const interval = setInterval(fetchPendingCount, 30000);
-    // return () => clearInterval(interval);
   }, []);
+
+  /* ---------------- Auto-open submenu by route ---------------- */
+  useEffect(() => {
+    if (pathname.startsWith("/admin/advertisements")) {
+      setOpenMenus((p) => ({ ...p, Advertisements: true }));
+    }
+
+    if (pathname.startsWith("/admin/settings")) {
+      setOpenMenus((p) => ({ ...p, "Other Settings": true }));
+    }
+  }, [pathname]);
+
+  /* ---------------- Toggle Menu ---------------- */
+  function toggleMenu(name: string) {
+    setOpenMenus((prev) => ({
+      ...prev,
+      [name]: !prev[name],
+    }));
+  }
+
+  async function handleLogout() {
+    await fetch("/api/admin/logout", { method: "POST" });
+    router.push("/admin-login");
+  }
 
   const menuItems = [
     { name: "Dashboard", href: "/admin" },
@@ -41,39 +63,30 @@ export default function Sidebar() {
       href: "/admin/advertisements",
       subItems: [
         { name: "Pending", href: "/admin/advertisements/pending" },
-        // { name: "Approved", href: "/admin/advertisements/approved" },
         { name: "All", href: "/admin/advertisements/all" },
       ],
     },
     { name: "Newspapers", href: "/admin/newspapers" },
     { name: "Users", href: "/admin/users" },
-    // { name: "Reports", href: "/admin" },
+    {
+      name: "Other Settings",
+      href: "/admin/settings",
+      subItems: [{ name: "Ad Types", href: "/admin/settings/AdTypes" }],
+    },
   ];
-
-  // Auto-open the submenu if current route matches any subpage
-  useEffect(() => {
-    if (pathname.startsWith("/admin/advertisements")) {
-      setIsAdMenuOpen(true);
-    }
-  }, [pathname]);
-
-  async function handleLogout() {
-    await fetch("/api/admin/logout", { method: "POST" });
-    router.push("/admin-login");
-  }
 
   return (
     <aside className="w-64 h-screen p-6 flex flex-col bg-[var(--color-primary)] text-white">
-      {/* Sidebar Header */}
-      <div className="flex justify-center items-center">
+      {/* Logo */}
+      <div className="flex justify-center">
         <Image
           src="/sample-logo-1.png"
           alt="Paththare Ads Logo"
           width={150}
           height={60}
-          className="object-contain"
         />
       </div>
+
       <h2 className="text-2xl font-extrabold text-center mb-6">Admin</h2>
 
       {/* Menu */}
@@ -82,17 +95,13 @@ export default function Sidebar() {
           <li key={item.name}>
             {item.subItems ? (
               <>
-                {/* Main parent menu button */}
+                {/* Parent Menu */}
                 <button
-                  onClick={() => setIsAdMenuOpen((prev) => !prev)}
-                  className={`w-full flex justify-between items-center px-4 py-2 rounded-lg font-medium transition-colors ${
-                    pathname.startsWith("/admin/advertisements")
-                      ? ""
-                      : "hover:bg-[var(--color-primary-dark)]"
-                  }`}
+                  onClick={() => toggleMenu(item.name)}
+                  className="w-full flex justify-between items-center px-4 py-2 rounded-lg font-medium transition hover:bg-[var(--color-primary-dark)]"
                 >
                   {item.name}
-                  {isAdMenuOpen ? (
+                  {openMenus[item.name] ? (
                     <ChevronUp size={18} />
                   ) : (
                     <ChevronDown size={18} />
@@ -102,7 +111,7 @@ export default function Sidebar() {
                 {/* Submenu */}
                 <ul
                   className={`pl-6 mt-1 flex flex-col gap-1 overflow-hidden transition-all duration-300 ease-in-out ${
-                    isAdMenuOpen ? "max-h-40" : "max-h-0"
+                    openMenus[item.name] ? "max-h-40" : "max-h-0"
                   }`}
                 >
                   {item.subItems.map((sub) => (
@@ -111,21 +120,14 @@ export default function Sidebar() {
                         href={sub.href}
                         className={`flex justify-between items-center px-3 py-2 rounded-md text-sm transition-colors ${
                           pathname === sub.href
-                            ? " text-white"
+                            ? "text-white"
                             : "text-gray-300 hover:bg-[var(--color-primary-dark)]"
                         }`}
                       >
                         {sub.name}
 
-                        {/* Badge for Pending */}
-                        {sub.name === "Pending" && (
-                          <span
-                            className={`ml-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full transform transition-all duration-300 ease-in-out ${
-                              pendingCount > 0
-                                ? "opacity-100 scale-100"
-                                : "opacity-0 scale-0"
-                            }`}
-                          >
+                        {sub.name === "Pending" && pendingCount > 0 && (
+                          <span className="ml-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold bg-red-600 rounded-full">
                             {pendingCount}
                           </span>
                         )}
@@ -137,7 +139,9 @@ export default function Sidebar() {
             ) : (
               <Link
                 href={item.href}
-                className={`block px-4 py-2 rounded-lg font-medium transition-colors hover:bg-[var(--color-primary-dark)]`}
+                className={`block px-4 py-2 rounded-lg font-medium transition hover:bg-[var(--color-primary-dark)] ${
+                  pathname === item.href ? "bg-[var(--color-primary-dark)]" : ""
+                }`}
               >
                 {item.name}
               </Link>
@@ -146,22 +150,20 @@ export default function Sidebar() {
         ))}
       </ul>
 
-      {/* Push bottom content */}
-      <div className="mt-auto flex flex-col gap-4">
-        {/* Logout Button */}
+      {/* Bottom */}
+      <div className="mt-auto space-y-4">
         <button
           onClick={handleLogout}
-          className="flex items-center justify-center gap-2 rounded-lg bg-[var(--color-primary-dark)] px-4 py-2 font-semibold text-white transition hover:bg-red-700"
+          className="flex items-center justify-center gap-2 w-full rounded-lg bg-[var(--color-primary-dark)] px-4 py-2 font-semibold hover:bg-red-700"
         >
           <LogOut size={18} />
           Logout
         </button>
 
-        {/* Footer */}
-        <div className="text-sm text-primary-dark pt-4 border-t border-gray-700 text-center">
+        <div className="text-sm text-center border-t border-gray-700 pt-4">
           &copy; {new Date().getFullYear()} Paththare Ads
           <br />
-          Powered By Hastec
+          Powered by Hastec
         </div>
       </div>
     </aside>
