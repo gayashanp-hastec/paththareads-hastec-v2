@@ -21,7 +21,7 @@ export default function Sidebar() {
         const res = await fetch("/api/ads");
         const data = await res.json();
         const count = data.filter(
-          (ad: any) => ad.status?.toLowerCase() === "pending"
+          (ad: any) => ad.status?.toLowerCase() === "pending",
         ).length;
         setPendingCount(count);
       } catch (err) {
@@ -71,7 +71,7 @@ export default function Sidebar() {
     {
       name: "Other Settings",
       href: "/admin/settings",
-      subItems: [{ name: "Ad Types", href: "/admin/settings/AdTypes" }],
+      subItems: [{ name: "Ad Types Manager", href: "/admin/settings/AdTypes" }],
     },
   ];
 
