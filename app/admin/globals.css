@@ -65,6 +65,7 @@ button {
 
 button:hover {
   @apply bg-primary-dark scale-103;
+  @apply text-white;
 }
 
 @layer utilities {

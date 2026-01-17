@@ -16,7 +16,7 @@ export default function AdminDashboard() {
         const res = await fetch("/api/ads");
         const data = await res.json();
         const pending = data.filter(
-          (ad: any) => ad.status?.toLowerCase() === "pending"
+          (ad: any) => ad.status?.toLowerCase() === "pending",
         ).length;
         setPendingCount(pending);
       } catch (error) {
