@@ -30,8 +30,8 @@ export default function Sidebar() {
     fetchPendingCount();
 
     // Optional: refresh every 30s
-    const interval = setInterval(fetchPendingCount, 30000);
-    return () => clearInterval(interval);
+    // const interval = setInterval(fetchPendingCount, 30000);
+    // return () => clearInterval(interval);
   }, []);
 
   const menuItems = [

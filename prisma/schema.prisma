@@ -212,6 +212,9 @@ model newspapers {
   combine_tam_price          Int?             @default(0)
   combine_eng_tam_price      Int?             @default(0)
   allowed_weekdays           Int[]            @default([])
+  allowed_month_days         Int[]            @default([])
+  language                   String?
+  group_id                   String?
   ad_types                   ad_types[]
   advertisements             advertisements[]
 }
