@@ -42,13 +42,20 @@ interface AdminAdvertisementsPending {
     is_publish_eng: boolean;
     is_publish_tam: boolean;
     is_priority: boolean;
+    is_publish_sin: boolean;
+    is_publish_sin_eng: boolean;
+    is_publish_sin_tam: boolean;
+    is_publish_eng_tam: boolean;
+    is_co_paper: boolean;
+    is_int_bw: boolean;
+    is_int_fc: boolean;
   } | null;
 }
 
 export default function AdminAdvertisementsPending() {
   const [ads, setAds] = useState<AdminAdvertisementsPending[]>([]);
   const [filteredAds, setFilteredAds] = useState<AdminAdvertisementsPending[]>(
-    []
+    [],
   );
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState("created_at");
@@ -78,7 +85,7 @@ export default function AdminAdvertisementsPending() {
         (ad: AdminAdvertisementsPending) =>
           ad.status.toLowerCase() === "pending" ||
           ad.status.toLowerCase() === "resubmitted" ||
-          ad.status.toLowerCase() === "updateimage"
+          ad.status.toLowerCase() === "updateimage",
       );
 
       setAds(pendingAds);
@@ -95,7 +102,7 @@ export default function AdminAdvertisementsPending() {
         ad.reference_number.toLowerCase().includes(search.toLowerCase()) ||
         ad.newspaper_name.toLowerCase().includes(search.toLowerCase()) ||
         ad.status.toLowerCase().includes(search.toLowerCase()) ||
-        ad.advertiser_name.toLowerCase().includes(search.toLowerCase())
+        ad.advertiser_name.toLowerCase().includes(search.toLowerCase()),
     );
     updated.sort((a, b) => {
       if (sortKey === "created_at") {
@@ -105,10 +112,10 @@ export default function AdminAdvertisementsPending() {
       }
 
       const aValue = String(
-        a[sortKey as keyof AdminAdvertisementsPending] ?? ""
+        a[sortKey as keyof AdminAdvertisementsPending] ?? "",
       );
       const bValue = String(
-        b[sortKey as keyof AdminAdvertisementsPending] ?? ""
+        b[sortKey as keyof AdminAdvertisementsPending] ?? "",
       );
 
       return aValue.localeCompare(bValue);
@@ -120,7 +127,7 @@ export default function AdminAdvertisementsPending() {
 
   const paginatedAds = filteredAds.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
+    currentPage * ITEMS_PER_PAGE,
   );
 
   const openModal = (ad: AdminAdvertisementsPending) => {
@@ -165,7 +172,7 @@ export default function AdminAdvertisementsPending() {
       (ad: AdminAdvertisementsPending) =>
         ad.status.toLowerCase() === "pending" ||
         ad.status.toLowerCase() === "resubmitted" ||
-        ad.status.toLowerCase() === "updateimage"
+        ad.status.toLowerCase() === "updateimage",
     );
     setAds(pendingAds);
   };
@@ -228,8 +235,9 @@ export default function AdminAdvertisementsPending() {
                   ads.filter((ad) =>
                     e.target.value === "all"
                       ? true
-                      : ad.status.toLowerCase() === e.target.value.toLowerCase()
-                  )
+                      : ad.status.toLowerCase() ===
+                        e.target.value.toLowerCase(),
+                  ),
                 )
               }
               defaultValue="all"
@@ -360,8 +368,8 @@ export default function AdminAdvertisementsPending() {
                       selectedAd.status === "Approved"
                         ? "bg-green-500/20 text-green-300"
                         : selectedAd.status === "Declined"
-                        ? "bg-red-500/20 text-red-300"
-                        : "bg-yellow-500/20 text-yellow-300"
+                          ? "bg-red-500/20 text-red-300"
+                          : "bg-yellow-500/20 text-yellow-300"
                     }`}
                   >
                     {selectedAd.status}
@@ -389,6 +397,17 @@ export default function AdminAdvertisementsPending() {
                       <div className="flex">
                         <span
                           className={`rounded-full px-3 py-1 text-xm font-medium ${
+                            selectedAd.classified_ad?.is_publish_sin
+                              ? "bg-amber-900/20 text-amber-700"
+                              : ""
+                          }`}
+                        >
+                          {selectedAd.classified_ad?.is_publish_sin
+                            ? "Tamil" //later add newspaper names here
+                            : ""}
+                        </span>
+                        <span
+                          className={`rounded-full px-3 py-1 text-xm font-medium ${
                             selectedAd.classified_ad?.is_publish_eng
                               ? "bg-blue-500/20 text-blue-500"
                               : ""
@@ -407,6 +426,43 @@ export default function AdminAdvertisementsPending() {
                         >
                           {selectedAd.classified_ad?.is_publish_tam
                             ? "Tamil" //later add newspaper names here
+                            : ""}
+                        </span>
+
+                        {/* sinhala and english both */}
+                        <span
+                          className={`rounded-full px-3 py-1 text-xm font-medium ${
+                            selectedAd.classified_ad?.is_publish_sin_eng
+                              ? "bg-yellow-500/20 text-yellow-500"
+                              : ""
+                          }`}
+                        >
+                          {selectedAd.classified_ad?.is_publish_sin_eng
+                            ? "Sinhala & English" //later add newspaper names here
+                            : ""}
+                        </span>
+
+                        <span
+                          className={`rounded-full px-3 py-1 text-xm font-medium ${
+                            selectedAd.classified_ad?.is_publish_sin_tam
+                              ? "bg-yellow-500/20 text-yellow-500"
+                              : ""
+                          }`}
+                        >
+                          {selectedAd.classified_ad?.is_publish_sin_tam
+                            ? "Sinhala & Tamil" //later add newspaper names here
+                            : ""}
+                        </span>
+
+                        <span
+                          className={`rounded-full px-3 py-1 text-xm font-medium ${
+                            selectedAd.classified_ad?.is_publish_eng_tam
+                              ? "bg-yellow-500/20 text-yellow-500"
+                              : ""
+                          }`}
+                        >
+                          {selectedAd.classified_ad?.is_publish_eng_tam
+                            ? "English & Tamil" //later add newspaper names here
                             : ""}
                         </span>
                       </div>
@@ -462,15 +518,15 @@ export default function AdminAdvertisementsPending() {
                                 selectedAd.casual_ad.has_artwork
                                   ? "bg-green-500/20 text-green-300"
                                   : selectedAd.casual_ad.need_artwork
-                                  ? "bg-red-500/20 text-red-300"
-                                  : "bg-yellow-500/20 text-yellow-300"
+                                    ? "bg-red-500/20 text-red-300"
+                                    : "bg-yellow-500/20 text-yellow-300"
                               }`}
                             >
                               {selectedAd.casual_ad.has_artwork
                                 ? "Has Artwork"
                                 : selectedAd.casual_ad.need_artwork
-                                ? "Need Artwork"
-                                : ""}
+                                  ? "Need Artwork"
+                                  : ""}
                             </span>
                           </div>
                         </>
@@ -549,7 +605,7 @@ export default function AdminAdvertisementsPending() {
                   <button
                     onClick={() =>
                       updateStatus(
-                        requestImageChange ? "UpdateImage" : "Revision"
+                        requestImageChange ? "UpdateImage" : "Revision",
                       )
                     }
                     className={`${ACTION_BTN_CLASS} bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-accent)]`}

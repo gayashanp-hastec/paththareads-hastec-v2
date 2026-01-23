@@ -46,12 +46,21 @@ interface Advertisement {
     color_option: string;
     has_artwork: boolean;
     need_artwork: boolean;
+    no_of_boxes: number;
   } | null;
 
   classified_ad?: {
     is_publish_eng: boolean;
     is_publish_tam: boolean;
     is_priority: boolean;
+    is_publish_sin: boolean;
+    is_publish_sin_eng: boolean;
+    is_publish_sin_tam: boolean;
+    is_publish_eng_tam: boolean;
+    is_co_paper: boolean;
+    is_int_bw: boolean;
+    is_int_fc: boolean;
+    is_int_highlight: boolean;
   } | null;
 }
 
@@ -92,7 +101,7 @@ export default function AdminAdvertisements() {
       (ad) =>
         ad.reference_number.toLowerCase().includes(search.toLowerCase()) ||
         ad.newspaper_name.toLowerCase().includes(search.toLowerCase()) ||
-        ad.status.toLowerCase().includes(search.toLowerCase())
+        ad.status.toLowerCase().includes(search.toLowerCase()),
     );
     updated.sort((a, b) => {
       if (sortKey === "created_at") {
@@ -114,7 +123,7 @@ export default function AdminAdvertisements() {
 
   const paginatedAds = filteredAds.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
+    currentPage * ITEMS_PER_PAGE,
   );
 
   const openModal = (ad: Advertisement) => {
@@ -263,8 +272,9 @@ export default function AdminAdvertisements() {
                   ads.filter((ad) =>
                     e.target.value === "all"
                       ? true
-                      : ad.status.toLowerCase() === e.target.value.toLowerCase()
-                  )
+                      : ad.status.toLowerCase() ===
+                        e.target.value.toLowerCase(),
+                  ),
                 )
               }
               defaultValue="all"
@@ -335,7 +345,7 @@ export default function AdminAdvertisements() {
                     </td>
                     <td
                       className={`px-4 py-2 font-semibold ${statusColorHandler(
-                        ad.status
+                        ad.status,
                       )}`}
                     >
                       {ad.status}
@@ -409,8 +419,8 @@ export default function AdminAdvertisements() {
                       selectedAd.status === "Approved"
                         ? "bg-green-500/20 text-green-300"
                         : selectedAd.status === "Declined"
-                        ? "bg-red-500/20 text-red-300"
-                        : "bg-yellow-500/20 text-yellow-300"
+                          ? "bg-red-500/20 text-red-300"
+                          : "bg-yellow-500/20 text-yellow-300"
                     }`}
                   >
                     {selectedAd.status}
@@ -438,6 +448,17 @@ export default function AdminAdvertisements() {
                       <div className="flex">
                         <span
                           className={`rounded-full px-3 py-1 text-xm font-medium ${
+                            selectedAd.classified_ad?.is_publish_sin
+                              ? "bg-amber-900/20 text-amber-700"
+                              : ""
+                          }`}
+                        >
+                          {selectedAd.classified_ad?.is_publish_sin
+                            ? "Tamil" //later add newspaper names here
+                            : ""}
+                        </span>
+                        <span
+                          className={`rounded-full px-3 py-1 text-xm font-medium ${
                             selectedAd.classified_ad?.is_publish_eng
                               ? "bg-blue-500/20 text-blue-500"
                               : ""
@@ -458,6 +479,43 @@ export default function AdminAdvertisements() {
                             ? "Tamil" //later add newspaper names here
                             : ""}
                         </span>
+
+                        {/* sinhala and english both */}
+                        <span
+                          className={`rounded-full px-3 py-1 text-xm font-medium ${
+                            selectedAd.classified_ad?.is_publish_sin_eng
+                              ? "bg-yellow-500/20 text-yellow-500"
+                              : ""
+                          }`}
+                        >
+                          {selectedAd.classified_ad?.is_publish_sin_eng
+                            ? "Sinhala & English" //later add newspaper names here
+                            : ""}
+                        </span>
+
+                        <span
+                          className={`rounded-full px-3 py-1 text-xm font-medium ${
+                            selectedAd.classified_ad?.is_publish_sin_tam
+                              ? "bg-yellow-500/20 text-yellow-500"
+                              : ""
+                          }`}
+                        >
+                          {selectedAd.classified_ad?.is_publish_sin_tam
+                            ? "Sinhala & Tamil" //later add newspaper names here
+                            : ""}
+                        </span>
+
+                        <span
+                          className={`rounded-full px-3 py-1 text-xm font-medium ${
+                            selectedAd.classified_ad?.is_publish_eng_tam
+                              ? "bg-yellow-500/20 text-yellow-500"
+                              : ""
+                          }`}
+                        >
+                          {selectedAd.classified_ad?.is_publish_eng_tam
+                            ? "English & Tamil" //later add newspaper names here
+                            : ""}
+                        </span>
                       </div>
                     </div>
 
@@ -470,6 +528,22 @@ export default function AdminAdvertisements() {
                       </>
                     )}
                     <InfoRow label="Ad Type" value={selectedAd.ad_type} />
+                    {selectedAd.casual_ad && (
+                      <div>
+                        <span
+                          className={`rounded-full px-3 py-1 text-xm font-medium ${
+                            selectedAd.casual_ad?.no_of_boxes > 0
+                              ? "bg-green-500/20 text-green-600"
+                              : "bg-yellow-500/20 text-orange-800"
+                          }`}
+                        >
+                          {selectedAd.casual_ad?.no_of_boxes > 0 &&
+                          selectedAd.casual_ad.ad_size === ""
+                            ? "Box Ad"
+                            : "Column Ad"}
+                        </span>
+                      </div>
+                    )}
                     <InfoRow
                       label="Category"
                       value={selectedAd.classified_category}
@@ -511,15 +585,15 @@ export default function AdminAdvertisements() {
                                 selectedAd.casual_ad.has_artwork
                                   ? "bg-green-500/20 text-green-300"
                                   : selectedAd.casual_ad.need_artwork
-                                  ? "bg-red-500/20 text-red-300"
-                                  : "bg-yellow-500/20 text-yellow-300"
+                                    ? "bg-red-500/20 text-red-300"
+                                    : ""
                               }`}
                             >
                               {selectedAd.casual_ad.has_artwork
                                 ? "Has Artwork"
                                 : selectedAd.casual_ad.need_artwork
-                                ? "Need Artwork"
-                                : ""}
+                                  ? "Need Artwork"
+                                  : ""}
                             </span>
                           </div>
                         </>
@@ -680,7 +754,7 @@ export default function AdminAdvertisements() {
                     )}
 
                   {["Pending", "Resubmitted", "UpdateImage"].includes(
-                    selectedAd.status
+                    selectedAd.status,
                   ) &&
                     !isTextChanged &&
                     !requestImageChange && (
