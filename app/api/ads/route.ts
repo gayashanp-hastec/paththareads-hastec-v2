@@ -49,6 +49,7 @@ export async function GET() {
           color_option: true,
           has_artwork: true,
           need_artwork: true,
+          no_of_boxes: true,
         },
       },
 
@@ -56,6 +57,14 @@ export async function GET() {
         select: {
           is_publish_eng: true,
           is_publish_tam: true,
+          is_publish_sin: true,
+          is_publish_sin_eng: true,
+          is_publish_sin_tam: true,
+          is_publish_eng_tam: true,
+          is_co_paper: true,
+          is_int_bw: true,
+          is_int_fc: true,
+          is_int_highlight: true,
           is_priority: true,
         },
       },
@@ -100,6 +109,7 @@ export async function GET() {
           color_option: ad.casual_ads.color_option,
           has_artwork: ad.casual_ads.has_artwork,
           need_artwork: ad.casual_ads.need_artwork,
+          no_of_boxes: ad.casual_ads.no_of_boxes,
         }
       : null,
 
@@ -108,6 +118,14 @@ export async function GET() {
         ? {
             is_publish_eng: ad.classified_ads[0].is_publish_eng,
             is_publish_tam: ad.classified_ads[0].is_publish_tam,
+            is_publish_sin: ad.classified_ads[0].is_publish_sin,
+            is_publish_sin_eng: ad.classified_ads[0].is_publish_sin_eng,
+            is_publish_sin_tam: ad.classified_ads[0].is_publish_sin_tam,
+            is_publish_eng_tam: ad.classified_ads[0].is_publish_eng_tam,
+            is_co_paper: ad.classified_ads[0].is_co_paper,
+            is_int_bw: ad.classified_ads[0].is_int_bw,
+            is_int_fc: ad.classified_ads[0].is_int_fc,
+            is_int_highlight: ad.classified_ads[0].is_int_highlight,
             is_priority: ad.classified_ads[0].is_priority,
           }
         : null,

@@ -16,7 +16,7 @@ export async function POST(req: Request) {
     if (!advertiser || !advertisement) {
       return NextResponse.json(
         { error: "Missing advertiser or advertisement data" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -42,7 +42,7 @@ export async function POST(req: Request) {
 
     async function generateAdReferenceNumber(
       prisma: PrismaClient,
-      newspaperSerialNo: number
+      newspaperSerialNo: number,
     ) {
       // 1️⃣ First 5 digits (newspaper prefix)
       const prefix = newspaperSerialNo.toString().padStart(5, "0");
@@ -80,7 +80,7 @@ export async function POST(req: Request) {
     if (!advertisement.newspaper_serial_no) {
       return NextResponse.json(
         { error: "Newspaper serial number is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -91,7 +91,7 @@ export async function POST(req: Request) {
       try {
         referenceNumber = await generateAdReferenceNumber(
           prisma,
-          advertisement.newspaper_serial_no
+          advertisement.newspaper_serial_no,
         );
         break;
       } catch (err) {
@@ -136,6 +136,7 @@ export async function POST(req: Request) {
           has_artwork: advertisement.has_artwork,
           need_artwork: advertisement.need_artwork,
           section_id: advertisement.sectionId,
+          no_of_boxes: advertisement.no_boxes,
         },
       });
     }
@@ -149,7 +150,15 @@ export async function POST(req: Request) {
           reference_number: referenceNumber,
           is_publish_eng: advertisement.is_publish_eng ?? false,
           is_publish_tam: advertisement.is_publish_tam ?? false,
+          is_publish_sin: advertisement.is_publish_sin ?? false,
+          is_publish_sin_eng: advertisement.is_publish_sin_eng ?? false,
+          is_publish_sin_tam: advertisement.is_publish_sin_tam ?? false,
+          is_publish_eng_tam: advertisement.is_publish_eng_tam ?? false,
           is_priority: advertisement.is_priority ?? false,
+          is_co_paper: advertisement.is_co_paper ?? false,
+          is_int_bw: advertisement.is_int_bw ?? false,
+          is_int_fc: advertisement.is_int_fc ?? false,
+          is_int_highlight: advertisement.is_int_highlight ?? false,
         },
       });
     }
@@ -226,7 +235,7 @@ export async function POST(req: Request) {
     console.error("Submit Ad Error:", err);
     return NextResponse.json(
       { error: "Internal Server Error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

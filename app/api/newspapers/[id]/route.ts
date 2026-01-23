@@ -28,6 +28,7 @@ export async function GET(
               orderBy: { id: "asc" },
               include: {
                 ad_section_sizes: { orderBy: { id: "asc" } },
+                ad_section_box_pricing: { orderBy: { box_number_dec: "asc" } },
               },
             },
           },
@@ -78,6 +79,9 @@ export async function PUT(
       combine_eng_price,
       combine_tam_price,
       combine_eng_tam_price,
+      combine_sin_tam_price,
+      combine_sin_price,
+      combine_sin_eng_price,
       allowed_month_days = [],
       allowed_weekdays = [],
       ad_types = [],
@@ -114,6 +118,9 @@ export async function PUT(
           combine_eng_price,
           combine_tam_price,
           combine_eng_tam_price,
+          combine_sin_tam_price,
+          combine_sin_price,
+          combine_sin_eng_price,
           allowed_weekdays,
           allowed_month_days,
         },
@@ -121,8 +128,20 @@ export async function PUT(
     );
 
     /* ----------------------------------------
-       2️⃣ Delete old ad data
+       2️⃣ Delete old ad data / Keep the order
     ---------------------------------------- */
+    ops.push(
+      prisma.ad_section_box_pricing.deleteMany({
+        where: {
+          ad_sections: {
+            ad_types: {
+              newspaper_id: id,
+            },
+          },
+        },
+      }),
+    );
+
     ops.push(
       prisma.ad_section_sizes.deleteMany({
         where: {
@@ -166,6 +185,10 @@ export async function PUT(
             base_price: Number(ad.base_price) || 0,
             additional_word_price: Number(ad.additional_word_price) || 0,
             tint_color_price: Number(ad.tint_color_price) || 0,
+            co_paper_price: Number(ad.co_paper_price) || 0,
+            internet_bw_price: Number(ad.internet_bw_price) || 0,
+            internet_fc_price: Number(ad.internet_fc_price) || 0,
+            internet_highlight_price: Number(ad.internet_highlight_price) || 0,
             is_allow_combined: Boolean(ad.is_allow_combined),
             max_words: Number.isFinite(ad.max_words) ? ad.max_words : 0,
             img_url: ad.img_url ?? null,
@@ -189,6 +212,8 @@ export async function PUT(
                 name: section.name,
                 extra_notes: section.extra_notes ?? null,
                 is_available: section.is_available ?? true,
+                supports_box_ads: Boolean(section.supports_box_ads),
+                max_boxes: section.max_boxes ?? null,
                 ad_section_sizes: {
                   createMany: {
                     data: section.sizes.map((sz: any) => ({
@@ -201,6 +226,23 @@ export async function PUT(
                     })),
                   },
                 },
+                ad_section_box_pricing:
+                  section.supports_box_ads &&
+                  section.ad_section_box_pricing?.length
+                    ? {
+                        createMany: {
+                          data: section.ad_section_box_pricing.map(
+                            (bp: any) => ({
+                              box_number_dec: bp.box_number,
+                              box_number: 1,
+                              price: bp.price,
+                              extra_note_1: bp.extra_note_1 ?? null,
+                              extra_note_2: bp.extra_note_2 ?? null,
+                            }),
+                          ),
+                        },
+                      }
+                    : undefined,
               })),
             },
           },

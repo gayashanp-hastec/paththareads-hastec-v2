@@ -13,6 +13,7 @@ export async function GET() {
       no_col_per_page: true,
       col_height: true,
       min_ad_height: true,
+      language: true,
       tint_additional_charge: true,
       newspaper_status: true,
       newspaper_serial_no: true,
@@ -20,6 +21,9 @@ export async function GET() {
       combine_eng_price: true,
       combine_tam_price: true,
       combine_eng_tam_price: true,
+      combine_sin_price: true,
+      combine_sin_eng_price: true,
+      combine_sin_tam_price: true,
       allowed_weekdays: true,
       allowed_month_days: true,
       created_at: true,
@@ -39,12 +43,16 @@ export async function GET() {
     no_col_per_page: n.no_col_per_page,
     col_height: n.col_height,
     min_ad_height: n.min_ad_height,
+    language: n.language,
     tint_additional_charge: n.tint_additional_charge,
     newspaper_serial_no: n.newspaper_serial_no,
     is_lang_combine_allowed: n.is_lang_combine_allowed,
     combine_eng_price: n.combine_eng_price,
     combine_tam_price: n.combine_tam_price,
     combine_eng_tam_price: n.combine_eng_tam_price,
+    combine_sin_price: n.combine_sin_price,
+    combine_sin_eng_price: n.combine_sin_eng_price,
+    combine_sin_tam_price: n.combine_sin_tam_price,
     allowed_weekdays: n.allowed_weekdays || [],
     allowed_month_days: n.allowed_month_days || [],
     created_at: n.created_at,
@@ -68,11 +76,15 @@ export async function POST(req: Request) {
       min_ad_height,
       tint_additional_charge,
       newspaper_img,
+      language,
       name_sinhala,
       is_lang_combine_allowed,
       combine_eng_price,
       combine_tam_price,
       combine_eng_tam_price,
+      combine_sin_tam_price,
+      combine_sin_price,
+      combine_sin_eng_price,
       allowed_month_days = [],
       allowed_weekdays = [],
       ad_types = [], // optional
@@ -114,10 +126,14 @@ export async function POST(req: Request) {
           tint_additional_charge,
           newspaper_img,
           name_sinhala,
+          language,
           is_lang_combine_allowed,
           combine_eng_price,
           combine_tam_price,
           combine_eng_tam_price,
+          combine_sin_tam_price,
+          combine_sin_price,
+          combine_sin_eng_price,
           allowed_weekdays,
           allowed_month_days,
         },
@@ -135,6 +151,10 @@ export async function POST(req: Request) {
             base_price: ad.base_price,
             additional_word_price: ad.additional_word_price,
             tint_color_price: ad.tint_color_price,
+            co_paper_price: ad.co_paper_price,
+            internet_bw_price: ad.internet_bw_price,
+            internet_fc_price: ad.internet_fc_price,
+            internet_highlight_price: ad.internet_highlight_price,
             is_allow_combined: ad.is_allow_combined,
             max_words: ad.max_words,
             img_url: ad.img_url ?? null,
@@ -163,6 +183,8 @@ export async function POST(req: Request) {
                 name: section.name,
                 extra_notes: section.extra_notes ?? null,
                 is_available: section.is_available,
+                supports_box_ads: section.supports_box_ads ?? false,
+                max_boxes: section.max_boxes ?? null,
               },
             });
 
@@ -177,6 +199,23 @@ export async function POST(req: Request) {
                   color_option: sz.color_option,
                   price: sz.price ?? 0,
                   is_available: sz.is_available,
+                })),
+              });
+            }
+
+            if (
+              section.supports_box_ads &&
+              section.ad_section_box_pricing &&
+              section.ad_section_box_pricing.length > 0
+            ) {
+              await tx.ad_section_box_pricing.createMany({
+                data: section.ad_section_box_pricing.map((bp: any) => ({
+                  ad_section_id: createdSection.id,
+                  box_number: 1,
+                  box_number_dec: bp.box_number,
+                  price: bp.price,
+                  extra_note_1: bp.extra_note_1 ?? null,
+                  extra_note_2: bp.extra_note_2 ?? null,
                 })),
               });
             }

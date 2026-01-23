@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET(
   req: Request,
-  context: { params: Promise<{ "newspaper-id": string }> }
+  context: { params: Promise<{ "newspaper-id": string }> },
 ) {
   const resolvedParams = await context.params;
   const newspaperId = resolvedParams["newspaper-id"];
@@ -24,6 +24,9 @@ export async function GET(
             ad_section_sizes: {
               orderBy: { id: "asc" },
             },
+            ad_section_box_pricing: {
+              orderBy: { id: "asc" },
+            },
           },
         },
       },
@@ -43,7 +46,7 @@ export async function GET(
               category: cat.category,
               subCategories: adCategory?.ad_sub_categories || [],
             };
-          })
+          }),
         );
 
         return {
@@ -63,9 +66,21 @@ export async function GET(
               price: Number(sz.price),
               isAvailable: sz.is_available,
             })),
+            boxPricing:
+              sec.ad_section_box_pricing.length > 0
+                ? sec.ad_section_box_pricing.map((bp) => ({
+                    id: bp.id,
+                    adSectionId: bp.ad_section_id,
+                    boxNumber: bp.box_number,
+                    boxNumberDec: Number(bp.box_number_dec),
+                    price: Number(bp.price),
+                    extraNote1: bp.extra_note_1 ?? null,
+                    extraNote2: bp.extra_note_2 ?? null,
+                  }))
+                : [],
           })),
         };
-      })
+      }),
     );
 
     return new Response(JSON.stringify(adTypesWithSubcats), {
