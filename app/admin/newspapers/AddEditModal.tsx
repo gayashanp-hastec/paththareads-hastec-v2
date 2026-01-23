@@ -15,6 +15,10 @@ const DEFAULT_AD_TYPE = {
   colorOptions: [],
   tintColorPrice: 0,
   priorityPrice: 0,
+  copaperPrice: 0,
+  internetBWPrice: 0,
+  internetFCPrice: 0,
+  internetHighlightPrice: 0,
   isAllowCombined: false,
   maxWords: 1,
   categories: "",
@@ -45,6 +49,10 @@ const createEmptySection = () => ({
   extraNotes: "",
   isAvailable: true,
   sizes: [],
+
+  supportsBoxAds: false,
+  maxBoxes: null,
+  boxPricing: [],
 });
 
 const EMPTY_SIZE = {
@@ -84,6 +92,9 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
       combine_eng_price: 0,
       combine_tam_price: 0,
       combine_eng_tam_price: 0,
+      combine_sin_price: 0,
+      combine_sin_eng_price: 0,
+      combine_sin_tam_price: 0,
       allowed_weekdays: [],
       allowed_month_days: [],
     },
@@ -121,6 +132,10 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
       taxAmount: t.tax_amount_2,
       additionalWordPrice: t.additional_word_price,
       tintColorPrice: t.tint_color_price,
+      copaperPrice: t.co_paper_price,
+      internetBWPrice: t.internet_bw_price,
+      internetFCPrice: t.internet_fc_price,
+      internetHighlightPrice: t.internet_highlight_price,
       isAllowCombined: t.is_allow_combined,
       maxWords: t.max_words,
       imgUrl: t.img_url || "",
@@ -286,6 +301,9 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
       combine_eng_price: Number(form.combine_eng_price),
       combine_tam_price: Number(form.combine_tam_price),
       combine_eng_tam_price: Number(form.combine_eng_tam_price),
+      combine_sin_price: Number(form.combine_sin_price),
+      combine_sin_eng_price: Number(form.combine_sin_eng_price),
+      combine_sin_tam_price: Number(form.combine_sin_tam_price),
       allowed_month_days: form.allowed_month_days,
       allowed_weekdays: form.allowed_weekdays,
       ad_types: adTypes.map((t) => ({
@@ -296,6 +314,10 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
         base_price: Number(t.basePrice),
         additional_word_price: Number(t.additionalWordPrice),
         tint_color_price: Number(t.tintColorPrice),
+        co_paper_price: Number(t.copaperPrice),
+        internet_bw_price: Number(t.internetBWPrice),
+        internet_fc_price: Number(t.internetFCPrice),
+        internet_highlight_price: Number(t.internetHighlightPrice),
         is_allow_combined: Boolean(t.isAllowCombined),
         max_words: Number(t.maxWords),
         img_url: t.imgUrl || null,
@@ -316,6 +338,17 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
           name: s.name,
           extra_notes: s.extraNotes,
           is_available: s.isAvailable,
+          supports_box_ads: Boolean(s.supportsBoxAds),
+          max_boxes: s.maxBoxes ? Number(s.maxBoxes) : null,
+
+          ad_section_box_pricing: s.supportsBoxAds
+            ? s.boxPricing.map((bp: any) => ({
+                box_number: Number(bp.boxNumber),
+                price: Number(bp.price),
+                extra_note_1: bp.extraNote1 || null,
+                extra_note_2: bp.extraNote2 || null,
+              }))
+            : [],
           sizes: s.sizes.map((z: any) => ({
             size_type: z.sizeType,
             width: z.width,
@@ -383,6 +416,9 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
           combine_eng_price: data.combine_eng_price,
           combine_tam_price: data.combine_tam_price,
           combine_eng_tam_price: data.combine_eng_tam_price,
+          combine_sin_price: data.combine_sin_price,
+          combine_sin_eng_price: data.combine_sin_eng_price,
+          combine_sin_tam_price: data.combine_sin_tam_price,
           allowed_month_days: data.allowed_month_days,
           allowed_weekdays: data.allowed_weekdays,
         });
@@ -398,6 +434,10 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
               basePrice: t.base_price,
               additionalWordPrice: t.additional_word_price,
               tintColorPrice: t.tint_color_price,
+              copaperPrice: t.co_paper_price,
+              internetBWPrice: t.internet_bw_price,
+              internetFCPrice: t.internet_fc_price,
+              internetHighlightPrice: t.internet_highlight_price,
               priorityPrice: t.priority_price ?? 0,
               taxAmount: t.tax_amount_2 ?? 0.0,
               isAllowCombined: t.is_allow_combined,
@@ -421,6 +461,17 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                     name: sec.name,
                     extraNotes: sec.extra_notes || "",
                     isAvailable: sec.is_available,
+                    supportsBoxAds: Boolean(sec.supports_box_ads),
+                    maxBoxes: sec.max_boxes ?? null,
+
+                    boxPricing: Array.isArray(sec.ad_section_box_pricing)
+                      ? sec.ad_section_box_pricing.map((bp: any) => ({
+                          boxNumber: bp.box_number_dec,
+                          price: bp.price,
+                          extraNote1: bp.extra_note_1 || "",
+                          extraNote2: bp.extra_note_2 || "",
+                        }))
+                      : [],
                     sizes: Array.isArray(sec.ad_section_sizes)
                       ? sec.ad_section_sizes.map((sz: any) => ({
                           sizeType: sz.size_type,
@@ -487,6 +538,25 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
 
     fetchAdTypes();
   }, []);
+
+  const combinedLanguageInputs =
+    form.language === "SI"
+      ? [
+          ["English Paper Price", "combine_eng_price"],
+          ["Tamil Paper Price", "combine_tam_price"],
+          ["English & Tamil Both Price", "combine_eng_tam_price"],
+        ]
+      : form.language === "EN"
+        ? [
+            ["Sinhala Paper Price", "combine_sin_price"],
+            ["Tamil Paper Price", "combine_tam_price"],
+            ["Sinhala & Tamil Paper Price", "combine_sin_tam_price"],
+          ]
+        : [
+            ["Sinhala Paper Price", "combine_sin_price"],
+            ["English Paper Price", "combine_eng_price"],
+            ["Sinhala & English Paper Price", "combine_sin_eng_price"],
+          ];
 
   // components/NewspaperSkeleton.tsx
   function NewspaperSkeleton() {
@@ -570,7 +640,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                   </label>
                   <input
                     type="text"
-                    className={`mt-1 w-full rounded-lg border px-3 py-2 text-sm focus:border-[var(--color-primary)] focus:outline-none ${
+                    className={`mt-1 w-full rounded-lg border px-3 py-2 text-sm focus:border-primary focus:outline-none ${
                       errors.name
                         ? "border-red-500 animate-shake"
                         : "border-gray-300"
@@ -605,7 +675,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                   </label>
                   <input
                     type="text"
-                    className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[var(--color-primary)] focus:outline-none"
+                    className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none"
                     value={form.name_sinhala}
                     onChange={(e) =>
                       setForm({ ...form, name_sinhala: e.target.value })
@@ -737,6 +807,8 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                     </label>
                     <input
                       type="number"
+                      min={0}
+                      step={key === "tintAdditionalCharge" ? 50 : 1}
                       className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none"
                       value={(form as any)[key]}
                       onChange={(e) =>
@@ -746,31 +818,6 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                   </div>
                 ))}
               </div>
-              {/* Allow Combined Languages */}
-
-              {/* <div className="mt-8 mb-4">
-                <label className="flex items-center gap-2 text-sm font-medium text-[var(--color-text)]">
-                  <input
-                    type="checkbox"
-                    checked={form.is_lang_combine_allowed}
-                    onChange={(e) =>
-                      setForm({
-                        ...form,
-                        is_lang_combine_allowed: e.target.checked,
-                        ...(e.target.checked
-                          ? {}
-                          : {
-                              combine_eng_price: 0,
-                              combine_tam_price: 0,
-                              combine_eng_tam_price: 0,
-                            }),
-                      })
-                    }
-                    className="h-4 w-4 accent-[var(--color-primary)] cursor-pointer"
-                  />
-                  Allow Combined Languages
-                </label>
-              </div> */}
 
               <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
                 {/* LEFT: Language Selector */}
@@ -797,12 +844,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                               language: lang.key,
                             }))
                           }
-                          className={`h-9 rounded-lg border text-sm font-medium transition-all
-              ${
-                isSelected
-                  ? "bg-[var(--color-primary-dark)] text-white"
-                  : "bg-white border-gray-300 hover:border-[var(--color-primary)]"
-              }`}
+                          className={`h-9 rounded-lg border text-sm font-medium transition-all ${isSelected ? "bg-[var(--color-primary-dark)] text-white" : "bg-white border-gray-300 hover:border-[var(--color-primary)]"}`}
                         >
                           {lang.label}
                         </button>
@@ -847,11 +889,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
 
               {form.is_lang_combine_allowed && (
                 <div className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-3">
-                  {[
-                    ["English Paper Price", "combine_eng_price"],
-                    ["Tamil Paper Price", "combine_tam_price"],
-                    ["English & Tamil Both Price", "combine_eng_tam_price"],
-                  ].map(([label, key]) => (
+                  {combinedLanguageInputs.map(([label, key]) => (
                     <div key={key}>
                       <label className="block text-sm font-medium text-[var(--color-text)]">
                         {label}
@@ -914,6 +952,25 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                     "tintColorPrice",
                     "number",
                     "Cost for tint",
+                  ],
+                  ["C/O Paper Price", "copaperPrice", "number", "Cost for C/O"],
+                  [
+                    "Internet B/W Price",
+                    "internetBWPrice",
+                    "number",
+                    "Cost for Internet BW",
+                  ],
+                  [
+                    "Internet F/C Price",
+                    "internetFCPrice",
+                    "number",
+                    "Cost for Internet F/C",
+                  ],
+                  [
+                    "Internet Highlight Price",
+                    "internetHighlightPrice",
+                    "number",
+                    "Cost for Internet Highlight",
                   ],
                   [
                     "Tax Amount (Vat %)",
@@ -1140,6 +1197,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                           </label>
                           <input
                             type="number"
+                            min={0}
                             className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
                             value={(t as any)[key] ?? ""}
                             onChange={(e) =>
@@ -1148,6 +1206,69 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                           />
                         </div>
                       ))}
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-4 my-4">
+                      {/* Toggles */}
+                      <div className="flex items-center gap-2 md:col-span-4">
+                        <div id="reqImg" className="flex items-center gap-1">
+                          <input
+                            className="h-5 w-5 accent-[var(--color-primary)]"
+                            type="checkbox"
+                            checked={t.isUploadImage}
+                            onChange={(e) =>
+                              updateAdType(
+                                index,
+                                "isUploadImage",
+                                e.target.checked,
+                              )
+                            }
+                          />
+                          <span className="text-sm">Require Image Upload</span>
+                        </div>
+                      </div>
+
+                      {/* <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={t.isAllowCombined}
+                          onChange={(e) =>
+                            updateAdType(
+                              index,
+                              "isAllowCombined",
+                              e.target.checked
+                            )
+                          }
+                        />
+                        <span className="text-sm">Allow Combined</span>
+                      </div> */}
+
+                      {/* Notes */}
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-medium">
+                          Extra Notes 1
+                        </label>
+                        <textarea
+                          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                          value={t.extraNotes1 ?? ""}
+                          onChange={(e) =>
+                            updateAdType(index, "extraNotes1", e.target.value)
+                          }
+                        />
+                      </div>
+
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-medium">
+                          Extra Notes 2
+                        </label>
+                        <textarea
+                          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                          value={t.extraNotes2 ?? ""}
+                          onChange={(e) =>
+                            updateAdType(index, "extraNotes2", e.target.value)
+                          }
+                        />
+                      </div>
                     </div>
 
                     {t.typeKey === "casual" && (
@@ -1167,11 +1288,11 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                           {t.sections?.map((section: any, sIndex: number) => (
                             <div key={sIndex} className="rounded-lg border p-4">
                               {/* SECTION HEADER */}
-                              <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+                              <div className="grid grid-cols-1 gap-4 md:grid-cols-4 mt-4 mb-8">
                                 <input
                                   type="text"
                                   placeholder="Section name (Main, Thaksalawa...)"
-                                  className="rounded border px-3 py-2 text-sm"
+                                  className="mt-1 ml-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none text-center"
                                   value={section.name}
                                   onChange={(e) => {
                                     const updated = [...adTypes];
@@ -1184,7 +1305,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                                 <input
                                   type="text"
                                   placeholder="Extra notes"
-                                  className="md:col-span-2 rounded border px-3 py-2 text-sm"
+                                  className="md:col-span-2 mt-1 ml-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none text-center"
                                   value={section.extraNotes}
                                   onChange={(e) => {
                                     const updated = [...adTypes];
@@ -1194,8 +1315,8 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                                   }}
                                 />
 
-                                <div className="flex items-center gap-2">
-                                  <label className="text-sm">Active</label>
+                                <div className="flex justify-end items-center gap-2">
+                                  <label className=" text-right">Active</label>
                                   <input
                                     type="checkbox"
                                     checked={section.isAvailable ?? true}
@@ -1212,24 +1333,18 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                               </div>
 
                               {/* ADD SIZE */}
-                              <div className="w-full flex justify-center mt-4">
-                                <button
-                                  type="button"
-                                  onClick={() => addSize(index, sIndex)}
-                                  className="mt-4 text-sm rounded-md border-primary border-1 px-4 py-2 text-primary-dark! hover:text-primary! !bg-transparent"
-                                >
-                                  Add New Size
-                                </button>
-                              </div>
-
                               {/* SIZES TABLE */}
-                              <div className="mt-3 overflow-x-auto">
+                              <div className="mt-3 overflow-x-auto mt-4">
                                 <table className="w-full border text-sm">
                                   <thead className="bg-gray-100">
                                     <tr>
                                       <th className="border p-2">Size Type</th>
-                                      <th className="border p-2">Width</th>
-                                      <th className="border p-2">Height</th>
+                                      <th className="border p-2">
+                                        Width (column)
+                                      </th>
+                                      <th className="border p-2">
+                                        Height (cm)
+                                      </th>
                                       <th className="border p-2">Color</th>
                                       <th className="border p-2">Price</th>
                                       <th className="border p-2">✔</th>
@@ -1254,7 +1369,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                                           >
                                             <td className="border p-2">
                                               <select
-                                                className="w-full rounded border px-2 py-1"
+                                                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none"
                                                 value={sz.sizeType}
                                                 onChange={(e) =>
                                                   updateSize(
@@ -1282,7 +1397,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                                             <td className="border p-2">
                                               <input
                                                 type="number"
-                                                className="w-full rounded border px-2 py-1"
+                                                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none text-right"
                                                 value={sz.width}
                                                 onChange={(e) =>
                                                   updateSize(
@@ -1300,7 +1415,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                                             <td className="border p-2">
                                               <input
                                                 type="number"
-                                                className="w-full rounded border px-2 py-1"
+                                                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none text-right"
                                                 value={sz.height}
                                                 onChange={(e) =>
                                                   updateSize(
@@ -1317,7 +1432,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
 
                                             <td className="border p-2">
                                               <select
-                                                className="w-full rounded border px-2 py-1"
+                                                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none"
                                                 value={sz.colorOption}
                                                 onChange={(e) =>
                                                   updateSize(
@@ -1344,7 +1459,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                                               <input
                                                 type="number"
                                                 step={1000}
-                                                className="w-full rounded border px-2 py-1"
+                                                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none text-right"
                                                 value={sz.price}
                                                 onChange={(e) =>
                                                   updateSize(
@@ -1430,74 +1545,229 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                                   </tbody>
                                 </table>
                               </div>
+                              <div className="w-full flex justify-center mt-4">
+                                <button
+                                  type="button"
+                                  onClick={() => addSize(index, sIndex)}
+                                  className="mt-4 text-sm rounded-md border-primary border-1 px-4 py-2 text-primary-dark! hover:text-primary! !bg-transparent"
+                                >
+                                  Add New Size
+                                </button>
+                              </div>
+
+                              {/* BOXES TABLE */}
+                              <div className="mt-8 rounded-lg border border-gray-400 bg-gray-50 p-4">
+                                <label className="flex items-center gap-3 my-4">
+                                  <input
+                                    type="checkbox"
+                                    className="h-6 w-6 accent-[var(--color-primary)]"
+                                    checked={section.supportsBoxAds || false}
+                                    onChange={(e) => {
+                                      const updated = [...adTypes];
+                                      updated[index].sections[
+                                        sIndex
+                                      ].supportsBoxAds = e.target.checked;
+
+                                      if (!e.target.checked) {
+                                        updated[index].sections[
+                                          sIndex
+                                        ].boxPricing = [];
+                                        updated[index].sections[
+                                          sIndex
+                                        ].maxBoxes = null;
+                                      }
+
+                                      setAdTypes(updated);
+                                    }}
+                                  />
+                                  <span className="text-sm font-medium">
+                                    Enable Box Ads for this section
+                                  </span>
+                                </label>
+
+                                {section.supportsBoxAds && (
+                                  <div className="mt-4 space-y-4">
+                                    {/* Max boxes */}
+                                    <label className="text-sm font-medium text-[var(--color-text)]">
+                                      No of Boxes
+                                    </label>
+                                    <input
+                                      type="number"
+                                      min={1}
+                                      placeholder="Max no of boxes"
+                                      className="mt-1 ml-2 w-full md:w-1/6 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none text-center"
+                                      value={section.maxBoxes ?? ""}
+                                      onChange={(e) => {
+                                        const updated = [...adTypes];
+                                        updated[index].sections[
+                                          sIndex
+                                        ].maxBoxes = e.target.value
+                                          ? Number(e.target.value)
+                                          : null;
+                                        setAdTypes(updated);
+                                      }}
+                                    />
+
+                                    {/* BOX PRICING TABLE */}
+                                    <div className="overflow-x-auto">
+                                      <table className="min-w-full border text-sm">
+                                        <thead className="bg-gray-100">
+                                          <tr>
+                                            <th className="border px-3 py-2 w-1/6">
+                                              Box #
+                                            </th>
+                                            <th className="border px-3 py-2 w-1/6">
+                                              Price
+                                            </th>
+                                            <th className="border px-3 py-2">
+                                              Extra note 1
+                                            </th>
+                                            <th className="border px-3 py-2">
+                                              Extra note 2
+                                            </th>
+                                            <th className="border px-3 py-2 w-1/12"></th>
+                                          </tr>
+                                        </thead>
+                                        <tbody>
+                                          {section.boxPricing?.map(
+                                            (row: any, rIndex: number) => (
+                                              <tr key={rIndex}>
+                                                <td className="border px-2 py-1">
+                                                  <input
+                                                    type="number"
+                                                    min={1}
+                                                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none text-right"
+                                                    value={row.boxNumber}
+                                                    onChange={(e) => {
+                                                      const updated = [
+                                                        ...adTypes,
+                                                      ];
+                                                      updated[index].sections[
+                                                        sIndex
+                                                      ].boxPricing[
+                                                        rIndex
+                                                      ].boxNumber = Number(
+                                                        e.target.value,
+                                                      );
+                                                      setAdTypes(updated);
+                                                    }}
+                                                  />
+                                                </td>
+
+                                                <td className="border px-2 py-1">
+                                                  <input
+                                                    type="number"
+                                                    step={500}
+                                                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none text-right"
+                                                    value={row.price}
+                                                    onChange={(e) => {
+                                                      const updated = [
+                                                        ...adTypes,
+                                                      ];
+                                                      updated[index].sections[
+                                                        sIndex
+                                                      ].boxPricing[
+                                                        rIndex
+                                                      ].price = Number(
+                                                        e.target.value,
+                                                      );
+                                                      setAdTypes(updated);
+                                                    }}
+                                                  />
+                                                </td>
+
+                                                <td className="border px-2 py-1">
+                                                  <input
+                                                    type="text"
+                                                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none"
+                                                    value={row.extraNote1 || ""}
+                                                    onChange={(e) => {
+                                                      const updated = [
+                                                        ...adTypes,
+                                                      ];
+                                                      updated[index].sections[
+                                                        sIndex
+                                                      ].boxPricing[
+                                                        rIndex
+                                                      ].extraNote1 =
+                                                        e.target.value;
+                                                      setAdTypes(updated);
+                                                    }}
+                                                  />
+                                                </td>
+
+                                                <td className="border px-2 py-1">
+                                                  <input
+                                                    type="text"
+                                                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none"
+                                                    value={row.extraNote2 || ""}
+                                                    onChange={(e) => {
+                                                      const updated = [
+                                                        ...adTypes,
+                                                      ];
+                                                      updated[index].sections[
+                                                        sIndex
+                                                      ].boxPricing[
+                                                        rIndex
+                                                      ].extraNote2 =
+                                                        e.target.value;
+                                                      setAdTypes(updated);
+                                                    }}
+                                                  />
+                                                </td>
+
+                                                <td className="border px-2 py-1 text-center">
+                                                  <button
+                                                    className="text-white bg-red-900 hover:underline w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-center"
+                                                    onClick={() => {
+                                                      const updated = [
+                                                        ...adTypes,
+                                                      ];
+                                                      updated[index].sections[
+                                                        sIndex
+                                                      ].boxPricing.splice(
+                                                        rIndex,
+                                                        1,
+                                                      );
+                                                      setAdTypes(updated);
+                                                    }}
+                                                  >
+                                                    REMOVE
+                                                  </button>
+                                                </td>
+                                              </tr>
+                                            ),
+                                          )}
+                                        </tbody>
+                                      </table>
+                                    </div>
+                                    <div className="w-full flex justify-center">
+                                      <button
+                                        className="mt-2 mb-8 text-sm rounded-md border-primary border-1 px-4 py-2 text-primary-dark! hover:text-primary! !bg-transparent"
+                                        onClick={() => {
+                                          const updated = [...adTypes];
+                                          updated[index].sections[
+                                            sIndex
+                                          ].boxPricing.push({
+                                            boxNumber: 1,
+                                            price: 0,
+                                            extraNote1: "",
+                                            extraNote2: "",
+                                          });
+                                          setAdTypes(updated);
+                                        }}
+                                      >
+                                        Add New Box
+                                      </button>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           ))}
                         </div>
                       </>
                     )}
-
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-4 my-4">
-                      {/* Toggles */}
-                      <div className="flex items-center gap-2 md:col-span-4">
-                        <div id="reqImg" className="flex items-center gap-1">
-                          <input
-                            className="h-5 w-5 accent-[var(--color-primary)]"
-                            type="checkbox"
-                            checked={t.isUploadImage}
-                            onChange={(e) =>
-                              updateAdType(
-                                index,
-                                "isUploadImage",
-                                e.target.checked,
-                              )
-                            }
-                          />
-                          <span className="text-sm">Require Image Upload</span>
-                        </div>
-                      </div>
-
-                      {/* <div className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={t.isAllowCombined}
-                          onChange={(e) =>
-                            updateAdType(
-                              index,
-                              "isAllowCombined",
-                              e.target.checked
-                            )
-                          }
-                        />
-                        <span className="text-sm">Allow Combined</span>
-                      </div> */}
-
-                      {/* Notes */}
-                      <div className="md:col-span-2">
-                        <label className="block text-sm font-medium">
-                          Extra Notes 1
-                        </label>
-                        <textarea
-                          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-                          value={t.extraNotes1 ?? ""}
-                          onChange={(e) =>
-                            updateAdType(index, "extraNotes1", e.target.value)
-                          }
-                        />
-                      </div>
-
-                      <div className="md:col-span-2">
-                        <label className="block text-sm font-medium">
-                          Extra Notes 2
-                        </label>
-                        <textarea
-                          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-                          value={t.extraNotes2 ?? ""}
-                          onChange={(e) =>
-                            updateAdType(index, "extraNotes2", e.target.value)
-                          }
-                        />
-                      </div>
-                    </div>
                   </div>
                 );
               })}

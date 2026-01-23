@@ -60,7 +60,7 @@ export default function Sidebar() {
     { name: "Dashboard", href: "/admin" },
     {
       name: "Advertisements",
-      href: "/admin/advertisements",
+      href: "/admin/all",
       subItems: [
         { name: "Pending", href: "/admin/advertisements/pending" },
         { name: "All", href: "/admin/advertisements/all" },

@@ -48,17 +48,17 @@ export default function StepSelectNewspaper({
     return activeTab === "daily"
       ? type === "daily"
       : activeTab === "sunday"
-      ? type === "sunday"
-      : activeTab === "weekly"
-      ? type === "weekly"
-      : type === "monthly";
+        ? type === "sunday"
+        : activeTab === "weekly"
+          ? type === "weekly"
+          : type === "monthly";
   });
 
   const handleSelectNewspaper = (paper: any) => {
     console.log("select newspaper output", paper);
     console.log(
       "select newspaper language output",
-      paper.is_lang_combine_allowed
+      paper.is_lang_combine_allowed,
     );
     updateFormData({
       selectedNewspaper: {
@@ -70,11 +70,17 @@ export default function StepSelectNewspaper({
         col_height: paper.col_height,
         min_ad_height: paper.min_ad_height,
         tint_additional_charge: paper.tint_additional_charge,
+        language: paper.language,
         newspaper_serial_no: paper.newspaper_serial_no,
         is_lang_combine_allowed: paper.is_lang_combine_allowed,
         combine_eng_price: paper.combine_eng_price,
         combine_tam_price: paper.combine_tam_price,
+        combine_sin_price: paper.combine_sin_price,
+        combine_sin_eng_price: paper.combine_sin_eng_price,
+        combine_sin_tam_price: paper.combine_sin_tam_price,
+        combine_eng_tam_price: paper.combine_eng_tam_price,
         allowed_weekdays: paper.allowed_weekdays,
+        allowed_month_days: paper.allowed_month_days,
       },
     });
     console.log("select newspaper form data output", formData);

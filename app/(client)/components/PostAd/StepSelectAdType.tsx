@@ -12,6 +12,16 @@ interface StepSelectAdTypeProps {
   updateFormData: (data: any) => void;
 }
 
+interface AdSectionBoxPricing {
+  id: number;
+  adSectionId: number;
+  boxNumber: number; // integer box count
+  boxNumberDec: number; // decimal (0.5, 1, 1.5, etc.)
+  price: number; // Decimal from DB → number in frontend
+  extraNote1?: string | null;
+  extraNote2?: string | null;
+}
+
 interface SectionSize {
   id: number;
   sizeType: string;
@@ -28,6 +38,7 @@ interface AdSection {
   extraNotes?: string;
   isAvailable: boolean;
   sizes: SectionSize[];
+  boxPricing?: AdSectionBoxPricing[];
 }
 
 interface AdType {
@@ -40,6 +51,10 @@ interface AdType {
   base_price: number;
   additional_word_price: number;
   priority_price: number;
+  co_paper_price: number;
+  internet_bw_price: number;
+  internet_fc_price: number;
+  internet_highlight_price: number;
   tax_amount_2: number;
   tint_color_price: number;
   is_allow_combined: boolean;
@@ -73,8 +88,12 @@ export default function StepSelectAdType({
   const [selectedAdType, setSelectedAdType] = useState<AdType | null>(null);
   const [selectedSection, setSelectedSection] = useState<number | null>(null);
 
+  const [selectedMainAdType, setselectedMainAdType] = useState<
+    "classified" | "casual" | null
+  >(null);
+
   const [wordCount, setWordCount] = useState<number>(
-    formData.adText?.split(" ").filter(Boolean).length || 0
+    formData.adText?.split(" ").filter(Boolean).length || 0,
   );
   const [priceBreakdown, setPriceBreakdown] = useState<
     { label: string; amount: number }[]
@@ -89,25 +108,29 @@ export default function StepSelectAdType({
   const [selectedColor, setselectedColor] = useState<number>(0); // stores value for colors for casual ads
   const [selectedColumns, setselectedColumns] = useState<number>(0); // user selected no of columns
   const [selectedAdHeight, setselectedAdHeight] = useState<number>(
-    formData.selectedNewspaper.min_ad_height
+    formData.selectedNewspaper.min_ad_height,
   );
   const [noOfColumnsPerPage, setNoOfColumnsPerPage] = useState<number>(
-    formData.selectedNewspaper.no_col_per_page
+    formData.selectedNewspaper.no_col_per_page,
   );
   const [minAdHeight, setminAdHeight] = useState<number>(
-    formData.selectedNewspaper.min_ad_height
+    formData.selectedNewspaper.min_ad_height,
   );
   const [maxColHeight, setmaxColHeight] = useState<number>(
-    formData.selectedNewspaper.col_height
+    formData.selectedNewspaper.col_height,
   );
   const [tintAdditionalCharge, settintAdditionalCharge] = useState<number>(
-    formData.selectedNewspaper.tint_additional_charge
+    formData.selectedNewspaper.tint_additional_charge,
   );
   const [newspaperDays, setnewspaperDays] = useState<string[]>([]);
+  const [selectedBoxPrice, setselectedBoxPrice] = useState<number>(0);
 
   const selectedNewspaperId = formData.selectedNewspaper?.id;
   const allowed_weekdays = formData.selectedNewspaper?.allowed_weekdays ?? [];
+  const allowed_month_days =
+    formData.selectedNewspaper?.allowed_month_days ?? [];
   console.log("days here: ", allowed_weekdays);
+  console.log("days here: ", allowed_month_days);
 
   // JS: Sunday=0 → ISO: Sunday=7
   const getIsoWeekday = (date: Date) =>
@@ -117,7 +140,15 @@ export default function StepSelectAdType({
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    return date >= today && allowed_weekdays.includes(getIsoWeekday(date));
+    if (date < today) return false; // never allow past dates
+
+    if (formData.selectedNewspaper?.type === "Monthly") {
+      // allowed_month_days is an array like [1, 15, 28]
+      return allowed_month_days.includes(date.getDate());
+    }
+
+    // For Daily / Sunday / Weekly → use allowed_weekdays
+    return allowed_weekdays.includes(getIsoWeekday(date));
   };
 
   const now = new Date();
@@ -165,6 +196,15 @@ export default function StepSelectAdType({
       userLangCombineSelected: false,
       userLangCombineSelected_Tam: false,
       userLangCombineSelected_Eng: false,
+      userLangCombineSelected_Sin: false,
+      userLangCombineSelected_Sin_Eng: false,
+      userLangCombineSelected_Sin_Tam: false,
+      userLangCombineSelected_Eng_Tam: false,
+      isPlacementEnabled: false,
+      userCOPaper: false,
+      userIntBW: false,
+      userIntFC: false,
+      userIntHighlight: false,
       specialNotes: "",
       classifiedCategory: "",
       photoCategory: "",
@@ -178,12 +218,12 @@ export default function StepSelectAdType({
       noOfColumnsPerPage,
       minAdHeight,
       selectedAdHeight,
-      maxColHeight
+      maxColHeight,
     );
   };
 
   const selectedSectionData = selectedAdType?.sections?.find(
-    (s) => s.id === selectedSection
+    (s) => s.id === selectedSection,
   );
 
   const sizeTypeOptions = Array.from(
@@ -194,9 +234,25 @@ export default function StepSelectAdType({
           key: sz.sizeType,
           label: sz.sizeType.replace(/_/g, " "),
         },
-      ])
-    ).values()
+      ]),
+    ).values(),
   );
+
+  const boxOptions = Array.from(
+    new Map(
+      (selectedSectionData?.boxPricing || []).map((bp) => [
+        bp.boxNumberDec,
+        {
+          key: bp.boxNumberDec,
+          label:
+            bp.boxNumberDec % 1 === 0
+              ? `${bp.boxNumberDec} Box`
+              : `${bp.boxNumberDec} Box`,
+          price: Number(bp.price),
+        },
+      ]),
+    ).values(),
+  ).sort((a, b) => a.key - b.key);
 
   const COLOR_LABEL_MAP: Record<string, { label: string; subLabel: string }> = {
     bw: {
@@ -229,8 +285,8 @@ export default function StepSelectAdType({
             subLabel: COLOR_LABEL_MAP[sz.colorOption]?.subLabel ?? "",
             price: sz.price,
           },
-        ])
-    ).values()
+        ]),
+    ).values(),
   );
 
   // Word count & price calculation
@@ -304,9 +360,17 @@ export default function StepSelectAdType({
       total += selectedAdType.base_price;
     }
 
+    if (formData.boxType > 0) {
+      breakdown.push({
+        label: "Box Price",
+        amount: selectedBoxPrice,
+      });
+      total += selectedBoxPrice;
+    }
+
     const extraWords = Math.max(
       0,
-      wordCount - selectedAdType.count_first_words
+      wordCount - selectedAdType.count_first_words,
     );
     if (extraWords > 0) {
       const extraPrice = extraWords * selectedAdType.additional_word_price;
@@ -354,6 +418,70 @@ export default function StepSelectAdType({
       total += formData.selectedNewspaper.combine_tam_price;
     }
 
+    if (formData.userLangCombineSelected_Sin) {
+      breakdown.push({
+        label: "Include in Sinhala paper",
+        amount: formData.selectedNewspaper.combine_sin_price,
+      });
+      total += formData.selectedNewspaper.combine_sin_price;
+    }
+
+    if (formData.userLangCombineSelected_Sin_Tam) {
+      breakdown.push({
+        label: "Include in Both Sinhala & Tamil papers",
+        amount: formData.selectedNewspaper.combine_sin_tam_price,
+      });
+      total += formData.selectedNewspaper.combine_sin_tam_price;
+    }
+
+    if (formData.userLangCombineSelected_Eng_Tam) {
+      breakdown.push({
+        label: "Include in both English & Tamil papers",
+        amount: formData.selectedNewspaper.combine_eng_tam_price,
+      });
+      total += formData.selectedNewspaper.combine_eng_tam_price;
+    }
+
+    if (formData.userLangCombineSelected_Sin_Eng) {
+      breakdown.push({
+        label: "Include in both Sinhala & English papers",
+        amount: formData.selectedNewspaper.combine_sin_eng_price,
+      });
+      total += formData.selectedNewspaper.combine_sin_eng_price;
+    }
+
+    if (formData.userCOPaper) {
+      breakdown.push({
+        label: "C/O Paper",
+        amount: selectedAdType.co_paper_price,
+      });
+      total += selectedAdType.co_paper_price;
+    }
+
+    if (formData.userIntBW) {
+      breakdown.push({
+        label: "Internet B&W",
+        amount: selectedAdType.internet_bw_price,
+      });
+      total += selectedAdType.internet_bw_price;
+    }
+
+    if (formData.userIntFC) {
+      breakdown.push({
+        label: "Inernet Full Color",
+        amount: selectedAdType.internet_fc_price,
+      });
+      total += selectedAdType.internet_fc_price;
+    }
+
+    if (formData.userIntHighlight) {
+      breakdown.push({
+        label: "Internet Highlight",
+        amount: selectedAdType.internet_highlight_price,
+      });
+      total += selectedAdType.internet_highlight_price;
+    }
+
     if (formData.priorityPrice) {
       if (!formData.adText?.startsWith("0")) {
         updateFormData({
@@ -386,12 +514,21 @@ export default function StepSelectAdType({
     formData.noOfColumns,
     formData.adHeight,
     selectedColor,
+    selectedBoxPrice,
 
     formData.backgroundColor,
     formData.combinedAd,
     formData.priorityPrice,
     formData.userLangCombineSelected_Eng,
     formData.userLangCombineSelected_Tam,
+    formData.userLangCombineSelected_Sin,
+    formData.userLangCombineSelected_Sin_Tam,
+    formData.userLangCombineSelected_Eng_Tam,
+    formData.userLangCombineSelected_Sin_Eng,
+    formData.userCOPaper,
+    formData.userIntBW,
+    formData.userIntFC,
+    formData.userIntHighlight,
     selectedAdType,
   ]);
 
@@ -402,7 +539,7 @@ export default function StepSelectAdType({
     }
 
     fetch(
-      `/api/subcategories?categoryName=${encodeURIComponent(selectedCategory)}`
+      `/api/subcategories?categoryName=${encodeURIComponent(selectedCategory)}`,
     )
       .then((res) => res.json())
       .then((data) => {
@@ -439,7 +576,7 @@ export default function StepSelectAdType({
     formData.append("file", file);
     formData.append(
       "upload_preset",
-      process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!
+      process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!,
     );
 
     const res = await fetch(
@@ -447,7 +584,7 @@ export default function StepSelectAdType({
       {
         method: "POST",
         body: formData,
-      }
+      },
     );
 
     if (!res.ok) {
@@ -468,6 +605,50 @@ export default function StepSelectAdType({
     }
   }, [formData.adSizeType, selectedAdType, minAdHeight]);
 
+  const filteredAdTypes = Array.isArray(adTypes)
+    ? adTypes.filter((ad) => {
+        if (!selectedMainAdType) return false;
+
+        if (selectedMainAdType === "classified") {
+          return ad.key !== "casual";
+        }
+
+        if (selectedMainAdType === "casual") {
+          return ad.key === "casual";
+        }
+
+        return true;
+      })
+    : [];
+
+  const languageOptions =
+    formData.selectedNewspaper.language === "SI"
+      ? [
+          ["userLangCombineSelected_Eng", "Place Ad in English Paper"],
+          ["userLangCombineSelected_Tam", "Place Ad in Tamil Paper"],
+          [
+            "userLangCombineSelected_Eng_Tam",
+            "Place Ad in English & Tamil Papers",
+          ],
+        ]
+      : formData.selectedNewspaper.language === "EN"
+        ? [
+            ["userLangCombineSelected_Tam", "Place Ad in Tamil Paper"],
+            ["userLangCombineSelected_Sin", "Place Ad in Sinhala Paper"],
+            [
+              "userLangCombineSelected_Sin_Tam",
+              "Place Ad in Sinhala & Tamil Papers",
+            ],
+          ]
+        : [
+            ["userLangCombineSelected_Eng", "Place Ad in English Paper"],
+            ["userLangCombineSelected_Sin", "Place Ad in Sinhala Paper"],
+            [
+              "userLangCombineSelected_Sin_Eng",
+              "Place Ad in Sinhala & English Papers",
+            ],
+          ];
+
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-center mb-2">Select Ad Type</h2>
@@ -480,8 +661,34 @@ export default function StepSelectAdType({
         <span>(දැන්වීම් වර්ගය තෝරන්න)</span>
       </h2>
 
+      <div className="grid grid-cols-2 gap-6 mb-8">
+        {[
+          { key: "classified", name: "Classified" },
+          { key: "casual", name: "Casual" },
+        ].map((item) => (
+          <div
+            key={item.key}
+            className={`border border-primary rounded-lg p-4 my-8 flex flex-col items-center cursor-pointer transition text-4xl text-primary-dark
+        ${
+          selectedMainAdType === item.key
+            ? "ring-2 ring-primary-dark"
+            : "hover:ring-2 hover:ring-primary-dark"
+        }`}
+            onClick={() => {
+              setselectedMainAdType(item.key as "classified" | "casual");
+              setSelectedAdType(null); // optional: reset selection below
+            }}
+          >
+            <div className="w-[120px] h-[30px] flex items-center justify-center mb-2 rounded-md text-lg font-semibold">
+              {item.name}
+            </div>
+            {/* <h3 className="font-semibold text-center">{item.name}</h3> */}
+          </div>
+        ))}
+      </div>
+
       {/* Ad Types Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+      {/* <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
         {loading
           ? // show 6 skeletons
             Array.from({ length: 6 }).map((_, i) => <AdTypeSkeleton key={i} />)
@@ -517,7 +724,50 @@ export default function StepSelectAdType({
                 )}
               </div>
             ))}
-      </div>
+      </div> */}
+
+      {selectedMainAdType && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          {loading
+            ? Array.from({ length: 6 }).map((_, i) => (
+                <AdTypeSkeleton key={i} />
+              ))
+            : filteredAdTypes.map((ad) => (
+                <div
+                  key={ad.key}
+                  className={`border rounded-lg p-4 flex flex-col items-center cursor-pointer transition ${
+                    selectedAdType?.key === ad.key
+                      ? "ring-2 ring-primary-accent"
+                      : "hover:ring-2 hover:ring-primary-accent"
+                  }`}
+                  onClick={() => handleAdTypeSelect(ad)}
+                >
+                  <div className="w-[120px] h-[120px] flex items-center justify-center mb-2 overflow-hidden">
+                    <Image
+                      src={getAdTypeImage(ad.key)}
+                      alt={ad.name}
+                      width={120}
+                      height={120}
+                      className="object-contain"
+                    />
+                  </div>
+
+                  <h3 className="font-semibold text-center">{ad.name}</h3>
+
+                  {ad.extra_notes1 && (
+                    <p className="text-xs text-gray-500 text-center">
+                      {ad.extra_notes1}
+                    </p>
+                  )}
+                  {ad.extra_notes2 && (
+                    <p className="text-xs text-gray-500 text-center">
+                      {ad.extra_notes2}
+                    </p>
+                  )}
+                </div>
+              ))}
+        </div>
+      )}
 
       <div className="space-y-4 md:w-2/3 mx-auto md:mt-8">
         {/* Fields for non-Casual Ads */}
@@ -544,7 +794,6 @@ export default function StepSelectAdType({
                 }
                 onChange={(date: Date | null) => {
                   if (!date) return;
-
                   updateFormData({
                     publishDate: formatDateLocal(date), // ✅ NO timezone shift
                   });
@@ -552,7 +801,11 @@ export default function StepSelectAdType({
                 filterDate={isAllowedDate}
                 minDate={minDate}
                 dateFormat="yyyy-MM-dd"
-                placeholderText="Select publish date"
+                placeholderText={
+                  formData.selectedNewspaper?.type === "Monthly"
+                    ? "Select allowed monthly date"
+                    : "Select publish date"
+                }
                 className="
     w-full rounded-lg border border-gray-300
     px-3 py-2 text-sm
@@ -817,45 +1070,232 @@ export default function StepSelectAdType({
                     {/* (LKR {selectedAdType.priority_price}) */}
                   </span>
                 </label>
-                {selectedAdType.tint_color_price > 0 && (
-                  <label className="flex items-center space-x-2">
+              </div>
+            )}
+
+            {/* Placement & Digital Publications Options - CO Paper, INT BW, INT FC, INT HL */}
+            {selectedMainAdType && (
+              <div className="mt-6 rounded-xl border border-gray-300 bg-white p-4 shadow-sm relative">
+                {/* Header + Toggle */}
+                <div className="flex items-center justify-between">
+                  {/* Enable / Disable Toggle */}
+                  <label className="flex items-center justify-between gap-2 cursor-pointer">
+                    <span className="text-sm text-gray-600">Enable</span>
+
+                    {/* Hidden checkbox controls state */}
                     <input
                       type="checkbox"
-                      checked={formData.backgroundColor}
-                      onChange={(e) =>
-                        updateFormData({ backgroundColor: e.target.checked })
-                      }
+                      checked={formData.isPlacementEnabled}
+                      onChange={(e) => {
+                        const enabled = e.target.checked;
+                        updateFormData({
+                          isPlacementEnabled: enabled,
+                          userIntFC: false,
+                          userIntBW: false,
+                          userCOPaper: false,
+                          userIntHighlight: false,
+                        });
+                      }}
+                      className="sr-only" // visually hidden but accessible
                     />
-                    <span>
-                      Background Color{" "}
+
+                    {/* Custom switch */}
+                    <span
+                      className={`w-11 h-6 rounded-full relative transition-colors duration-300
+      ${formData.isPlacementEnabled ? "bg-[var(--color-primary-dark)]" : "bg-gray-300"}
+    `}
+                    >
+                      {/* The knob */}
                       <span
-                        className="text-sm"
-                        style={{
-                          fontFamily: "var(--font-sinhala), sans-serif",
-                        }}
-                      >
-                        (පසුබිම වර්ණගන්වන්න)
-                      </span>{" "}
-                      {/* (LKR {selectedAdType.tint_color_price}) */}
+                        className={`absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-300
+        ${formData.isPlacementEnabled ? "translate-x-5" : "translate-x-0"}
+      `}
+                      />
                     </span>
                   </label>
-                )}
+                </div>
+
+                <h3 className="mb-1 font-normal text-[var(--color-primary-dark)] text-center">
+                  Placement & Digital Publications Options
+                </h3>
+                <h3
+                  className="mb-2 font-normal text-[var(--color-primary-dark)] text-center text-sm"
+                  style={{ fontFamily: "var(--font-sinhala), sans-serif" }}
+                >
+                  (ස්ථානගත කිරීම සහ ඩිජිටල් ප්‍රකාශන සටහන්)
+                </h3>
+
+                {/* Main Section: Disable if toggle is off */}
+                <div
+                  className={`grid grid-cols-2 gap-4 w-full py-4 transition-opacity ${
+                    !formData.isPlacementEnabled
+                      ? "opacity-50 pointer-events-none"
+                      : ""
+                  }`}
+                >
+                  {/* ================= PART 1 ================= */}
+                  <div className="col-span-2 md:col-span-1 flex flex-col">
+                    <p className="mb-2 text-sm text-center text-gray-600">
+                      Select <strong>one</strong> internet publication option
+                    </p>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      {/* Internet Full Color */}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          updateFormData({ userIntFC: true, userIntBW: false })
+                        }
+                        className={`h-full rounded-xl border p-4 text-left transition-all
+            ${
+              formData.userIntFC
+                ? "bg-[var(--color-primary-dark)] border-[var(--color-primary-dark)] text-white"
+                : "border-gray-300 hover:border-[var(--color-primary)]"
+            }`}
+                      >
+                        <p className="font-medium">Internet Full Color</p>
+                        <p
+                          className={`text-xs mt-1 ${
+                            formData.userIntFC
+                              ? "text-white/80"
+                              : "text-gray-500"
+                          }`}
+                        >
+                          Display ad in full colour on digital platforms
+                        </p>
+                      </button>
+
+                      {/* Internet Black & White */}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          updateFormData({ userIntBW: true, userIntFC: false })
+                        }
+                        className={`h-full rounded-xl border p-4 text-left transition-all
+            ${
+              formData.userIntBW
+                ? "bg-[var(--color-primary-dark)] border-[var(--color-primary-dark)] text-white"
+                : "border-gray-300 hover:border-[var(--color-primary)]"
+            }`}
+                      >
+                        <p className="font-medium">Internet Black & White</p>
+                        <p
+                          className={`text-xs mt-1 ${
+                            formData.userIntBW
+                              ? "text-white/80"
+                              : "text-gray-500"
+                          }`}
+                        >
+                          Grayscale digital advertisement placement
+                        </p>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* ================= PART 2 ================= */}
+                  <div className="col-span-2 md:col-span-1 flex flex-col">
+                    <p className="mb-2 text-sm text-center text-gray-600">
+                      Select additional placement & highlight options (optional)
+                    </p>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      {/* CO Paper */}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          updateFormData({ userCOPaper: !formData.userCOPaper })
+                        }
+                        className={`h-full rounded-xl border p-4 text-left transition-all
+            ${
+              formData.userCOPaper
+                ? "bg-[var(--color-primary-dark)] border-[var(--color-primary-dark)] text-white"
+                : "border-gray-300 hover:border-[var(--color-primary)]"
+            }`}
+                      >
+                        <p className="font-medium">CO Paper</p>
+                        <p
+                          className={`text-xs mt-1 ${
+                            formData.userCOPaper
+                              ? "text-white/80"
+                              : "text-gray-500"
+                          }`}
+                        >
+                          Placement decided by the newspaper
+                        </p>
+                      </button>
+
+                      {/* Internet Highlight */}
+                      <button
+                        type="button"
+                        disabled={!formData.userIntBW && !formData.userIntFC}
+                        onClick={() =>
+                          updateFormData({
+                            userIntHighlight: !formData.userIntHighlight,
+                          })
+                        }
+                        className={`h-full rounded-xl border p-4 text-left transition-all
+            ${
+              !formData.userIntBW && !formData.userIntFC
+                ? "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed"
+                : formData.userIntHighlight
+                  ? "bg-[var(--color-primary-dark)] border-[var(--color-primary-dark)] text-white"
+                  : "border-gray-300 hover:border-[var(--color-primary)]"
+            }`}
+                      >
+                        <p className="font-medium">Internet Highlight</p>
+                        <p
+                          className={`text-xs mt-1 ${
+                            formData.userIntHighlight
+                              ? "text-white/80"
+                              : "text-gray-500"
+                          }`}
+                        >
+                          Featured placement to attract more views
+                        </p>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Background tint price */}
+
+            {selectedAdType.tint_color_price > 0 && (
+              <div className="flex flex-col md:flex-row gap-4 md:mt-8">
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={formData.backgroundColor}
+                    onChange={(e) =>
+                      updateFormData({ backgroundColor: e.target.checked })
+                    }
+                  />
+                  <span>
+                    Background Color{" "}
+                    <span
+                      className="text-sm"
+                      style={{
+                        fontFamily: "var(--font-sinhala), sans-serif",
+                      }}
+                    >
+                      (පසුබිම වර්ණගන්වන්න)
+                    </span>{" "}
+                    {/* (LKR {selectedAdType.tint_color_price}) */}
+                  </span>
+                </label>
               </div>
             )}
 
             {/* Language Combination Checkbox */}
-            {selectedAdType.key === "classified" &&
+            {selectedMainAdType === "classified" &&
               formData.selectedNewspaper?.is_lang_combine_allowed && (
-                <div className="my-4">
+                <div className="my-4 mt-8">
                   <label className="flex items-center space-x-2">
                     <input
                       type="checkbox"
                       checked={formData.userLangCombineSelected}
                       onChange={(e) => {
-                        console.log(
-                          "eng price",
-                          formData.selectedNewspaper.combine_eng_price
-                        );
                         updateFormData({
                           userLangCombineSelected: e.target.checked,
                         });
@@ -869,7 +1309,7 @@ export default function StepSelectAdType({
                           fontFamily: "var(--font-sinhala), sans-serif",
                         }}
                       >
-                        (දමිළ හෝ ඉංග්‍රීසි පුවත්පත් වලද පල කරන්න)
+                        (වෙනත් භාෂාවලින්ද පළ කරන්න)
                       </span>{" "}
                     </span>
                   </label>
@@ -877,50 +1317,38 @@ export default function StepSelectAdType({
               )}
 
             {/* English and Tamil Language checkboxes */}
-            {selectedAdType.key === "classified" &&
+            {selectedMainAdType === "classified" &&
               formData.userLangCombineSelected && (
-                <div className="my-4 grid grid-cols-2">
-                  <label className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      checked={formData.userLangCombineSelected_Eng}
-                      onChange={(e) =>
-                        updateFormData({
-                          userLangCombineSelected_Eng: e.target.checked,
-                        })
-                      }
-                    />
-                    <span>
-                      Place Ad in English Paper
-                      <span
-                        className="text-sm"
-                        style={{
-                          fontFamily: "var(--font-sinhala), sans-serif",
-                        }}
-                      ></span>{" "}
-                    </span>
-                  </label>
-                  <label className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      checked={formData.userLangCombineSelected_Tam}
-                      onChange={(e) => {
-                        console.log(formData.selectedNespaper);
-                        updateFormData({
-                          userLangCombineSelected_Tam: e.target.checked,
-                        });
-                      }}
-                    />
-                    <span>
-                      Place Ad in Tamil Paper
-                      <span
-                        className="text-sm"
-                        style={{
-                          fontFamily: "var(--font-sinhala), sans-serif",
-                        }}
-                      ></span>{" "}
-                    </span>
-                  </label>
+                <div className="my-8 grid md:grid-cols-3 lg:grid-cols-3 grid-cols-1">
+                  {languageOptions.map(([key, label]) => (
+                    <label key={key} className="flex items-center space-x-2">
+                      <input
+                        type="radio"
+                        name="language-combination"
+                        checked={(formData as any)[key]}
+                        onChange={() =>
+                          updateFormData({
+                            userLangCombineSelected_Eng: false,
+                            userLangCombineSelected_Tam: false,
+                            userLangCombineSelected_Sin: false,
+                            userLangCombineSelected_Sin_Tam: false,
+                            userLangCombineSelected_Sin_Eng: false,
+                            userLangCombineSelected_Eng_Tam: false,
+                            [key]: true,
+                          })
+                        }
+                      />
+                      <span>
+                        {label}
+                        <span
+                          className="text-sm"
+                          style={{
+                            fontFamily: "var(--font-sinhala), sans-serif",
+                          }}
+                        ></span>{" "}
+                      </span>
+                    </label>
+                  ))}
                 </div>
               )}
 
@@ -966,6 +1394,7 @@ export default function StepSelectAdType({
               <textarea
                 rows={2}
                 value={formData.specialNotes}
+                placeholder="Specific Page, Position on a Page etc (නිශ්චිත පිටුව, පිටුවක පිහිටීම ආදිය)"
                 onChange={(e) =>
                   updateFormData({ specialNotes: e.target.value })
                 }
@@ -1027,12 +1456,12 @@ export default function StepSelectAdType({
           cursor-not-allowed
         `
         : isSelected
-        ? `
+          ? `
           bg-white
           border-[var(--color-primary)]
           shadow-[0_0_0_1px_var(--color-primary)]
         `
-        : `
+          : `
           bg-white
           border-gray-300
           hover:border-[var(--color-primary-accent)]
@@ -1085,7 +1514,6 @@ export default function StepSelectAdType({
                     }
                     onChange={(date: Date | null) => {
                       if (!date) return;
-
                       updateFormData({
                         publishDate: formatDateLocal(date), // ✅ NO timezone shift
                       });
@@ -1093,7 +1521,11 @@ export default function StepSelectAdType({
                     filterDate={isAllowedDate}
                     minDate={minDate}
                     dateFormat="yyyy-MM-dd"
-                    placeholderText="Select publish date"
+                    placeholderText={
+                      formData.selectedNewspaper?.type === "Monthly"
+                        ? "Select allowed monthly date"
+                        : "Select publish date"
+                    }
                     className="
     w-full rounded-lg border border-gray-300
     px-3 py-2 text-sm
@@ -1253,7 +1685,8 @@ export default function StepSelectAdType({
                         >
                           Sinhala typing tool
                         </a>
-                        , type your advertisement, then copy and paste it here.{" "}
+                        , type your advertisement, then copy and paste it
+                        here.{" "}
                       </p>
                       <p className="text-sm">
                         <span
@@ -1427,38 +1860,98 @@ export default function StepSelectAdType({
                     </p>
                   </div>
 
-                  <div className="flex flex-col md:flex-row gap-4 mt-4">
-                    {sizeTypeOptions.map((option) => (
-                      <label
-                        key={option.key}
-                        className={`cursor-pointer flex flex-col items-center justify-center w-full md:w-1/2 border rounded-lg p-4 text-center transition ${
-                          formData.adSizeType === option.key
-                            ? "bg-[var(--color-primary-dark)] text-white border-primary"
-                            : "bg-white text-[var(--color-primary-dark)] border-gray-300 hover:border-[var(--color-primary-accent)]"
-                        }`}
-                      >
-                        <input
-                          type="radio"
-                          name="adSizeType"
-                          value={option.key}
-                          className="hidden"
-                          checked={formData.adSizeType === option.key}
-                          onChange={() => {
-                            updateFormData({
-                              adSizeType: option.key,
-                              colorOption: "",
-                            });
-                            setselectedSize(option.key);
-                            setselectedColor(0);
-                          }}
-                        />
+                  {sizeTypeOptions.length > 0 && (
+                    <>
+                      <div className="flex flex-col md:flex-row gap-4 mt-4">
+                        {sizeTypeOptions.map((option) => (
+                          <label
+                            key={option.key}
+                            className={`cursor-pointer flex flex-col items-center justify-center w-full md:w-1/2 border rounded-lg p-5 text-center transition
+        ${
+          formData.adSizeType === option.key
+            ? "bg-[var(--color-primary-dark)] text-white border-primary"
+            : "bg-white text-[var(--color-primary-dark)] border-gray-300 hover:border-[var(--color-primary-accent)]"
+        }`}
+                          >
+                            <input
+                              type="radio"
+                              name="adSizeType"
+                              value={option.key}
+                              className="hidden"
+                              checked={formData.adSizeType === option.key}
+                              onChange={() => {
+                                updateFormData({
+                                  adSizeType: option.key,
+                                  colorOption: "",
+                                  boxType: 0, // 👈 reset box selection
+                                });
+                                setselectedSize(option.key);
+                                setselectedColor(0);
+                              }}
+                            />
 
-                        <span className="font-semibold text-sm capitalize">
-                          {option.label}
-                        </span>
-                      </label>
-                    ))}
-                  </div>
+                            <span className="font-semibold text-sm capitalize">
+                              {option.label}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    </>
+                  )}
+
+                  {boxOptions.length > 0 && (
+                    <>
+                      {sizeTypeOptions.length > 0 && boxOptions.length > 0 && (
+                        <div className="relative my-8 flex items-center">
+                          <div className="flex-grow border-t border-gray-300" />
+                          <span className="mx-4 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                            OR
+                          </span>
+                          <div className="flex-grow border-t border-gray-300" />
+                        </div>
+                      )}
+
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
+                        {boxOptions.map((option) => (
+                          <label
+                            key={option.key}
+                            className={`cursor-pointer flex flex-col items-center justify-center h-24 border rounded-xl text-center transition
+        ${
+          formData.boxType === option.key
+            ? "bg-[var(--color-primary-dark)] text-white border-primary"
+            : "bg-white text-[var(--color-primary-dark)] border-gray-300 hover:border-[var(--color-primary-accent)]"
+        }`}
+                          >
+                            <input
+                              type="radio"
+                              name="boxType"
+                              value={option.key}
+                              className="hidden"
+                              checked={formData.boxType === option.key}
+                              onChange={() => {
+                                updateFormData({
+                                  boxType: option.key,
+                                  adSizeType: "", // 👈 reset size selection
+                                  colorOption: "",
+                                });
+                                setselectedSize("");
+                                setselectedColor(0);
+                                setselectedBoxPrice(option.price);
+                              }}
+                            />
+
+                            <span className="font-semibold text-sm">
+                              {option.label}
+                            </span>
+
+                            <span className="text-xs opacity-80">
+                              Rs. {option.price.toLocaleString()}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 {formData.adSizeType == "custom" && (
@@ -1485,7 +1978,7 @@ export default function StepSelectAdType({
                         <div className="flex flex-wrap gap-2 my-2">
                           {Array.from(
                             { length: noOfColumnsPerPage },
-                            (_, i) => i + 1
+                            (_, i) => i + 1,
                           ).map((num) => (
                             <label key={num} className="cursor-pointer">
                               <input
@@ -1557,7 +2050,7 @@ export default function StepSelectAdType({
                                 updateFormData({
                                   adHeight: Math.max(
                                     minAdHeight,
-                                    formData.adHeight - 1
+                                    formData.adHeight - 1,
                                   ),
                                 });
                               }}
@@ -1581,7 +2074,7 @@ export default function StepSelectAdType({
                                 updateFormData({
                                   adHeight: Math.min(
                                     maxColHeight,
-                                    formData.adHeight + 1
+                                    formData.adHeight + 1,
                                   ),
                                 });
                               }}
@@ -1628,7 +2121,7 @@ export default function StepSelectAdType({
                 )}
 
                 {/* Ad Color Selector */}
-                {selectedSize !== "" && (
+                {formData.adSizeType !== "" && (
                   <div className="mt-6 rounded-xl border border-gray-300 bg-white p-4 shadow-sm">
                     <h3 className="mb-1 font-normal text-[var(--color-primary-dark)] text-center">
                       Advertisement Color Options

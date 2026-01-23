@@ -105,7 +105,7 @@ export default function AdminDashboard() {
                 pendingCount && pendingCount > 0 ? (
                   <div className="mt-5 w-full flex flex-col sm:flex-row gap-3">
                     <Link
-                      href="/admin/advertisements"
+                      href="/admin/advertisements/all"
                       className="flex-1 text-center bg-blue-500 text-white rounded-xl py-2 hover:bg-blue-600 transition"
                     >
                       All Ads

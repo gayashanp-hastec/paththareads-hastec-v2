@@ -1,8 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
 import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 import BreadcrumbSteps from "../components/BreadcrumbSteps";
 import StepSelectNewspaper from "../components/PostAd/StepSelectNewspaper";
@@ -22,10 +23,16 @@ interface Newspaper {
   min_ad_height: number;
   tint_additional_charge: number;
   newspaper_serial_no: number;
+  language: string;
   is_allow_language_combined: false;
-  combine_eng_price: false;
-  combine_tam_price: false;
+  combine_eng_price: number;
+  combine_tam_price: number;
+  combine_sin_price: number;
+  combine_sin_eng_price: number;
+  combine_sin_tam_price: number;
+  combine_eng_tam_price: number;
   allowed_weekdays: [];
+  allowed_month_days: [];
 }
 
 interface AdType {
@@ -39,6 +46,10 @@ interface AdType {
   additional_word_price: number;
   priority_price: number;
   tint_color_price: number;
+  co_paper_price: number;
+  internet_bw_price: number;
+  internet_fc_price: number;
+  internet_highlight_price: number;
   is_allow_combined: boolean;
   max_words: number;
   img_url?: string;
@@ -75,6 +86,14 @@ interface FormData {
   userLangCombineSelected: boolean;
   userLangCombineSelected_Tam: boolean;
   userLangCombineSelected_Eng: boolean;
+  userLangCombineSelected_Sin: boolean;
+  userLangCombineSelected_Sin_Eng: boolean;
+  userLangCombineSelected_Sin_Tam: boolean;
+  userLangCombineSelected_Eng_Tam: boolean;
+  userCOPaper: boolean;
+  userIntBW: boolean;
+  userIntFC: boolean;
+  userIntHighlight: boolean;
   tmagree: boolean;
   // fullpagead: boolean;
   // halfPageAdHR: boolean;
@@ -83,6 +102,8 @@ interface FormData {
   adHeight: number;
   colorOption: string;
   adSizeType: string;
+  boxType: number;
+
   vehicleModel: string;
   vehicleType: string;
   vehicleYear: string;
@@ -104,6 +125,8 @@ export default function PostAdPage() {
     "Advertiser Details",
     "On Review",
   ];
+
+  const [showBackConfirm, setShowBackConfirm] = useState(false);
 
   const [currentStep, setCurrentStep] = useState(1);
   const [referenceNumber, setReferenceNumber] = useState("");
@@ -132,6 +155,14 @@ export default function PostAdPage() {
     userLangCombineSelected: false,
     userLangCombineSelected_Eng: false,
     userLangCombineSelected_Tam: false,
+    userLangCombineSelected_Sin: false,
+    userLangCombineSelected_Sin_Eng: false,
+    userLangCombineSelected_Sin_Tam: false,
+    userLangCombineSelected_Eng_Tam: false,
+    userCOPaper: false,
+    userIntBW: false,
+    userIntFC: false,
+    userIntHighlight: false,
     tmagree: false,
     // fullpagead: false,
     // halfPageAdHR: false,
@@ -140,6 +171,7 @@ export default function PostAdPage() {
     adHeight: 0,
     colorOption: "",
     adSizeType: "",
+    boxType: 0,
     vehicleModel: "",
     vehicleType: "",
     vehicleYear: "",
@@ -158,7 +190,7 @@ export default function PostAdPage() {
   };
 
   const [isNextEnabled, setIsNextEnabled] = useState(
-    !!formData.selectedNewspaper
+    !!formData.selectedNewspaper,
   );
 
   // ---------------- Step Validation ----------------
@@ -202,9 +234,10 @@ export default function PostAdPage() {
           toast.error("Advertisement text cannot be empty.");
           return false;
         }
+
         if (
-          (formData.adSizeType === "" || formData.colorOption === "") &&
-          formData.adType === "casual"
+          formData.boxType === 0 &&
+          (formData.adSizeType === "" || formData.colorOption === "")
         ) {
           toast.error("Please select size and color!");
           return false;
@@ -267,7 +300,7 @@ export default function PostAdPage() {
           formData.advertiserNIC.trim().length < 10
         ) {
           toast.error(
-            "NIC must be a minimum of 10 characters and cannot exceed 12."
+            "NIC must be a minimum of 10 characters and cannot exceed 12.",
           );
           return false;
         }
@@ -336,10 +369,19 @@ export default function PostAdPage() {
           no_of_columns: formData.noOfColumns,
           ad_height: formData.adHeight,
           color_option: formData.colorOption,
+          no_boxes: formData.boxType,
           has_artwork: formData.hasOwnArtwork,
           need_artwork: formData.needArtwork,
           is_publish_eng: formData.userLangCombineSelected_Eng,
           is_publish_tam: formData.userLangCombineSelected_Tam,
+          is_publish_sin: formData.userLangCombineSelected_Sin,
+          is_publish_sin_eng: formData.userLangCombineSelected_Sin_Eng,
+          is_publish_sin_tam: formData.userLangCombineSelected_Sin_Tam,
+          is_publish_eng_tam: formData.userLangCombineSelected_Eng_Tam,
+          is_co_paper: formData.userCOPaper,
+          is_int_bw: formData.userIntBW,
+          is_int_fc: formData.userIntFC,
+          is_int_higlight: formData.userIntHighlight,
           section_id: formData.sectionId,
           is_priority: formData.priorityPrice,
         },
@@ -367,6 +409,43 @@ export default function PostAdPage() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  useEffect(() => {
+    // Push a dummy state to trap back button
+    window.history.pushState(null, "", window.location.href);
+
+    const handlePopState = () => {
+      // Show modal instead of navigating back
+      setShowBackConfirm(true);
+      // Push state again to prevent actual back
+      window.history.pushState(null, "", window.location.href);
+    };
+
+    window.addEventListener("popstate", handlePopState);
+
+    // Tab close / refresh
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+      return "";
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, []);
+
+  const confirmLeave = () => {
+    setShowBackConfirm(false);
+    // Actually go back now
+    window.history.go(-1);
+  };
+
+  const stayHere = () => {
+    setShowBackConfirm(false);
   };
 
   // ---------------- Render Step ----------------
@@ -473,6 +552,32 @@ export default function PostAdPage() {
           ) : null}
         </div>
       </main>
+      {/* Back button confirmation modal */}
+      {showBackConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="rounded-xl bg-primary-dark p-6 w-80 text-white shadow-lg">
+            <h2 className="text-lg font-semibold mb-4">Hold On!</h2>
+            <p className="mb-6 text-sm">
+              You have unsaved changes. Are you sure you want to leave this
+              page?
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowBackConfirm(false)}
+                className="rounded-full bg-button px-4 py-1.5 text-sm font-medium transition hover:bg-(--color-button-hover) text-white"
+              >
+                Stay
+              </button>
+              <button
+                onClick={confirmLeave}
+                className="rounded-full bg-orange-accent px-4 py-1.5 text-sm font-medium text-(--color-primary-dark) transition hover:brightness-110"
+              >
+                Leave
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
