@@ -235,12 +235,14 @@ export default function PostAdPage() {
           return false;
         }
 
-        if (
-          formData.boxType === 0 &&
-          (formData.adSizeType === "" || formData.colorOption === "")
-        ) {
-          toast.error("Please select size and color!");
-          return false;
+        if (formData.adType === "casual") {
+          if (
+            formData.boxType === 0 &&
+            (formData.adSizeType === "" || formData.colorOption === "")
+          ) {
+            toast.error("Please select size and color!");
+            return false;
+          }
         }
         if (
           formData.hasOwnArtwork &&
