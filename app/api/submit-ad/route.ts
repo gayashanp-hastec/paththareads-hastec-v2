@@ -139,12 +139,7 @@ export async function POST(req: Request) {
           no_of_boxes: advertisement.no_boxes,
         },
       });
-    }
-
-    if (
-      advertisement.ad_type === "classified" ||
-      advertisement.ad_type === "photo_classified"
-    ) {
+    } else {
       await prisma.classified_ads.create({
         data: {
           reference_number: referenceNumber,

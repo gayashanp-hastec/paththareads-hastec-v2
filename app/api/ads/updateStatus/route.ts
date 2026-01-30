@@ -4,17 +4,29 @@ import prisma from "@/lib/prisma";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { reference_number, status, advertisement_text } = body;
+    const {
+      reference_number,
+      status,
+      advertisement_text,
+      price_change,
+      old_price,
+    } = body;
 
     // Validate incoming data
     if (!reference_number || !status) {
       return NextResponse.json(
         { error: "Missing required fields" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    console.log("Updating ad:", reference_number, status, advertisement_text);
+    console.log(
+      "Updating ad:",
+      reference_number,
+      status,
+      advertisement_text,
+      price_change,
+    );
 
     // Fetch the original ad to get the original text
     const originalAd = await prisma.advertisements.findUnique({
@@ -24,7 +36,7 @@ export async function POST(req: Request) {
     if (!originalAd) {
       return NextResponse.json(
         { error: "Advertisement not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -57,6 +69,25 @@ export async function POST(req: Request) {
       },
     });
 
+    if (price_change) {
+      await prisma.ad_price_change_history.create({
+        data: {
+          reference_number,
+          old_price: old_price,
+          requested_price: price_change.new_price,
+          reason: price_change.reason,
+          requested_by: "admin",
+          status: "PriceChange",
+        },
+      });
+
+      // Optional: update ad status
+      await prisma.advertisements.update({
+        where: { reference_number },
+        data: { status: "PriceChange", price: price_change.new_price },
+      });
+    }
+
     return NextResponse.json({
       success: true,
       message: `Advertisement ${reference_number} updated successfully`,
@@ -66,7 +97,7 @@ export async function POST(req: Request) {
     console.error("Error updating ad:", error);
     return NextResponse.json(
       { error: "Failed to update advertisement", details: error.message },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

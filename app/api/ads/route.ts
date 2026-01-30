@@ -38,6 +38,8 @@ export async function GET() {
       newspapers: {
         select: {
           name: true,
+          id: true,
+          language: true,
         },
       },
 
@@ -78,6 +80,7 @@ export async function GET() {
     reference_number: ad.reference_number,
 
     newspaper_name: ad.newspapers?.name ?? ad.newspaper_name ?? "—",
+    language: ad.newspapers?.language,
 
     ad_type: ad.ad_type,
     classified_category: ad.classified_category,

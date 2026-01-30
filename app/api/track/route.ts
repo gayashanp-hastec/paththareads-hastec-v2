@@ -13,7 +13,7 @@ export async function GET(req: Request) {
     if (!reference || !token) {
       return NextResponse.json(
         { ok: false, error: "missing_params" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -26,14 +26,14 @@ export async function GET(req: Request) {
     if (!tokenRow) {
       return NextResponse.json(
         { ok: false, error: "invalid_token" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
     if (tokenRow.expires_at < new Date()) {
       return NextResponse.json(
         { ok: false, error: "expired_token" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -49,24 +49,32 @@ export async function GET(req: Request) {
       include: {
         ad_review_history: { orderBy: { attempt: "desc" }, take: 10 },
         ad_status_history: { orderBy: { updated_at: "desc" }, take: 10 },
+        ad_price_change_history: {
+          orderBy: { created_at: "desc" },
+          take: 1, // 🔑 latest entry only
+        },
         advertisers: true,
       },
     });
+    console.log(ad);
 
     if (!ad) {
       return NextResponse.json(
         { ok: false, error: "ad_not_found" },
-        { status: 404 }
+        { status: 404 },
       );
+    } else {
+      const latestPriceChange =
+        ad.ad_price_change_history.length > 0
+          ? ad.ad_price_change_history[0]
+          : null;
     }
-
-    // ✅ Count total attempts from review history
+    // Count attempts
     const attempts =
       ad.ad_review_history.length > 0
         ? Math.max(...ad.ad_review_history.map((r) => r.attempt))
         : 0;
 
-    // ✅ Send clean JSON payload
     return NextResponse.json({
       ok: true,
       ad: {
@@ -78,6 +86,15 @@ export async function GET(req: Request) {
         advertisement_text: ad.advertisement_text,
         attempts,
         price: ad.price,
+        latest_price_change: latestPriceChange
+          ? {
+              requested_price: latestPriceChange.requested_price,
+              old_price: latestPriceChange.old_price,
+              reason: latestPriceChange.reason,
+              status: latestPriceChange.status,
+              created_at: latestPriceChange.created_at,
+            }
+          : null,
         review_history: ad.ad_review_history,
         status_history: ad.ad_status_history,
         advertiser: ad.advertisers
@@ -89,7 +106,7 @@ export async function GET(req: Request) {
     console.error("Tracking API Error:", err);
     return NextResponse.json(
       { ok: false, error: "server_error" },
-      { status: 500 }
+      { status: 500 },
     );
   } finally {
     await prisma.$disconnect();
