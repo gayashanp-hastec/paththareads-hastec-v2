@@ -64,10 +64,8 @@ export async function GET(req: Request) {
         { status: 404 },
       );
     }
-    const latestPriceChange =
-      ad.ad_price_change_history.length > 0
-        ? ad.ad_price_change_history[0]
-        : null;
+    const priceHistory = ad.ad_price_change_history as any[];
+    const latestPriceChange = priceHistory.length > 0 ? priceHistory[0] : null;
 
     // Count attempts
     const attempts =
