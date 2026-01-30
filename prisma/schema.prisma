@@ -98,32 +98,33 @@ model ad_status_history {
 }
 
 model advertisements {
-  ad_id               Int                 @id @default(autoincrement())
-  reference_number    String              @unique @db.Char(16)
-  advertiser_id       Int?
-  newspaper_name      String              @db.VarChar(100)
-  ad_type             String              @db.VarChar(50)
-  classified_category String?             @db.VarChar(100)
-  subcategory         String?             @db.VarChar(100)
-  publish_date        DateTime            @db.Date
-  advertisement_text  String
-  background_color    Boolean?            @default(false)
-  post_in_web         Boolean?            @default(false)
-  upload_image        String?
-  special_notes       String?
-  price               Decimal?            @db.Decimal(10, 2)
-  status              String?             @default("Pending") @db.VarChar(20)
-  created_at          DateTime?           @default(now()) @db.Timestamp(6)
-  updated_at          DateTime?           @default(now()) @db.Timestamp(6)
-  newspaper_serial_no Int?
-  ad_review_history   ad_review_history[]
-  ad_status_history   ad_status_history[]
-  advertisers         advertisers?        @relation(fields: [advertiser_id], references: [advertiser_id], onDelete: Cascade, onUpdate: NoAction)
-  newspapers          newspapers?         @relation(fields: [newspaper_serial_no], references: [newspaper_serial_no], map: "fk_ads_newspaper_serial")
-  casual_ads          casual_ads?
-  classified_ads      classified_ads[]
-  payment_ads         payment_ads[]
-  tracking_tokens     tracking_tokens[]
+  ad_id                   Int                       @id @default(autoincrement())
+  reference_number        String                    @unique @db.Char(16)
+  advertiser_id           Int?
+  newspaper_name          String                    @db.VarChar(100)
+  ad_type                 String                    @db.VarChar(50)
+  classified_category     String?                   @db.VarChar(100)
+  subcategory             String?                   @db.VarChar(100)
+  publish_date            DateTime                  @db.Date
+  advertisement_text      String
+  background_color        Boolean?                  @default(false)
+  post_in_web             Boolean?                  @default(false)
+  upload_image            String?
+  special_notes           String?
+  price                   Decimal?                  @db.Decimal(10, 2)
+  status                  String?                   @default("Pending") @db.VarChar(20)
+  created_at              DateTime?                 @default(now()) @db.Timestamp(6)
+  updated_at              DateTime?                 @default(now()) @db.Timestamp(6)
+  newspaper_serial_no     Int?
+  ad_price_change_history ad_price_change_history[]
+  ad_review_history       ad_review_history[]
+  ad_status_history       ad_status_history[]
+  advertisers             advertisers?              @relation(fields: [advertiser_id], references: [advertiser_id], onDelete: Cascade, onUpdate: NoAction)
+  newspapers              newspapers?               @relation(fields: [newspaper_serial_no], references: [newspaper_serial_no], map: "fk_ads_newspaper_serial")
+  casual_ads              casual_ads?
+  classified_ads          classified_ads[]
+  payment_ads             payment_ads[]
+  tracking_tokens         tracking_tokens[]
 
   @@index([reference_number], map: "idx_advertisements_reference_number")
   @@index([status], map: "idx_advertisements_status")
@@ -218,8 +219,10 @@ model newspapers {
   combine_sin_price          Int?             @default(0)
   combine_sin_eng_price      Int?             @default(0)
   combine_sin_tam_price      Int?             @default(0)
+  publisher_id               Int              @default(1)
   ad_types                   ad_types[]
   advertisements             advertisements[]
+  publishers                 publishers       @relation(fields: [publisher_id], references: [id], map: "fk_newspapers_publishers")
 }
 
 model ad_type_categories {
@@ -288,10 +291,11 @@ model ad_categories {
 }
 
 model ad_sub_categories {
-  id            Int           @id @default(autoincrement())
-  category_id   Int
-  name          String
-  ad_categories ad_categories @relation(fields: [category_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_sub_category_category")
+  id                    Int           @id @default(autoincrement())
+  category_id           Int
+  name                  String
+  classification_number Int?
+  ad_categories         ad_categories @relation(fields: [category_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_sub_category_category")
 
   @@unique([category_id, name], map: "unique_subcategory_per_category")
 }
@@ -371,6 +375,40 @@ model ad_section_box_pricing {
   extra_note_2   String?
   box_number_dec Decimal     @default(1) @db.Decimal(5, 2)
   ad_sections    ad_sections @relation(fields: [ad_section_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model agency {
+  id             Int       @id @default(autoincrement())
+  agent_name     String
+  agent_address  String?
+  agent_tel      String?
+  agent_no       String?
+  papers         String[]  @default([])
+  created_at     DateTime? @default(now()) @db.Timestamptz(6)
+  publisher_name String?
+  ad_text_type   String?
+}
+
+model publishers {
+  id         Int          @id @default(autoincrement())
+  name       String
+  form_link  String?
+  created_at DateTime?    @default(now()) @db.Timestamptz(6)
+  newspapers newspapers[]
+}
+
+model ad_price_change_history {
+  id               Int            @id @default(autoincrement())
+  reference_number String         @db.Char(16)
+  old_price        Decimal?       @db.Decimal(10, 2)
+  requested_price  Decimal        @db.Decimal(10, 2)
+  reason           String
+  requested_by     String?        @db.VarChar(100)
+  status           String         @default("Pending") @db.VarChar(20)
+  created_at       DateTime       @default(now()) @db.Timestamp(6)
+  advertisements   advertisements @relation(fields: [reference_number], references: [reference_number], onDelete: Cascade, onUpdate: NoAction, map: "fk_ad_price_change_reference")
+
+  @@index([reference_number], map: "idx_ad_price_change_reference")
 }
 
 enum role_enum {
