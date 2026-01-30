@@ -66,6 +66,9 @@ export default function AdminAdvertisementsPending() {
   const [editedText, setEditedText] = useState("");
   const [originalText, setOriginalText] = useState("");
   const [requestImageChange, setRequestImageChange] = useState(false);
+  const [requestPriceChange, setRequestPriceChange] = useState(false);
+  const [newPrice, setNewPrice] = useState("");
+  const [priceReason, setPriceReason] = useState("");
 
   const ACTION_BTN_CLASS =
     "flex items-center justify-center gap-2 w-40 px-1 py-2.5 rounded-lg shadow text-sm font-medium transition";
@@ -85,7 +88,8 @@ export default function AdminAdvertisementsPending() {
         (ad: AdminAdvertisementsPending) =>
           ad.status.toLowerCase() === "pending" ||
           ad.status.toLowerCase() === "resubmitted" ||
-          ad.status.toLowerCase() === "updateimage",
+          ad.status.toLowerCase() === "updateimage" ||
+          ad.status.toLowerCase() === "pricechange",
       );
 
       setAds(pendingAds);
@@ -152,6 +156,13 @@ export default function AdminAdvertisementsPending() {
         reference_number: selectedAd.reference_number,
         status,
         advertisement_text: editedText,
+        old_price: selectedAd.price,
+        price_change: requestPriceChange
+          ? {
+              new_price: Number(newPrice),
+              reason: priceReason,
+            }
+          : null,
       }),
     });
 
@@ -531,6 +542,9 @@ export default function AdminAdvertisementsPending() {
                           </div>
                         </>
                       )}
+                    {selectedAd.price && (
+                      <InfoRow label="Price" value={String(selectedAd.price)} />
+                    )}
 
                     {selectedAd.classified_ad?.is_priority && (
                       <div>
@@ -591,6 +605,63 @@ export default function AdminAdvertisementsPending() {
                 </div>
               )}
 
+              <div className="px-8 py-4 border-t">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+                  {/* LEFT: Toggle */}
+                  <div className="md:col-span-1">
+                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                      <input
+                        type="checkbox"
+                        checked={requestPriceChange}
+                        onChange={(e) =>
+                          setRequestPriceChange(e.target.checked)
+                        }
+                        className="accent-[var(--color-primary)]"
+                      />
+                      Request Price Change
+                    </label>
+
+                    <p className="mt-2 text-xs text-gray-500">
+                      Request a revision to the advertisement price with
+                      justification.
+                    </p>
+                  </div>
+
+                  {/* RIGHT: Conditional Content */}
+                  <div className="md:col-span-2">
+                    {requestPriceChange && (
+                      <div className="space-y-4 rounded-xl border border-yellow-200 bg-yellow-50 p-4">
+                        <div>
+                          <p className="text-sm font-medium text-gray-700">
+                            New Price
+                          </p>
+                          <input
+                            type="number"
+                            value={newPrice}
+                            onChange={(e) => setNewPrice(e.target.value)}
+                            className="mt-1 w-full rounded-lg border px-3 py-2 text-sm focus:ring-2 focus:ring-yellow-400 outline-none"
+                            placeholder="Enter new price"
+                          />
+                        </div>
+
+                        <div>
+                          <p className="text-sm font-medium text-gray-700">
+                            Reason for Price Change
+                          </p>
+                          <textarea
+                            value={priceReason}
+                            onChange={(e) => setPriceReason(e.target.value)}
+                            className="mt-1 w-full rounded-lg border px-3 py-2 text-sm resize-none focus:ring-2 focus:ring-yellow-400 outline-none"
+                            rows={3}
+                            placeholder="Explain why the price needs to be changed"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
               {/* Footer Actions */}
               <div className="flex justify-end gap-3 px-8 py-5 border-t bg-gray-50">
                 <button
@@ -601,11 +672,17 @@ export default function AdminAdvertisementsPending() {
                   Decline
                 </button>
 
-                {(isTextChanged || requestImageChange) && (
+                {(isTextChanged || requestImageChange || newPrice) && (
                   <button
                     onClick={() =>
                       updateStatus(
-                        requestImageChange ? "UpdateImage" : "Revision",
+                        requestImageChange
+                          ? "UpdateImage"
+                          : requestImageChange && newPrice
+                            ? "UpdateImagePrice"
+                            : isTextChanged && newPrice
+                              ? "RevisionPrice"
+                              : "Revision",
                       )
                     }
                     className={`${ACTION_BTN_CLASS} bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-accent)]`}
@@ -615,7 +692,7 @@ export default function AdminAdvertisementsPending() {
                   </button>
                 )}
 
-                {!isTextChanged && !requestImageChange && (
+                {!isTextChanged && !requestImageChange && !newPrice && (
                   <button
                     onClick={() => updateStatus("Approved")}
                     className={`${ACTION_BTN_CLASS} bg-green-600 text-white hover:bg-green-700`}

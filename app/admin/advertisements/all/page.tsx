@@ -15,6 +15,8 @@ interface Advertisement {
   reference_number: string;
 
   newspaper_name: string;
+  language?: string;
+  id?: string;
 
   advertiser_name: string;
   advertiser_nic?: string;
@@ -199,7 +201,28 @@ export default function AdminAdvertisements() {
     );
   }
 
+  const formatDateYMD = (dateStr: string) => {
+    const [year, month, day] = dateStr.split("T")[0].split("-");
+    return `${year}-${month}-${day}`;
+  };
+
+  const formatColorType = (value: string): string => {
+    switch (value?.toLowerCase()) {
+      case "full":
+        return "F/C";
+      case "bw":
+        return "BW";
+      case "bw1":
+        return "BW+1 color";
+      case "bw2":
+        return "BW+2 colors";
+      default:
+        return value; // fallback (safe)
+    }
+  };
+
   const handlePrint = async () => {
+    console.log(selectedAd);
     if (!selectedAd) return;
 
     // Trim + split by ONE OR MORE SPACES
@@ -211,13 +234,80 @@ export default function AdminAdvertisements() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        advertiser_name: selectedAd.advertiser_name,
-        advertisement_words: words, // 👈 array of words
-        word_count: wordCount, // 👈 total count
+        /* ---------------- Core identifiers ---------------- */
         reference_number: selectedAd.reference_number,
         newspaper_name: selectedAd.newspaper_name,
-        // color_option: selectedAd.casual_ad?.color_option,
-        category: selectedAd.classified_category,
+        language: selectedAd.language,
+
+        newspaper_id: selectedAd.newspaper_name
+          ?.trim()
+          .toUpperCase()
+          .replace(/\s+/g, "_"),
+
+        /* ---------------- Advertiser details ---------------- */
+        advertiser_name: selectedAd.advertiser_name,
+        advertiser_nic: selectedAd.advertiser_nic ?? null,
+        advertiser_phone: selectedAd.advertiser_phone ?? null,
+        advertiser_address: selectedAd.advertiser_address ?? null,
+
+        /* ---------------- Ad classification ---------------- */
+        ad_type: selectedAd.ad_type,
+        category: selectedAd.classified_category ?? null,
+        subcategory: selectedAd.subcategory ?? null,
+
+        /* ---------------- Dates ---------------- */
+        publish_date: formatDateYMD(
+          selectedAd.publish_date ? selectedAd.publish_date : "",
+        ),
+        created_at: selectedAd.created_at,
+        updated_at: selectedAd.updated_at ?? null,
+
+        /* ---------------- Text & content ---------------- */
+        advertisement_text: selectedAd.advertisement_text,
+        advertisement_words: words,
+        word_count: wordCount,
+        special_notes: selectedAd.special_notes ?? null,
+
+        /* ---------------- Flags ---------------- */
+        background_color: selectedAd.background_color ?? null,
+        post_in_web: selectedAd.post_in_web ?? null,
+
+        /* ---------------- Media ---------------- */
+        upload_image: selectedAd.upload_image ?? null,
+
+        /* ---------------- Pricing & status ---------------- */
+        price: selectedAd.price ?? null,
+        status: selectedAd.status,
+
+        /* ---------------- Casual Ad ---------------- */
+        casual_ad: selectedAd.casual_ad
+          ? {
+              ad_size: selectedAd.casual_ad.ad_size,
+              no_of_columns: selectedAd.casual_ad.no_of_columns,
+              ad_height: selectedAd.casual_ad.ad_height,
+              color_option: selectedAd.casual_ad.color_option,
+              has_artwork: selectedAd.casual_ad.has_artwork,
+              need_artwork: selectedAd.casual_ad.need_artwork,
+              no_of_boxes: selectedAd.casual_ad.no_of_boxes,
+            }
+          : null,
+
+        /* ---------------- Classified Ad ---------------- */
+        classified_ad: selectedAd.classified_ad
+          ? {
+              is_publish_eng: selectedAd.classified_ad.is_publish_eng,
+              is_publish_tam: selectedAd.classified_ad.is_publish_tam,
+              is_priority: selectedAd.classified_ad.is_priority,
+              is_publish_sin: selectedAd.classified_ad.is_publish_sin,
+              is_publish_sin_eng: selectedAd.classified_ad.is_publish_sin_eng,
+              is_publish_sin_tam: selectedAd.classified_ad.is_publish_sin_tam,
+              is_publish_eng_tam: selectedAd.classified_ad.is_publish_eng_tam,
+              is_co_paper: selectedAd.classified_ad.is_co_paper,
+              is_int_bw: selectedAd.classified_ad.is_int_bw,
+              is_int_fc: selectedAd.classified_ad.is_int_fc,
+              is_int_highlight: selectedAd.classified_ad.is_int_highlight,
+            }
+          : null,
       }),
     });
 
