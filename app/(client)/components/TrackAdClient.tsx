@@ -12,6 +12,12 @@ type AdData = {
   review_history: any[];
   upload_image: string;
   price?: number | null;
+  latest_price_change?: {
+    requested_price: number;
+    reason: string;
+    status: string;
+    created_at: string;
+  } | null;
 };
 
 export default function TrackAdClient({ reference }: { reference: string }) {
@@ -60,7 +66,7 @@ export default function TrackAdClient({ reference }: { reference: string }) {
       if (addata.review_history && addata.review_history.length) {
         const d = new Date(
           addata.review_history[0].updated_at ??
-            addata.review_history[0].created_at
+            addata.review_history[0].created_at,
         );
         if (d > latestDate) latestDate = d;
       }
@@ -132,7 +138,7 @@ export default function TrackAdClient({ reference }: { reference: string }) {
   async function handleConfirm() {
     if (isEdited)
       return alert(
-        "Cannot confirm while you edited text. Use Resubmit or revert."
+        "Cannot confirm while you edited text. Use Resubmit or revert.",
       );
     const res = await fetch(`/api/ads/${reference}/confirm`, {
       method: "POST",
@@ -183,7 +189,7 @@ export default function TrackAdClient({ reference }: { reference: string }) {
     formData.append("file", file);
     formData.append(
       "upload_preset",
-      process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!
+      process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!,
     );
 
     const res = await fetch(
@@ -191,7 +197,7 @@ export default function TrackAdClient({ reference }: { reference: string }) {
       {
         method: "POST",
         body: formData,
-      }
+      },
     );
 
     if (!res.ok) {
@@ -266,10 +272,10 @@ export default function TrackAdClient({ reference }: { reference: string }) {
               ad.status === "Approved"
                 ? "bg-green-100 text-green-700"
                 : ad.status === "Pending"
-                ? "bg-yellow-100 text-yellow-700"
-                : ad.status === "Cancelled"
-                ? "bg-red-100 text-red-700"
-                : "bg-blue-100 text-blue-700"
+                  ? "bg-yellow-100 text-yellow-700"
+                  : ad.status === "Cancelled"
+                    ? "bg-red-100 text-red-700"
+                    : "bg-blue-100 text-blue-700"
             }`}
           >
             {ad.status}
@@ -308,7 +314,7 @@ export default function TrackAdClient({ reference }: { reference: string }) {
           value={editableText}
           disabled={
             !["Pending", "Revision", "Resubmitted", "UpdateImage"].includes(
-              ad.status
+              ad.status,
             )
           }
           onChange={(e) => onTextChange(e.target.value)}
@@ -376,16 +382,53 @@ export default function TrackAdClient({ reference }: { reference: string }) {
         <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg text-center">
           <p className="text-sm text-green-700">Advertisement Price</p>
           <p className="text-2xl font-bold text-green-800">
-            LKR {ad.price.toLocaleString()}
+            LKR {ad.latest_price_change?.requested_price.toLocaleString()}
           </p>
+        </div>
+      )}
+      {ad.latest_price_change && (
+        <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <p className="text-sm font-semibold text-yellow-800 mb-1">
+            Price Change Requested
+          </p>
+
+          <p className="text-lg font-bold text-yellow-900">
+            New Price: LKR{" "}
+            {ad.latest_price_change.requested_price.toLocaleString()}
+          </p>
+
+          <p className="mt-2 text-sm text-gray-700">
+            <strong>Reason:</strong> {ad.latest_price_change.reason}
+          </p>
+
+          <p className="mt-1 text-xs text-gray-500">
+            Requested on{" "}
+            {new Date(ad.latest_price_change.created_at).toLocaleString()}
+          </p>
+
+          <span
+            className={`inline-block mt-2 px-2 py-0.5 rounded-full text-xs ${
+              ad.latest_price_change.status === "Pending"
+                ? "bg-yellow-200 text-yellow-900"
+                : ad.latest_price_change.status === "Approved"
+                  ? "bg-green-200 text-green-900"
+                  : "bg-red-200 text-red-900"
+            }`}
+          >
+            {ad.latest_price_change.status}
+          </span>
         </div>
       )}
 
       {/* Action Buttons */}
       <div className="flex flex-wrap justify-center gap-3 mt-8">
-        {["Pending", "Revision", "Resubmitted", "UpdateImage"].includes(
-          ad.status
-        ) && (
+        {[
+          "Pending",
+          "Revision",
+          "Resubmitted",
+          "UpdateImage",
+          "PriceChange",
+        ].includes(ad.status) && (
           <button
             onClick={handleResubmit}
             disabled={!isEdited}
@@ -399,7 +442,7 @@ export default function TrackAdClient({ reference }: { reference: string }) {
           </button>
         )}
 
-        {["Revision"].includes(ad.status) && (
+        {["Revision", "PriceChange"].includes(ad.status) && (
           <button
             onClick={handleConfirm}
             disabled={isEdited}
@@ -420,6 +463,7 @@ export default function TrackAdClient({ reference }: { reference: string }) {
           "Approved",
           "Resubmitted",
           "UpdateImage",
+          "PriceChange",
         ].includes(ad.status) && (
           <button
             onClick={handleCancel}
@@ -453,6 +497,7 @@ export default function TrackAdClient({ reference }: { reference: string }) {
           "Print",
           "PaymentPending",
           "UpdateImage",
+          "PriceChange",
         ].includes(ad.status) && (
           <button
             onClick={() => window.close()}

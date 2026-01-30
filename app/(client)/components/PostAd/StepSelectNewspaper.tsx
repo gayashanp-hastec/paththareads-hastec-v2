@@ -166,7 +166,7 @@ export default function StepSelectNewspaper({
       </div>
 
       {/* ================= GRID ================= */}
-      <div className="grid grid-cols-2 gap-4 px-4 sm:grid-cols-3 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 px-4 sm:grid-cols-3 md:grid-cols-5">
         {loading ? (
           Array.from({ length: 4 }).map((_, idx) => (
             <div
@@ -200,28 +200,26 @@ export default function StepSelectNewspaper({
                 onClick={() => handleSelectNewspaper(paper)}
                 aria-pressed={isSelected}
                 className={`relative flex aspect-[3/2] items-center justify-center 
-                    overflow-hidden rounded-lg bg-white shadow-sm transition
-                    hover:scale-[1.03] focus:outline-none focus:ring-2 
-                    focus:ring-primary-accent
-                    ${isSelected ? "ring-4 ring-primary-accent" : ""}
-                  `}
+    overflow-hidden rounded-xl border-2 border-gray-300
+    shadow-md transition-all duration-300
+    hover:scale-105 hover:shadow-xl
+    focus:outline-none focus:ring-4 focus:ring-primary-accent
+    ${isSelected ? "ring-4 ring-primary-accent" : ""}
+  `}
               >
                 <div
-                  className={`flex items-center justify-center w-full h-full p-4 text-center 
-                      rounded-xl shadow-lg shadow-gray-400/20 font-bold text-gray-800 text-lg md:text-2xl lg:text-2xl
-                      uppercase tracking-wide select-none transition-transform transform hover:scale-105
-                    `}
+                  className={`flex items-center justify-center w-full h-full p-6 text-center
+      rounded-lg font-semibold text-gray-800 text-lg md:text-2xl lg:text-2xl
+      uppercase tracking-wide select-none
+      transition-all duration-300
+    `}
                   style={{
-                    background:
-                      "linear-gradient(to bottom right, #fff, #fff, var(--color-primary))",
                     fontFamily: "var(--font-sinhala), sans-serif",
+                    background:
+                      "radial-gradient(circle at center, #ffffff 50%, var(--color-primary) 100%)",
                   }}
                 >
-                  {paper.name_sinhala === "" ? (
-                    <h3>{paper.name}</h3>
-                  ) : (
-                    <h3>{paper.name_sinhala}</h3>
-                  )}
+                  <h3>{paper.name_sinhala || paper.name}</h3>
                 </div>
               </button>
             );

@@ -73,7 +73,7 @@ interface AdType {
   extra_notes2?: string;
   categories: {
     category: string;
-    subCategories: { name: string }[];
+    subCategories: { name: string; classification_number: number }[];
   }[];
   sections: AdSection[];
 }
@@ -102,7 +102,10 @@ export default function StepSelectAdType({
 
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [selectedSubCategory, setSelectedSubCategory] = useState<string>("");
-  const [subCategoryOptions, setSubCategoryOptions] = useState<string[]>([]);
+  // const [subCategoryOptions, setSubCategoryOptions] = useState<string[]>([]);
+  const [subCategoryOptions, setSubCategoryOptions] = useState<
+    { name: string; classification_number: number | null }[]
+  >([]);
 
   const [selectedSize, setselectedSize] = useState<string>(""); // user selected size full, custom...
   const [selectedColor, setselectedColor] = useState<number>(0); // stores value for colors for casual ads
@@ -793,25 +796,45 @@ export default function StepSelectAdType({
                     : null
                 }
                 onChange={(date: Date | null) => {
-                  if (!date) return;
-                  updateFormData({
-                    publishDate: formatDateLocal(date), // ✅ NO timezone shift
-                  });
+                  updateFormData({ publishDate: formatDateLocal(date!) });
                 }}
-                filterDate={isAllowedDate}
-                minDate={minDate}
                 dateFormat="yyyy-MM-dd"
+                minDate={minDate}
+                filterDate={isAllowedDate}
                 placeholderText={
                   formData.selectedNewspaper?.type === "Monthly"
                     ? "Select allowed monthly date"
                     : "Select publish date"
                 }
-                className="
-    w-full rounded-lg border border-gray-300
-    px-3 py-2 text-sm
-    focus:outline-none focus:ring-2
-    focus:ring-[var(--color-primary-accent)]
-  "
+                renderCustomHeader={({
+                  date,
+                  decreaseMonth,
+                  increaseMonth,
+                }) => (
+                  <div className="flex justify-between items-center px-2">
+                    <button
+                      type="button"
+                      onClick={decreaseMonth}
+                      className="text-[var(--color-primary-dark)] font-bold"
+                    >
+                      &#8592; {/* ← Left arrow */}
+                    </button>
+                    <span className="font-medium">
+                      {date.toLocaleString("default", {
+                        month: "long",
+                        year: "numeric",
+                      })}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={increaseMonth}
+                      className="text-[var(--color-primary-dark)] font-bold"
+                    >
+                      &#8594; {/* → Right arrow */}
+                    </button>
+                  </div>
+                )}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-accent)]"
               />
             </div>
 
@@ -895,7 +918,7 @@ export default function StepSelectAdType({
                       (දැන්වීම් ස්වභාවය)
                     </span>{" "}
                   </label>
-                  <select
+                  {/* <select
                     value={selectedSubCategory}
                     onChange={(e) => {
                       setSelectedSubCategory(e.target.value);
@@ -907,6 +930,29 @@ export default function StepSelectAdType({
                     {subCategoryOptions.map((sub) => (
                       <option key={sub} value={sub}>
                         {sub}
+                      </option>
+                    ))}
+                  </select> */}
+                  <select
+                    value={formData.subCategory ?? ""}
+                    onChange={(e) => {
+                      const value = e.target.value
+                        ? Number(e.target.value)
+                        : null;
+
+                      updateFormData({ subCategory: String(value) });
+                      setSelectedSubCategory(String(value));
+                    }}
+                    className="border border-gray-300 rounded-lg p-2 w-full focus:ring-2 focus:ring-primary-accent"
+                  >
+                    <option value="">Select Subcategory</option>
+
+                    {subCategoryOptions.map((sub) => (
+                      <option
+                        key={sub.classification_number ?? sub.name}
+                        value={sub.classification_number ?? ""}
+                      >
+                        {sub.name}
                       </option>
                     ))}
                   </select>
@@ -1513,98 +1559,47 @@ export default function StepSelectAdType({
                         : null
                     }
                     onChange={(date: Date | null) => {
-                      if (!date) return;
-                      updateFormData({
-                        publishDate: formatDateLocal(date), // ✅ NO timezone shift
-                      });
+                      updateFormData({ publishDate: formatDateLocal(date!) });
                     }}
-                    filterDate={isAllowedDate}
-                    minDate={minDate}
                     dateFormat="yyyy-MM-dd"
+                    minDate={minDate}
+                    filterDate={isAllowedDate}
                     placeholderText={
                       formData.selectedNewspaper?.type === "Monthly"
                         ? "Select allowed monthly date"
                         : "Select publish date"
                     }
-                    className="
-    w-full rounded-lg border border-gray-300
-    px-3 py-2 text-sm
-    focus:outline-none focus:ring-2
-    focus:ring-[var(--color-primary-accent)]
-  "
+                    renderCustomHeader={({
+                      date,
+                      decreaseMonth,
+                      increaseMonth,
+                    }) => (
+                      <div className="flex justify-between items-center px-2">
+                        <button
+                          type="button"
+                          onClick={decreaseMonth}
+                          className="text-[var(--color-primary-dark)] font-bold"
+                        >
+                          &#8592; {/* ← Left arrow */}
+                        </button>
+                        <span className="font-medium">
+                          {date.toLocaleString("default", {
+                            month: "long",
+                            year: "numeric",
+                          })}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={increaseMonth}
+                          className="text-[var(--color-primary-dark)] font-bold"
+                        >
+                          &#8594; {/* → Right arrow */}
+                        </button>
+                      </div>
+                    )}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-accent)]"
                   />
                 </div>
-
-                {/* Category Dropdown - Casual */}
-                <div>
-                  <label className="block font-medium mb-1 md:mt-8">
-                    Category{" "}
-                    <span
-                      className="text-sm"
-                      style={{
-                        fontFamily: "var(--font-sinhala), sans-serif",
-                      }}
-                    >
-                      (වර්ගීකරණය)
-                    </span>{" "}
-                    <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    value={selectedCategory}
-                    onChange={(e) => {
-                      setSelectedCategory(e.target.value);
-                      updateFormData({ classifiedCategory: e.target.value });
-                      setSelectedSubCategory("");
-                    }}
-                    className="border border-gray-300 rounded-lg p-2 w-full focus:ring-2 focus:ring-primary-accent"
-                  >
-                    <option value="">Select Category</option>
-                    {/* {selectedAdType.categories.map((cat) => (
-                  <option key={cat.category} value={cat.category}>
-                    {cat.category}
-                  </option>
-                ))} */}
-                    <option value="Real Estate">Real Estate</option>
-                    <option value="Health & Beauty">Health & Beauty</option>
-                    <option value="Automobile">Automobile</option>
-                    <option value="Personal">Personal</option>
-                    <option value="Employment">Employment</option>
-                    <option value="General">General</option>
-                    <option value="Trade">Trade</option>
-                  </select>
-                </div>
-
-                {/* Subcategory Dropdown - Casual */}
-                {selectedCategory && (
-                  <div className="md:mt-8">
-                    <label className="block font-medium mb-1">
-                      Sub Category{" "}
-                      <span
-                        className="text-sm"
-                        style={{
-                          fontFamily: "var(--font-sinhala), sans-serif",
-                        }}
-                      >
-                        (දැන්වීම් ස්වභාවය)
-                      </span>{" "}
-                    </label>
-                    <select
-                      value={selectedSubCategory}
-                      onChange={(e) => {
-                        setSelectedSubCategory(e.target.value);
-                        updateFormData({ subCategory: e.target.value });
-                      }}
-                      className="border border-gray-300 rounded-lg p-2 w-full focus:ring-2 focus:ring-primary-accent"
-                    >
-                      <option value="">Select Subcategory</option>
-                      {subCategoryOptions.map((sub) => (
-                        <option key={sub} value={sub}>
-                          {sub}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
 
                 {/* Has own Artwork? checkbox */}
                 <div className="md:mt-8">
@@ -2192,6 +2187,91 @@ export default function StepSelectAdType({
                       })}
                     </div>
                   </div>
+                )}
+
+                {/* Category Dropdown - Casual */}
+                {formData.boxType > 0 && (
+                  <>
+                    <div>
+                      <label className="block font-medium mb-1 md:mt-8">
+                        Category{" "}
+                        <span
+                          className="text-sm"
+                          style={{
+                            fontFamily: "var(--font-sinhala), sans-serif",
+                          }}
+                        >
+                          (වර්ගීකරණය)
+                        </span>{" "}
+                        <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        value={selectedCategory}
+                        onChange={(e) => {
+                          setSelectedCategory(e.target.value);
+                          updateFormData({
+                            classifiedCategory: e.target.value,
+                          });
+                          setSelectedSubCategory("");
+                        }}
+                        className="border border-gray-300 rounded-lg p-2 w-full focus:ring-2 focus:ring-primary-accent"
+                      >
+                        <option value="">Select Category</option>
+                        {/* {selectedAdType.categories.map((cat) => (
+                  <option key={cat.category} value={cat.category}>
+                    {cat.category}
+                  </option>
+                ))} */}
+                        <option value="Real Estate">Real Estate</option>
+                        <option value="Health & Beauty">Health & Beauty</option>
+                        <option value="Automobile">Automobile</option>
+                        <option value="Personal">Personal</option>
+                        <option value="Employment">Employment</option>
+                        <option value="General">General</option>
+                        <option value="Trade">Trade</option>
+                      </select>
+                    </div>
+
+                    {/* Subcategory Dropdown - Casual */}
+                    {selectedCategory && (
+                      <div className="md:mt-8">
+                        <label className="block font-medium mb-1">
+                          Sub Category{" "}
+                          <span
+                            className="text-sm"
+                            style={{
+                              fontFamily: "var(--font-sinhala), sans-serif",
+                            }}
+                          >
+                            (දැන්වීම් ස්වභාවය)
+                          </span>{" "}
+                        </label>
+                        <select
+                          value={formData.subCategory ?? ""}
+                          onChange={(e) => {
+                            const value = e.target.value
+                              ? Number(e.target.value)
+                              : null;
+
+                            updateFormData({ subCategory: String(value) });
+                            setSelectedSubCategory(String(value));
+                          }}
+                          className="border border-gray-300 rounded-lg p-2 w-full focus:ring-2 focus:ring-primary-accent"
+                        >
+                          <option value="">Select Subcategory</option>
+
+                          {subCategoryOptions.map((sub) => (
+                            <option
+                              key={sub.classification_number ?? sub.name}
+                              value={sub.classification_number ?? ""}
+                            >
+                              {sub.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                  </>
                 )}
               </>
             )}

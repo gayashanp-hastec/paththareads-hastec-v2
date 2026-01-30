@@ -23,9 +23,20 @@
   --color-button-hover: #fff; */
 
   /* --color-primary: #842a3b; */
-  --color-primary: #f7931e;
+  /* orange colors */
+  /* --color-primary: #f7931e;
   --color-primary-dark: #160f29;
   --color-primary-accent: #f9a94e;
+  --color-orange-accent: #fdca90;
+  --color-text: #130606;
+  --color-text-highlight: #c17181;
+  --color-text-dark-highlight: #b57c3e;
+  --color-button: #160f29;
+  --color-button-hover: #fff; */
+
+  --color-primary: #0a4b5f;
+  --color-primary-dark: #160f29;
+  --color-primary-accent: #2f7287;
   --color-orange-accent: #fdca90;
   --color-text: #130606;
   --color-text-highlight: #c17181;

@@ -31,7 +31,7 @@ export default function Header() {
 
   const handlePostAdClick = (
     e: React.MouseEvent<HTMLAnchorElement, MouseEvent>,
-    href: string
+    href: string,
   ) => {
     if (pathname === "/post-ad") {
       e.preventDefault();
@@ -52,8 +52,11 @@ export default function Header() {
       <header
         className={clsx(
           "fixed inset-x-0 top-0 z-50 transition-all duration-300",
-          "bg-[var(--color-primary)] text-white shadow-md",
-          isScrolled ? "h-20" : "h-32 md:h-44"
+          "bg-gradient-to-b from-[#042a36] via-[#06394a] via-[#0a4b5f] to-[#0e5f73]",
+          "text-white shadow-md",
+          isScrolled
+            ? "h-20 bg-gradient-to-b from-[#042a36]/95 via-[#06394a]/95 via-[#0a4b5f]/95 to-[#0e5f73]/95 backdrop-blur-md"
+            : "h-32 md:h-44 bg-gradient-to-b from-[#042a36] via-[#06394a] via-[#0a4b5f] to-[#0e5f73]",
         )}
       >
         <div className="mx-auto flex h-full max-w-7xl flex-col px-4 md:px-8">

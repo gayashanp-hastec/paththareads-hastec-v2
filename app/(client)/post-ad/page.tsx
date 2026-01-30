@@ -221,7 +221,8 @@ export default function PostAdPage() {
         if (
           formData.adType === "casual" &&
           !formData.hasOwnArtwork &&
-          !formData.adText.trim()
+          !formData.adText.trim() &&
+          adType_?.max_words !== 0
         ) {
           toast.error("Advertisement text cannot be empty.");
           return false;
@@ -298,12 +299,10 @@ export default function PostAdPage() {
           return false;
         }
         if (
-          formData.advertiserNIC.trim().length > 12 ||
-          formData.advertiserNIC.trim().length < 10
+          formData.advertiserNIC.trim().length !== 12 &&
+          formData.advertiserNIC.trim().length !== 10
         ) {
-          toast.error(
-            "NIC must be a minimum of 10 characters and cannot exceed 12.",
-          );
+          toast.error("NIC must only be 10 or 12 characters long.");
           return false;
         }
         if (!formData.advertiserEmail.trim()) {
@@ -358,7 +357,7 @@ export default function PostAdPage() {
           newspaper_name: formData.selectedNewspaper?.id,
           ad_type: formData.adType || "",
           classified_category: formData.classifiedCategory || null,
-          subcategory: formData.photoCategory || null,
+          subcategory: formData.subCategory || null,
           publish_date: formData.publishDate,
           advertisement_text: formData.adText,
           background_color: formData.backgroundColor,
