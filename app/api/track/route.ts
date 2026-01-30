@@ -63,12 +63,12 @@ export async function GET(req: Request) {
         { ok: false, error: "ad_not_found" },
         { status: 404 },
       );
-    } else {
-      const latestPriceChange =
-        ad.ad_price_change_history.length > 0
-          ? ad.ad_price_change_history[0]
-          : null;
     }
+    const latestPriceChange =
+      ad.ad_price_change_history.length > 0
+        ? ad.ad_price_change_history[0]
+        : null;
+
     // Count attempts
     const attempts =
       ad.ad_review_history.length > 0
