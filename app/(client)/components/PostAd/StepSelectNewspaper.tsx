@@ -209,10 +209,7 @@ export default function StepSelectNewspaper({
               >
                 <div
                   className={`flex items-center justify-center w-full h-full p-6 text-center
-      rounded-lg font-semibold text-gray-800 text-lg md:text-2xl lg:text-2xl
-      uppercase tracking-wide select-none
-      transition-all duration-300
-    `}
+      rounded-lg font-semibold text-gray-800 text-lg md:text-2xl lg:text-2xl uppercase tracking-wide select-none transition-all duration-300`}
                   style={{
                     fontFamily: "var(--font-sinhala), sans-serif",
                     background:
