@@ -21,6 +21,7 @@ export async function GET() {
       background_color: true,
       post_in_web: true,
       upload_image: true,
+      uploaded_images: true,
       special_notes: true,
 
       price: true,
@@ -94,6 +95,7 @@ export async function GET() {
     background_color: ad.background_color,
     post_in_web: ad.post_in_web,
     upload_image: ad.upload_image,
+    uploaded_images: ad.uploaded_images,
     special_notes: ad.special_notes,
 
     price: ad.price,

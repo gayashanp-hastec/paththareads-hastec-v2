@@ -117,6 +117,7 @@ export async function POST(req: Request) {
         background_color: advertisement.background_color ?? false,
         post_in_web: advertisement.post_in_web ?? false,
         upload_image: advertisement.upload_image || null,
+        uploaded_images: advertisement.uploaded_images || [],
         special_notes: advertisement.special_notes || null,
         price: advertisement.price ? parseFloat(advertisement.price) : null,
         status: "Pending",
