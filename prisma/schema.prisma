@@ -116,6 +116,7 @@ model advertisements {
   created_at              DateTime?                 @default(now()) @db.Timestamp(6)
   updated_at              DateTime?                 @default(now()) @db.Timestamp(6)
   newspaper_serial_no     Int?
+  uploaded_images         String[]                  @default([])
   ad_price_change_history ad_price_change_history[]
   ad_review_history       ad_review_history[]
   ad_status_history       ad_status_history[]
