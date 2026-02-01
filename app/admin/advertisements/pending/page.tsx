@@ -25,7 +25,7 @@ interface AdminAdvertisementsPending {
   background_color?: boolean | null;
   post_in_web?: boolean | null;
   upload_image?: string | null;
-  uploaded_images?: string | null;
+  uploaded_images?: string[] | null;
 
   price?: number | null;
   status: string;
@@ -398,6 +398,7 @@ export default function AdminAdvertisementsPending() {
               </div>
 
               {/* Content */}
+
               <div className="flex-1 overflow-y-auto">
                 {selectedAd && (
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-8">
@@ -589,50 +590,51 @@ export default function AdminAdvertisementsPending() {
                 )}
 
                 {/* Image */}
-                {selectedAd && selectedAd.uploaded_images?.length > 0 && (
-                  <div className="px-8 py-4 border-t space-y-4">
-                    {/* Image grid */}
-                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                      {selectedAd.uploaded_images.map((url, index) => (
-                        <button
-                          key={url}
-                          type="button"
-                          onClick={() => setPreviewImage(url)}
-                          className="group block text-left"
-                        >
-                          <img
-                            src={url}
-                            alt={`Uploaded image ${index + 1}`}
-                            className="w-full h-32 object-cover rounded-lg border
+                {selectedAd.uploaded_images &&
+                  selectedAd.uploaded_images?.length > 0 && (
+                    <div className="px-8 py-4 border-t space-y-4">
+                      {/* Image grid */}
+                      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                        {selectedAd.uploaded_images.map((url, index) => (
+                          <button
+                            key={url}
+                            type="button"
+                            onClick={() => setPreviewImage(url)}
+                            className="group block text-left"
+                          >
+                            <img
+                              src={url}
+                              alt={`Uploaded image ${index + 1}`}
+                              className="w-full h-32 object-cover rounded-lg border
                        group-hover:opacity-90 transition"
+                            />
+
+                            <p className="mt-1 text-xs text-center text-gray-500">
+                              Click to preview
+                            </p>
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-500">
+                          {selectedAd.uploaded_images.length} image(s) uploaded
+                        </span>
+
+                        <label className="flex items-center gap-2 text-sm">
+                          <input
+                            type="checkbox"
+                            checked={requestImageChange}
+                            onChange={(e) =>
+                              setRequestImageChange(e.target.checked)
+                            }
                           />
-
-                          <p className="mt-1 text-xs text-center text-gray-500">
-                            Click to preview
-                          </p>
-                        </button>
-                      ))}
+                          Request Image Change
+                        </label>
+                      </div>
                     </div>
-
-                    {/* Actions */}
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-500">
-                        {selectedAd.uploaded_images.length} image(s) uploaded
-                      </span>
-
-                      <label className="flex items-center gap-2 text-sm">
-                        <input
-                          type="checkbox"
-                          checked={requestImageChange}
-                          onChange={(e) =>
-                            setRequestImageChange(e.target.checked)
-                          }
-                        />
-                        Request Image Change
-                      </label>
-                    </div>
-                  </div>
-                )}
+                  )}
 
                 <div className="px-8 py-4 border-t">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
