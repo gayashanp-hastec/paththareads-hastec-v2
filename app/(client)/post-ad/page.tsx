@@ -81,6 +81,7 @@ interface FormData {
   hasOwnArtwork: boolean;
   needArtwork: boolean;
   uploadedImage: File | null;
+  uploadedImages: string[];
   sectionId: number;
   is_allow_language_combined: boolean;
   userLangCombineSelected: boolean;
@@ -148,6 +149,7 @@ export default function PostAdPage() {
     deathCertificate: null,
     photoCategory: null,
     uploadedImage: null,
+    uploadedImages: [],
     hasOwnArtwork: false,
     needArtwork: false,
     sectionId: 0,
@@ -248,7 +250,8 @@ export default function PostAdPage() {
         if (
           formData.hasOwnArtwork &&
           formData.adType === "casual" &&
-          adType_?.is_upload_image
+          adType_?.is_upload_image &&
+          formData.uploadedImages.length === 0
         ) {
           toast.error("Please upload an image!");
           return false;
@@ -270,7 +273,8 @@ export default function PostAdPage() {
         if (
           formData.adType !== "casual" &&
           adType_?.is_upload_image &&
-          !formData.uploadedImage
+          !formData.uploadedImage &&
+          formData.uploadedImages.length === 0
         ) {
           toast.error("Please upload an image!");
           return false;
@@ -363,6 +367,7 @@ export default function PostAdPage() {
           background_color: formData.backgroundColor,
           post_in_web: formData.combinedAd,
           upload_image: formData.uploadedImage || null,
+          uploaded_images: formData.uploadedImages,
           special_notes: formData.specialNotes,
           price: formData.totalPrice || 0,
           newspaper_serial_no: formData.selectedNewspaper?.newspaper_serial_no,

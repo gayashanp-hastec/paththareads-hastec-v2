@@ -60,6 +60,7 @@ interface AdType {
   is_allow_combined: boolean;
   max_words: number;
   img_url?: string;
+  uploadedImages: string[];
   is_upload_image: boolean;
   cs_col_bw_price: number;
   cs_col_bw_one_color_price: number;
@@ -135,6 +136,9 @@ export default function StepSelectAdType({
   console.log("days here: ", allowed_weekdays);
   console.log("days here: ", allowed_month_days);
 
+  const MAX_FILES = 8;
+  const MAX_SIZE = 3 * 1024 * 1024; // 3MB
+
   // JS: Sunday=0 → ISO: Sunday=7
   const getIsoWeekday = (date: Date) =>
     date.getDay() === 0 ? 7 : date.getDay();
@@ -193,6 +197,7 @@ export default function StepSelectAdType({
       hasOwnArtwork: false,
       needArtwork: false,
       uploadedImage: null,
+      uploadedImages: [],
       sectionId: 0,
       noOfColumns: 1,
       adHeight: formData.selectedNewspaper.min_ad_height,
@@ -690,45 +695,6 @@ export default function StepSelectAdType({
         ))}
       </div>
 
-      {/* Ad Types Grid */}
-      {/* <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-        {loading
-          ? // show 6 skeletons
-            Array.from({ length: 6 }).map((_, i) => <AdTypeSkeleton key={i} />)
-          : (Array.isArray(adTypes) ? adTypes : []).map((ad) => (
-              <div
-                key={ad.key}
-                className={`border rounded-lg p-4 flex flex-col items-center cursor-pointer transition ${
-                  selectedAdType?.key === ad.key
-                    ? "ring-2 ring-primary-accent"
-                    : "hover:ring-2 hover:ring-primary-accent"
-                }`}
-                onClick={() => handleAdTypeSelect(ad)}
-              >
-                <div className="w-[120px] h-[120px] flex items-center justify-center mb-2 overflow-hidden">
-                  <Image
-                    src={getAdTypeImage(ad.key)}
-                    alt={ad.name}
-                    width={120}
-                    height={120}
-                    className="object-contain"
-                  />
-                </div>
-                <h3 className="font-semibold text-center">{ad.name}</h3>
-                {ad.extra_notes1 && (
-                  <p className="text-xs text-gray-500 text-center">
-                    {ad.extra_notes1}
-                  </p>
-                )}
-                {ad.extra_notes2 && (
-                  <p className="text-xs text-gray-500 text-center">
-                    {ad.extra_notes2}
-                  </p>
-                )}
-              </div>
-            ))}
-      </div> */}
-
       {selectedMainAdType && (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
           {loading
@@ -1035,54 +1001,110 @@ export default function StepSelectAdType({
                 <input
                   type="file"
                   accept="image/*"
-                  required
+                  multiple
                   onChange={async (e) => {
-                    const file = e.target.files?.[0];
-                    if (!file) return;
+                    const files = Array.from(e.target.files ?? []);
+                    if (!files.length) return;
+
+                    // Enforce max count
+                    const remainingSlots =
+                      MAX_FILES - (formData.uploadedImages?.length ?? 0);
+
+                    if (remainingSlots <= 0) {
+                      alert("You can upload a maximum of 8 images.");
+                      return;
+                    }
+
+                    const selectedFiles = files.slice(0, remainingSlots);
+
+                    // Size validation
+                    const oversized = selectedFiles.find(
+                      (file) => file.size > MAX_SIZE,
+                    );
+                    if (oversized) {
+                      alert("Each image must be under 3 MB.");
+                      return;
+                    }
 
                     try {
                       updateFormData({ uploading: true });
 
-                      const data = await uploadImageToCloudinary(file);
+                      const uploadedUrls: string[] = [];
+
+                      for (const file of selectedFiles) {
+                        const data = await uploadImageToCloudinary(file);
+                        uploadedUrls.push(data.secure_url);
+                      }
 
                       updateFormData({
-                        uploadedImage: data.secure_url,
+                        uploadedImages: [
+                          ...(formData.uploadedImages ?? []),
+                          ...uploadedUrls,
+                        ],
                         uploading: false,
                       });
                     } catch (error) {
                       console.error(error);
                       updateFormData({ uploading: false });
-                      alert("Image upload failed. Please try again.");
+                      alert("One or more images failed to upload.");
+                    } finally {
+                      // allow re-selecting same file again
+                      e.target.value = "";
                     }
                   }}
                   className="w-full border border-gray-300 rounded-lg p-3
-               focus:ring-2 focus:ring-primary-accent
-               file:mr-4 file:py-2 file:px-4
-               file:rounded-full file:border-0
-               file:bg-primary-accent file:text-white
-               file:cursor-pointer
-               hover:file:bg-primary-accent/90
-               transition"
+    focus:ring-2 focus:ring-primary-accent
+    file:mr-4 file:py-2 file:px-4
+    file:rounded-full file:border-0
+    file:bg-primary-accent file:text-white
+    file:cursor-pointer
+    hover:file:bg-primary-accent/90
+    transition"
                 />
 
                 {/* Optional status text (non-breaking, visual only) */}
                 {formData.uploading && (
-                  <p className="text-sm text-gray-500 mt-2">Uploading image…</p>
-                )}
-
-                {formData.uploadedImage && !formData.uploading && (
-                  <p className="text-sm text-green-600 mt-2">
-                    Image uploaded successfully
+                  <p className="text-sm text-gray-500 mt-2">
+                    Uploading images…
                   </p>
                 )}
+                {formData.uploadedImages?.length > 0 && (
+                  <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {formData.uploadedImages.map(
+                      (url: string, index: number) => (
+                        <div key={url} className="relative group">
+                          <img
+                            src={url}
+                            alt={`Uploaded ${index + 1}`}
+                            className="w-full h-32 object-cover rounded-lg border"
+                          />
 
-                {formData.uploadedImage && (
-                  <img
-                    src={formData.uploadedImage}
-                    alt="Uploaded preview"
-                    className="mt-4 w-48 rounded-lg border"
-                  />
+                          {/* Remove button */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const updated = formData.uploadedImages.filter(
+                                (_, i) => i !== index,
+                              );
+                              updateFormData({ uploadedImages: updated });
+                            }}
+                            className="absolute top-2 right-2
+            bg-black/70 text-white text-xs
+            rounded-full px-2 py-1
+            opacity-0 group-hover:opacity-100
+            transition"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ),
+                    )}
+                  </div>
                 )}
+
+                <p className="text-sm text-gray-500 mt-2">
+                  {formData.uploadedImages.length} / 8 images uploaded
+                </p>
 
                 {selectedAdType.extra_notes1 && (
                   <p className="text-xs text-gray-500">
@@ -1769,56 +1791,111 @@ export default function StepSelectAdType({
                     <input
                       type="file"
                       accept="image/*"
-                      required
+                      multiple
                       onChange={async (e) => {
-                        const file = e.target.files?.[0];
-                        if (!file) return;
+                        const files = Array.from(e.target.files ?? []);
+                        if (!files.length) return;
+
+                        // Enforce max count
+                        const remainingSlots =
+                          MAX_FILES - (formData.uploadedImages?.length ?? 0);
+
+                        if (remainingSlots <= 0) {
+                          alert("You can upload a maximum of 8 images.");
+                          return;
+                        }
+
+                        const selectedFiles = files.slice(0, remainingSlots);
+
+                        // Size validation
+                        const oversized = selectedFiles.find(
+                          (file) => file.size > MAX_SIZE,
+                        );
+                        if (oversized) {
+                          alert("Each image must be under 3 MB.");
+                          return;
+                        }
 
                         try {
                           updateFormData({ uploading: true });
 
-                          const data = await uploadImageToCloudinary(file);
+                          const uploadedUrls: string[] = [];
+
+                          for (const file of selectedFiles) {
+                            const data = await uploadImageToCloudinary(file);
+                            uploadedUrls.push(data.secure_url);
+                          }
 
                           updateFormData({
-                            uploadedImage: data.secure_url,
+                            uploadedImages: [
+                              ...(formData.uploadedImages ?? []),
+                              ...uploadedUrls,
+                            ],
                             uploading: false,
                           });
                         } catch (error) {
                           console.error(error);
                           updateFormData({ uploading: false });
-                          alert("Image upload failed. Please try again.");
+                          alert("One or more images failed to upload.");
+                        } finally {
+                          // allow re-selecting same file again
+                          e.target.value = "";
                         }
                       }}
                       className="w-full border border-gray-300 rounded-lg p-3
-               focus:ring-2 focus:ring-primary-accent
-               file:mr-4 file:py-2 file:px-4
-               file:rounded-full file:border-0
-               file:bg-primary-accent file:text-white
-               file:cursor-pointer
-               hover:file:bg-primary-accent/90
-               transition"
+    focus:ring-2 focus:ring-primary-accent
+    file:mr-4 file:py-2 file:px-4
+    file:rounded-full file:border-0
+    file:bg-primary-accent file:text-white
+    file:cursor-pointer
+    hover:file:bg-primary-accent/90
+    transition"
                     />
 
                     {/* Optional status text (non-breaking, visual only) */}
                     {formData.uploading && (
                       <p className="text-sm text-gray-500 mt-2">
-                        Uploading image…
+                        Uploading images…
                       </p>
                     )}
+                    {formData.uploadedImages?.length > 0 && (
+                      <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {formData.uploadedImages.map(
+                          (url: string, index: number) => (
+                            <div key={url} className="relative group">
+                              <img
+                                src={url}
+                                alt={`Uploaded ${index + 1}`}
+                                className="w-full h-32 object-cover rounded-lg border"
+                              />
 
-                    {formData.uploadedImage && !formData.uploading && (
-                      <p className="text-sm text-green-600 mt-2">
-                        Image uploaded successfully
-                      </p>
+                              {/* Remove button */}
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const updated =
+                                    formData.uploadedImages.filter(
+                                      (_, i) => i !== index,
+                                    );
+                                  updateFormData({ uploadedImages: updated });
+                                }}
+                                className="absolute top-2 right-2
+            bg-black/70 text-white text-xs
+            rounded-full px-2 py-1
+            opacity-0 group-hover:opacity-100
+            transition"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          ),
+                        )}
+                      </div>
                     )}
 
-                    {formData.uploadedImage && (
-                      <img
-                        src={formData.uploadedImage}
-                        alt="Uploaded preview"
-                        className="mt-4 w-48 rounded-lg border"
-                      />
-                    )}
+                    <p className="text-sm text-gray-500 mt-2">
+                      {formData.uploadedImages.length} / 8 images uploaded
+                    </p>
 
                     {selectedAdType.extra_notes1 && (
                       <p className="text-xs text-gray-500">

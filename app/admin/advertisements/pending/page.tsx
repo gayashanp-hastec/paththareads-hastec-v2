@@ -25,6 +25,7 @@ interface AdminAdvertisementsPending {
   background_color?: boolean | null;
   post_in_web?: boolean | null;
   upload_image?: string | null;
+  uploaded_images?: string | null;
 
   price?: number | null;
   status: string;
@@ -69,6 +70,7 @@ export default function AdminAdvertisementsPending() {
   const [requestPriceChange, setRequestPriceChange] = useState(false);
   const [newPrice, setNewPrice] = useState("");
   const [priceReason, setPriceReason] = useState("");
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   const ACTION_BTN_CLASS =
     "flex items-center justify-center gap-2 w-40 px-1 py-2.5 rounded-lg shadow text-sm font-medium transition";
@@ -349,7 +351,7 @@ export default function AdminAdvertisementsPending() {
         {/* Modal */}
         {isModalOpen && selectedAd && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
-            <div className="relative w-full max-w-5xl overflow-hidden rounded-2xl bg-white shadow-2xl border border-gray-100 animate-fadeIn">
+            <div className="relative w-full max-w-5xl max-h-[90vh] flex flex-col rounded-2xl bg-white shadow-2xl border border-gray-100 animate-fadeIn">
               {/* Header */}
               <div className="flex items-start justify-between px-8 py-6 border-b bg-[var(--color-primary-dark)] text-white">
                 <div>
@@ -396,268 +398,296 @@ export default function AdminAdvertisementsPending() {
               </div>
 
               {/* Content */}
-              {selectedAd && (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-8">
-                  {/* Left: Details */}
-                  <div className="lg:col-span-1 space-y-4 text-sm">
-                    <div>
-                      <InfoRow
-                        label="Newspaper"
-                        value={selectedAd.newspaper_name}
-                      />
-                      <div className="flex">
-                        <span
-                          className={`rounded-full px-3 py-1 text-xm font-medium ${
-                            selectedAd.classified_ad?.is_publish_sin
-                              ? "bg-amber-900/20 text-amber-700"
-                              : ""
-                          }`}
-                        >
-                          {selectedAd.classified_ad?.is_publish_sin
-                            ? "Tamil" //later add newspaper names here
-                            : ""}
-                        </span>
-                        <span
-                          className={`rounded-full px-3 py-1 text-xm font-medium ${
-                            selectedAd.classified_ad?.is_publish_eng
-                              ? "bg-blue-500/20 text-blue-500"
-                              : ""
-                          }`}
-                        >
-                          {selectedAd.classified_ad?.is_publish_eng
-                            ? "English" //later add newspaper names here
-                            : ""}
-                        </span>
-                        <span
-                          className={`rounded-full px-3 py-1 text-xm font-medium ${
-                            selectedAd.classified_ad?.is_publish_tam
-                              ? "bg-yellow-500/20 text-yellow-500"
-                              : ""
-                          }`}
-                        >
-                          {selectedAd.classified_ad?.is_publish_tam
-                            ? "Tamil" //later add newspaper names here
-                            : ""}
-                        </span>
-
-                        {/* sinhala and english both */}
-                        <span
-                          className={`rounded-full px-3 py-1 text-xm font-medium ${
-                            selectedAd.classified_ad?.is_publish_sin_eng
-                              ? "bg-yellow-500/20 text-yellow-500"
-                              : ""
-                          }`}
-                        >
-                          {selectedAd.classified_ad?.is_publish_sin_eng
-                            ? "Sinhala & English" //later add newspaper names here
-                            : ""}
-                        </span>
-
-                        <span
-                          className={`rounded-full px-3 py-1 text-xm font-medium ${
-                            selectedAd.classified_ad?.is_publish_sin_tam
-                              ? "bg-yellow-500/20 text-yellow-500"
-                              : ""
-                          }`}
-                        >
-                          {selectedAd.classified_ad?.is_publish_sin_tam
-                            ? "Sinhala & Tamil" //later add newspaper names here
-                            : ""}
-                        </span>
-
-                        <span
-                          className={`rounded-full px-3 py-1 text-xm font-medium ${
-                            selectedAd.classified_ad?.is_publish_eng_tam
-                              ? "bg-yellow-500/20 text-yellow-500"
-                              : ""
-                          }`}
-                        >
-                          {selectedAd.classified_ad?.is_publish_eng_tam
-                            ? "English & Tamil" //later add newspaper names here
-                            : ""}
-                        </span>
-                      </div>
-                    </div>
-
-                    {selectedAd.publish_date && (
-                      <>
+              <div className="flex-1 overflow-y-auto">
+                {selectedAd && (
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-8">
+                    {/* Left: Details */}
+                    <div className="lg:col-span-1 space-y-4 text-sm">
+                      <div>
                         <InfoRow
-                          label="Date to be Published"
-                          value={formatPublishDate(selectedAd.publish_date)}
+                          label="Newspaper"
+                          value={selectedAd.newspaper_name}
                         />
-                      </>
-                    )}
-                    <InfoRow label="Ad Type" value={selectedAd.ad_type} />
-                    <InfoRow
-                      label="Category"
-                      value={selectedAd.classified_category}
-                    />
-                    <InfoRow
-                      label="Subcategory"
-                      value={selectedAd.subcategory}
-                    />
-                    {selectedAd.ad_type === "casual" &&
-                      selectedAd.casual_ad && (
+                        <div className="flex">
+                          <span
+                            className={`rounded-full px-3 py-1 text-xm font-medium ${
+                              selectedAd.classified_ad?.is_publish_sin
+                                ? "bg-amber-900/20 text-amber-700"
+                                : ""
+                            }`}
+                          >
+                            {selectedAd.classified_ad?.is_publish_sin
+                              ? "Tamil" //later add newspaper names here
+                              : ""}
+                          </span>
+                          <span
+                            className={`rounded-full px-3 py-1 text-xm font-medium ${
+                              selectedAd.classified_ad?.is_publish_eng
+                                ? "bg-blue-500/20 text-blue-500"
+                                : ""
+                            }`}
+                          >
+                            {selectedAd.classified_ad?.is_publish_eng
+                              ? "English" //later add newspaper names here
+                              : ""}
+                          </span>
+                          <span
+                            className={`rounded-full px-3 py-1 text-xm font-medium ${
+                              selectedAd.classified_ad?.is_publish_tam
+                                ? "bg-yellow-500/20 text-yellow-500"
+                                : ""
+                            }`}
+                          >
+                            {selectedAd.classified_ad?.is_publish_tam
+                              ? "Tamil" //later add newspaper names here
+                              : ""}
+                          </span>
+
+                          {/* sinhala and english both */}
+                          <span
+                            className={`rounded-full px-3 py-1 text-xm font-medium ${
+                              selectedAd.classified_ad?.is_publish_sin_eng
+                                ? "bg-yellow-500/20 text-yellow-500"
+                                : ""
+                            }`}
+                          >
+                            {selectedAd.classified_ad?.is_publish_sin_eng
+                              ? "Sinhala & English" //later add newspaper names here
+                              : ""}
+                          </span>
+
+                          <span
+                            className={`rounded-full px-3 py-1 text-xm font-medium ${
+                              selectedAd.classified_ad?.is_publish_sin_tam
+                                ? "bg-yellow-500/20 text-yellow-500"
+                                : ""
+                            }`}
+                          >
+                            {selectedAd.classified_ad?.is_publish_sin_tam
+                              ? "Sinhala & Tamil" //later add newspaper names here
+                              : ""}
+                          </span>
+
+                          <span
+                            className={`rounded-full px-3 py-1 text-xm font-medium ${
+                              selectedAd.classified_ad?.is_publish_eng_tam
+                                ? "bg-yellow-500/20 text-yellow-500"
+                                : ""
+                            }`}
+                          >
+                            {selectedAd.classified_ad?.is_publish_eng_tam
+                              ? "English & Tamil" //later add newspaper names here
+                              : ""}
+                          </span>
+                        </div>
+                      </div>
+
+                      {selectedAd.publish_date && (
                         <>
                           <InfoRow
-                            label="Ad Size"
-                            value={selectedAd.casual_ad.ad_size}
+                            label="Date to be Published"
+                            value={formatPublishDate(selectedAd.publish_date)}
                           />
-
-                          {selectedAd.casual_ad.ad_size.toLowerCase() ===
-                            "custom" && (
-                            <>
-                              <InfoRow
-                                label="No of Columns"
-                                value={selectedAd.casual_ad.no_of_columns.toString()}
-                              />
-                              <InfoRow
-                                label="Ad height (cm)"
-                                value={selectedAd.casual_ad.ad_height.toString()}
-                              />
-                            </>
-                          )}
-
-                          <InfoRow
-                            label="Color Option"
-                            value={selectedAd.casual_ad.color_option}
-                          />
-
-                          <div>
-                            <span
-                              className={`rounded-full px-3 py-1 text-xm font-medium ${
-                                selectedAd.casual_ad.has_artwork
-                                  ? "bg-green-500/20 text-green-300"
-                                  : selectedAd.casual_ad.need_artwork
-                                    ? "bg-red-500/20 text-red-300"
-                                    : "bg-yellow-500/20 text-yellow-300"
-                              }`}
-                            >
-                              {selectedAd.casual_ad.has_artwork
-                                ? "Has Artwork"
-                                : selectedAd.casual_ad.need_artwork
-                                  ? "Need Artwork"
-                                  : ""}
-                            </span>
-                          </div>
                         </>
                       )}
-                    {selectedAd.price && (
-                      <InfoRow label="Price" value={String(selectedAd.price)} />
-                    )}
-
-                    {selectedAd.classified_ad?.is_priority && (
-                      <div>
-                        <span className="rounded-full px-3 py-1 text-xm font-medium bg-red-500/20 text-red-500">
-                          Priority
-                        </span>
-                      </div>
-                    )}
-
-                    {selectedAd.special_notes && (
-                      <div>
-                        <p className="font-medium text-[var(--color-text-dark-highlight)]">
-                          Special Notes
-                        </p>
-                        <p className="mt-1 text-gray-600 leading-relaxed">
-                          {selectedAd.special_notes}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Right: Editable Text */}
-                  <div className="lg:col-span-2">
-                    <p className="mb-2 text-sm font-medium text-[var(--color-text-dark-highlight)]">
-                      Advertisement Content
-                    </p>
-
-                    <textarea
-                      value={editedText}
-                      onChange={(e) => setEditedText(e.target.value)}
-                      className="w-full h-56 rounded-xl border border-gray-300 p-4 text-gray-800
-                     focus:ring-2 focus:ring-[var(--color-primary)] outline-none resize-none"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Image */}
-              {selectedAd.upload_image && (
-                <div className="px-8 py-4 flex items-center justify-between gap-4 border-t">
-                  <a
-                    href={selectedAd.upload_image}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm font-medium text-[var(--color-primary-dark)] hover:underline"
-                  >
-                    View Uploaded Image
-                  </a>
-
-                  <label className="flex items-center gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      checked={requestImageChange}
-                      onChange={(e) => setRequestImageChange(e.target.checked)}
-                    />
-                    Request Image Change
-                  </label>
-                </div>
-              )}
-
-              <div className="px-8 py-4 border-t">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
-                  {/* LEFT: Toggle */}
-                  <div className="md:col-span-1">
-                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                      <input
-                        type="checkbox"
-                        checked={requestPriceChange}
-                        onChange={(e) =>
-                          setRequestPriceChange(e.target.checked)
-                        }
-                        className="accent-[var(--color-primary)]"
+                      <InfoRow label="Ad Type" value={selectedAd.ad_type} />
+                      <InfoRow
+                        label="Category"
+                        value={selectedAd.classified_category}
                       />
-                      Request Price Change
-                    </label>
+                      <InfoRow
+                        label="Subcategory"
+                        value={selectedAd.subcategory}
+                      />
+                      {selectedAd.ad_type === "casual" &&
+                        selectedAd.casual_ad && (
+                          <>
+                            <InfoRow
+                              label="Ad Size"
+                              value={selectedAd.casual_ad.ad_size}
+                            />
 
-                    <p className="mt-2 text-xs text-gray-500">
-                      Request a revision to the advertisement price with
-                      justification.
-                    </p>
+                            {selectedAd.casual_ad.ad_size.toLowerCase() ===
+                              "custom" && (
+                              <>
+                                <InfoRow
+                                  label="No of Columns"
+                                  value={selectedAd.casual_ad.no_of_columns.toString()}
+                                />
+                                <InfoRow
+                                  label="Ad height (cm)"
+                                  value={selectedAd.casual_ad.ad_height.toString()}
+                                />
+                              </>
+                            )}
+
+                            <InfoRow
+                              label="Color Option"
+                              value={selectedAd.casual_ad.color_option}
+                            />
+
+                            <div>
+                              <span
+                                className={`rounded-full px-3 py-1 text-xm font-medium ${
+                                  selectedAd.casual_ad.has_artwork
+                                    ? "bg-green-500/20 text-green-300"
+                                    : selectedAd.casual_ad.need_artwork
+                                      ? "bg-red-500/20 text-red-300"
+                                      : "bg-yellow-500/20 text-yellow-300"
+                                }`}
+                              >
+                                {selectedAd.casual_ad.has_artwork
+                                  ? "Has Artwork"
+                                  : selectedAd.casual_ad.need_artwork
+                                    ? "Need Artwork"
+                                    : ""}
+                              </span>
+                            </div>
+                          </>
+                        )}
+                      {selectedAd.price && (
+                        <InfoRow
+                          label="Price"
+                          value={String(selectedAd.price)}
+                        />
+                      )}
+
+                      {selectedAd.classified_ad?.is_priority && (
+                        <div>
+                          <span className="rounded-full px-3 py-1 text-xm font-medium bg-red-500/20 text-red-500">
+                            Priority
+                          </span>
+                        </div>
+                      )}
+
+                      {selectedAd.special_notes && (
+                        <div>
+                          <p className="font-medium text-[var(--color-text-dark-highlight)]">
+                            Special Notes
+                          </p>
+                          <p className="mt-1 text-gray-600 leading-relaxed">
+                            {selectedAd.special_notes}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Right: Editable Text */}
+                    <div className="lg:col-span-2">
+                      <p className="mb-2 text-sm font-medium text-[var(--color-text-dark-highlight)]">
+                        Advertisement Content
+                      </p>
+
+                      <textarea
+                        value={editedText}
+                        onChange={(e) => setEditedText(e.target.value)}
+                        className="w-full h-56 rounded-xl border border-gray-300 p-4 text-gray-800
+                     focus:ring-2 focus:ring-[var(--color-primary)] outline-none resize-none"
+                      />
+                    </div>
                   </div>
+                )}
 
-                  {/* RIGHT: Conditional Content */}
-                  <div className="md:col-span-2">
-                    {requestPriceChange && (
-                      <div className="space-y-4 rounded-xl border border-yellow-200 bg-yellow-50 p-4">
-                        <div>
-                          <p className="text-sm font-medium text-gray-700">
-                            New Price
-                          </p>
-                          <input
-                            type="number"
-                            value={newPrice}
-                            onChange={(e) => setNewPrice(e.target.value)}
-                            className="mt-1 w-full rounded-lg border px-3 py-2 text-sm focus:ring-2 focus:ring-yellow-400 outline-none"
-                            placeholder="Enter new price"
+                {/* Image */}
+                {selectedAd && selectedAd.uploaded_images?.length > 0 && (
+                  <div className="px-8 py-4 border-t space-y-4">
+                    {/* Image grid */}
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                      {selectedAd.uploaded_images.map((url, index) => (
+                        <button
+                          key={url}
+                          type="button"
+                          onClick={() => setPreviewImage(url)}
+                          className="group block text-left"
+                        >
+                          <img
+                            src={url}
+                            alt={`Uploaded image ${index + 1}`}
+                            className="w-full h-32 object-cover rounded-lg border
+                       group-hover:opacity-90 transition"
                           />
-                        </div>
 
-                        <div>
-                          <p className="text-sm font-medium text-gray-700">
-                            Reason for Price Change
+                          <p className="mt-1 text-xs text-center text-gray-500">
+                            Click to preview
                           </p>
-                          <textarea
-                            value={priceReason}
-                            onChange={(e) => setPriceReason(e.target.value)}
-                            className="mt-1 w-full rounded-lg border px-3 py-2 text-sm resize-none focus:ring-2 focus:ring-yellow-400 outline-none"
-                            rows={3}
-                            placeholder="Explain why the price needs to be changed"
-                          />
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-500">
+                        {selectedAd.uploaded_images.length} image(s) uploaded
+                      </span>
+
+                      <label className="flex items-center gap-2 text-sm">
+                        <input
+                          type="checkbox"
+                          checked={requestImageChange}
+                          onChange={(e) =>
+                            setRequestImageChange(e.target.checked)
+                          }
+                        />
+                        Request Image Change
+                      </label>
+                    </div>
+                  </div>
+                )}
+
+                <div className="px-8 py-4 border-t">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+                    {/* LEFT: Toggle */}
+                    <div className="md:col-span-1">
+                      <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                        <input
+                          type="checkbox"
+                          checked={requestPriceChange}
+                          onChange={(e) =>
+                            setRequestPriceChange(e.target.checked)
+                          }
+                          className="accent-[var(--color-primary)]"
+                        />
+                        Request Price Change
+                      </label>
+
+                      <p className="mt-2 text-xs text-gray-500">
+                        Request a revision to the advertisement price with
+                        justification.
+                      </p>
+                    </div>
+
+                    {/* RIGHT: Conditional Content */}
+                    <div className="md:col-span-2">
+                      {requestPriceChange && (
+                        <div className="space-y-4 rounded-xl border border-yellow-200 bg-yellow-50 p-4">
+                          <div>
+                            <p className="text-sm font-medium text-gray-700">
+                              New Price
+                            </p>
+                            <input
+                              type="number"
+                              value={newPrice}
+                              onChange={(e) => setNewPrice(e.target.value)}
+                              className="mt-1 w-full rounded-lg border px-3 py-2 text-sm focus:ring-2 focus:ring-yellow-400 outline-none"
+                              placeholder="Enter new price"
+                            />
+                          </div>
+
+                          <div>
+                            <p className="text-sm font-medium text-gray-700">
+                              Reason for Price Change
+                            </p>
+                            <textarea
+                              value={priceReason}
+                              onChange={(e) => setPriceReason(e.target.value)}
+                              className="mt-1 w-full rounded-lg border px-3 py-2 text-sm resize-none focus:ring-2 focus:ring-yellow-400 outline-none"
+                              rows={3}
+                              placeholder="Explain why the price needs to be changed"
+                            />
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -702,6 +732,33 @@ export default function AdminAdvertisementsPending() {
                   </button>
                 )}
               </div>
+            </div>
+          </div>
+        )}
+
+        {previewImage && (
+          <div
+            className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center px-4"
+            onClick={() => setPreviewImage(null)}
+          >
+            <div
+              className="relative max-w-4xl w-full"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Close button */}
+              <button
+                type="button"
+                onClick={() => setPreviewImage(null)}
+                className="absolute -top-10 right-0 text-white text-sm hover:underline"
+              >
+                Close ✕
+              </button>
+
+              <img
+                src={previewImage}
+                alt="Image preview"
+                className="w-full max-h-[80vh] object-contain rounded-lg shadow-lg bg-white"
+              />
             </div>
           </div>
         )}
