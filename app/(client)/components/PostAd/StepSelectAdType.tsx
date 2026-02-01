@@ -1084,7 +1084,7 @@ export default function StepSelectAdType({
                             type="button"
                             onClick={() => {
                               const updated = formData.uploadedImages.filter(
-                                (_, i) => i !== index,
+                                (_: any, i: any) => i !== index,
                               );
                               updateFormData({ uploadedImages: updated });
                             }}
@@ -1875,7 +1875,7 @@ export default function StepSelectAdType({
                                 onClick={() => {
                                   const updated =
                                     formData.uploadedImages.filter(
-                                      (_, i) => i !== index,
+                                      (_: any, i: any) => i !== index,
                                     );
                                   updateFormData({ uploadedImages: updated });
                                 }}
