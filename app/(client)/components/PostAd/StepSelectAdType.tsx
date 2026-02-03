@@ -571,8 +571,10 @@ export default function StepSelectAdType({
 
   const adTypeImages: Record<string, string> = {
     classified: "/classified.png",
-    photo_classified: "/photo-classified.png",
+    photo_classified: "/photo_classified.png",
     casual: "/casual.png",
+    death_notice: "/death_notice.png",
+    marriage: "/marriage.png",
   };
 
   const getAdTypeImage = (adKey: string) => {
