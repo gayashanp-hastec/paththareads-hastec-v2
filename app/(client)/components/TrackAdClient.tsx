@@ -397,7 +397,10 @@ export default function TrackAdClient({ reference }: { reference: string }) {
         <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg text-center">
           <p className="text-sm text-green-700">Advertisement Price</p>
           <p className="text-2xl font-bold text-green-800">
-            LKR {ad.latest_price_change?.requested_price.toLocaleString()}
+            LKR{" "}
+            {ad.latest_price_change
+              ? ad.latest_price_change.requested_price.toLocaleString()
+              : ad.price}
           </p>
         </div>
       )}
