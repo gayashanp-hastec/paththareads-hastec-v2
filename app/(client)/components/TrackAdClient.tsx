@@ -110,7 +110,22 @@ export default function TrackAdClient({ reference }: { reference: string }) {
   }
 
   function onTextChange(v: string) {
-    setEditableText(v);
+    if (!maxWords) {
+      setEditableText(v);
+      setIsEdited(v.trim() !== (ad?.advertisement_text ?? "").trim());
+      return;
+    }
+
+    const words = v.trim().split(/\s+/).filter(Boolean);
+
+    if (words.length <= maxWords) {
+      setEditableText(v);
+    } else {
+      // Trim to maxWords
+      const trimmed = words.slice(0, maxWords).join(" ");
+      setEditableText(trimmed);
+    }
+
     setIsEdited(v.trim() !== (ad?.advertisement_text ?? "").trim());
   }
 
