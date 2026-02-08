@@ -683,9 +683,13 @@ export default function AdminAdvertisements() {
                               <button
                                 key={selectedAd.payment.file_path}
                                 type="button"
-                                onClick={() =>
-                                  setPreviewImage(selectedAd.payment.file_path)
-                                }
+                                onClick={() => {
+                                  if (selectedAd.payment) {
+                                    setPreviewImage(
+                                      selectedAd.payment.file_path,
+                                    );
+                                  }
+                                }}
                                 className="rounded-xl p-2 bg-amber-300"
                               >
                                 View Payment Receipt
