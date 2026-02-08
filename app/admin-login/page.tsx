@@ -38,8 +38,9 @@ export default function AdminLogin() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <form
         onSubmit={handleLogin}
-        className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8 space-y-6
-                   transition-all hover:shadow-xl"
+        className="w-full max-w-md rounded-2xl shadow-lg p-8 mt-2 mb-12
+             bg-[#042a36]
+             transition-all hover:shadow-xl"
       >
         {/* Logo */}
         <div className="flex justify-center">
@@ -52,19 +53,19 @@ export default function AdminLogin() {
           />
         </div>
 
-        <h1 className="text-2xl font-bold text-center text-[var(--color-primary-dark)]">
+        <h1 className="text-xl font-bold text-center text-gray-500 mb-8">
           Admin Login
         </h1>
 
-        <div className="space-y-4">
+        <div className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-100 mb-1">
               Username
             </label>
             <input
               placeholder="Enter your username"
               className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none
-                         focus:ring-2 focus:ring-[var(--color-primary-accent)] transition"
+                         focus:ring-2 focus:ring-gray-200 transition text-amber-100"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
@@ -72,14 +73,14 @@ export default function AdminLogin() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-100 mb-1">
               Password
             </label>
             <input
               placeholder="Enter your password"
               type="password"
               className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none
-                         focus:ring-2 focus:ring-[var(--color-primary-accent)] transition"
+                         focus:ring-2 focus:ring-gray-200 transition text-amber-100"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required

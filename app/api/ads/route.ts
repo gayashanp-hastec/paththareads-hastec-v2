@@ -71,6 +71,22 @@ export async function GET() {
           is_priority: true,
         },
       },
+
+      payment_ads: {
+        orderBy: { created_at: "desc" },
+        take: 1, // latest payment only
+        select: {
+          id: true,
+          file_path: true,
+          original_filename: true,
+          amount: true,
+          payment_date: true,
+          verified_by: true,
+          status: true,
+          remarks: true,
+          created_at: true,
+        },
+      },
     },
     orderBy: {
       created_at: "desc",
@@ -132,6 +148,20 @@ export async function GET() {
             is_int_fc: ad.classified_ads[0].is_int_fc,
             is_int_highlight: ad.classified_ads[0].is_int_highlight,
             is_priority: ad.classified_ads[0].is_priority,
+          }
+        : null,
+
+    payment:
+      ad.payment_ads.length > 0
+        ? {
+            amount: ad.payment_ads[0].amount,
+            status: ad.payment_ads[0].status,
+            payment_date: ad.payment_ads[0].payment_date,
+            verified_by: ad.payment_ads[0].verified_by,
+            remarks: ad.payment_ads[0].remarks,
+            file_path: ad.payment_ads[0].file_path,
+            original_filename: ad.payment_ads[0].original_filename,
+            created_at: ad.payment_ads[0].created_at,
           }
         : null,
   }));

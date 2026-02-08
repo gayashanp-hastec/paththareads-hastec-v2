@@ -37,6 +37,7 @@ interface Advertisement {
   background_color?: boolean | null;
   post_in_web?: boolean | null;
   upload_image?: string | null;
+  uploaded_images?: string[] | null;
 
   price?: number | null;
   status: string;
@@ -48,7 +49,7 @@ interface Advertisement {
     color_option: string;
     has_artwork: boolean;
     need_artwork: boolean;
-    no_of_boxes: number;
+    no_of_boxes: number; // only exists in set 1
   } | null;
 
   classified_ad?: {
@@ -62,7 +63,18 @@ interface Advertisement {
     is_co_paper: boolean;
     is_int_bw: boolean;
     is_int_fc: boolean;
-    is_int_highlight: boolean;
+    is_int_highlight?: boolean; // only exists in set 1
+  } | null;
+
+  payment?: {
+    amount?: number | null;
+    status?: string | null;
+    payment_date?: string | null;
+    verified_by?: string | null;
+    remarks?: string | null;
+    file_path: string | null;
+    original_filename?: string | null;
+    created_at: string;
   } | null;
 }
 
@@ -77,6 +89,10 @@ export default function AdminAdvertisements() {
   const [editedText, setEditedText] = useState("");
   const [originalText, setOriginalText] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [requestPriceChange, setRequestPriceChange] = useState(false);
+  const [newPrice, setNewPrice] = useState("");
+  const [priceReason, setPriceReason] = useState("");
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
   const ITEMS_PER_PAGE = 15;
 
   const [requestImageChange, setRequestImageChange] = useState(false);
@@ -312,6 +328,9 @@ export default function AdminAdvertisements() {
     });
 
     const blob = await res.blob();
+    if (res.status !== 400) {
+      updateStatus("Sent to Print");
+    }
     const url = URL.createObjectURL(blob);
     window.open(url, "_blank");
   };
@@ -417,6 +436,7 @@ export default function AdminAdvertisements() {
                     //   }
                     // }}
                     onClick={() => {
+                      console.log(selectedAd);
                       openModal(ad);
                     }}
                     className="hover:bg-blue-50 cursor-pointer border-b"
@@ -524,246 +544,300 @@ export default function AdminAdvertisements() {
                   </button>
                 </div>
               </div>
+              <div className="flex max-h-[60vh] flex-col bg-white rounded-2xl shadow-xl">
+                {/* SCROLLABLE CONTENT */}
+                <div className="flex-1 overflow-y-auto overscroll-contain">
+                  {selectedAd && (
+                    <>
+                      {/* CONTENT */}
+                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-8">
+                        {/* LEFT: DETAILS */}
+                        <div className="lg:col-span-1 space-y-4 text-sm">
+                          <div>
+                            <InfoRow
+                              label="Newspaper"
+                              value={selectedAd.newspaper_name}
+                            />
 
-              {/* Content */}
-              {selectedAd && (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-8">
-                  {/* Left: Details */}
-                  <div className="lg:col-span-1 space-y-4 text-sm">
-                    <div>
-                      <InfoRow
-                        label="Newspaper"
-                        value={selectedAd.newspaper_name}
-                      />
-                      <div className="flex">
-                        <span
-                          className={`rounded-full px-3 py-1 text-xm font-medium ${
-                            selectedAd.classified_ad?.is_publish_sin
-                              ? "bg-amber-900/20 text-amber-700"
-                              : ""
-                          }`}
-                        >
-                          {selectedAd.classified_ad?.is_publish_sin
-                            ? "Tamil" //later add newspaper names here
-                            : ""}
-                        </span>
-                        <span
-                          className={`rounded-full px-3 py-1 text-xm font-medium ${
-                            selectedAd.classified_ad?.is_publish_eng
-                              ? "bg-blue-500/20 text-blue-500"
-                              : ""
-                          }`}
-                        >
-                          {selectedAd.classified_ad?.is_publish_eng
-                            ? "English" //later add newspaper names here
-                            : ""}
-                        </span>
-                        <span
-                          className={`rounded-full px-3 py-1 text-xm font-medium ${
-                            selectedAd.classified_ad?.is_publish_tam
-                              ? "bg-yellow-500/20 text-yellow-500"
-                              : ""
-                          }`}
-                        >
-                          {selectedAd.classified_ad?.is_publish_tam
-                            ? "Tamil" //later add newspaper names here
-                            : ""}
-                        </span>
+                            <div className="flex flex-wrap gap-2 mt-2">
+                              {selectedAd.classified_ad?.is_publish_sin && (
+                                <span className="rounded-full px-3 py-1 text-xs font-medium bg-amber-900/20 text-amber-700">
+                                  Sinhala
+                                </span>
+                              )}
 
-                        {/* sinhala and english both */}
-                        <span
-                          className={`rounded-full px-3 py-1 text-xm font-medium ${
-                            selectedAd.classified_ad?.is_publish_sin_eng
-                              ? "bg-yellow-500/20 text-yellow-500"
-                              : ""
-                          }`}
-                        >
-                          {selectedAd.classified_ad?.is_publish_sin_eng
-                            ? "Sinhala & English" //later add newspaper names here
-                            : ""}
-                        </span>
+                              {selectedAd.classified_ad?.is_publish_eng && (
+                                <span className="rounded-full px-3 py-1 text-xs font-medium bg-blue-500/20 text-blue-500">
+                                  English
+                                </span>
+                              )}
 
-                        <span
-                          className={`rounded-full px-3 py-1 text-xm font-medium ${
-                            selectedAd.classified_ad?.is_publish_sin_tam
-                              ? "bg-yellow-500/20 text-yellow-500"
-                              : ""
-                          }`}
-                        >
-                          {selectedAd.classified_ad?.is_publish_sin_tam
-                            ? "Sinhala & Tamil" //later add newspaper names here
-                            : ""}
-                        </span>
+                              {selectedAd.classified_ad?.is_publish_tam && (
+                                <span className="rounded-full px-3 py-1 text-xs font-medium bg-yellow-500/20 text-yellow-600">
+                                  Tamil
+                                </span>
+                              )}
 
-                        <span
-                          className={`rounded-full px-3 py-1 text-xm font-medium ${
-                            selectedAd.classified_ad?.is_publish_eng_tam
-                              ? "bg-yellow-500/20 text-yellow-500"
-                              : ""
-                          }`}
-                        >
-                          {selectedAd.classified_ad?.is_publish_eng_tam
-                            ? "English & Tamil" //later add newspaper names here
-                            : ""}
-                        </span>
-                      </div>
-                    </div>
+                              {selectedAd.classified_ad?.is_publish_sin_eng && (
+                                <span className="rounded-full px-3 py-1 text-xs font-medium bg-purple-500/20 text-purple-600">
+                                  Sinhala & English
+                                </span>
+                              )}
 
-                    {selectedAd.publish_date && (
-                      <>
-                        <InfoRow
-                          label="Date to be Published"
-                          value={formatPublishDate(selectedAd.publish_date)}
-                        />
-                      </>
-                    )}
-                    <InfoRow label="Ad Type" value={selectedAd.ad_type} />
-                    {selectedAd.casual_ad && (
-                      <div>
-                        <span
-                          className={`rounded-full px-3 py-1 text-xm font-medium ${
-                            selectedAd.casual_ad?.no_of_boxes > 0
-                              ? "bg-green-500/20 text-green-600"
-                              : "bg-yellow-500/20 text-orange-800"
-                          }`}
-                        >
-                          {selectedAd.casual_ad?.no_of_boxes > 0 &&
-                          selectedAd.casual_ad.ad_size === ""
-                            ? "Box Ad"
-                            : "Column Ad"}
-                        </span>
-                      </div>
-                    )}
-                    <InfoRow
-                      label="Category"
-                      value={selectedAd.classified_category}
-                    />
-                    <InfoRow
-                      label="Subcategory"
-                      value={selectedAd.subcategory}
-                    />
-                    {selectedAd.ad_type === "casual" &&
-                      selectedAd.casual_ad && (
-                        <>
+                              {selectedAd.classified_ad?.is_publish_sin_tam && (
+                                <span className="rounded-full px-3 py-1 text-xs font-medium bg-green-500/20 text-green-600">
+                                  Sinhala & Tamil
+                                </span>
+                              )}
+
+                              {selectedAd.classified_ad?.is_publish_eng_tam && (
+                                <span className="rounded-full px-3 py-1 text-xs font-medium bg-pink-500/20 text-pink-600">
+                                  English & Tamil
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {selectedAd.publish_date && (
+                            <InfoRow
+                              label="Date to be Published"
+                              value={formatPublishDate(selectedAd.publish_date)}
+                            />
+                          )}
+
+                          <InfoRow label="Ad Type" value={selectedAd.ad_type} />
                           <InfoRow
-                            label="Ad Size"
-                            value={selectedAd.casual_ad.ad_size}
+                            label="Category"
+                            value={selectedAd.classified_category}
+                          />
+                          <InfoRow
+                            label="Subcategory"
+                            value={selectedAd.subcategory}
                           />
 
-                          {selectedAd.casual_ad.ad_size.toLowerCase() ===
-                            "custom" && (
+                          {selectedAd.casual_ad && (
                             <>
+                              <span
+                                className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${
+                                  selectedAd.casual_ad.no_of_boxes > 0
+                                    ? "bg-green-500/20 text-green-600"
+                                    : "bg-yellow-500/20 text-yellow-700"
+                                }`}
+                              >
+                                {selectedAd.casual_ad.no_of_boxes > 0 &&
+                                selectedAd.casual_ad.ad_size === ""
+                                  ? "Box Ad"
+                                  : "Column Ad"}
+                              </span>
+
                               <InfoRow
-                                label="No of Columns"
-                                value={selectedAd.casual_ad.no_of_columns.toString()}
+                                label="Ad Size"
+                                value={selectedAd.casual_ad.ad_size}
                               />
+
+                              {selectedAd.casual_ad.ad_size.toLowerCase() ===
+                                "custom" && (
+                                <>
+                                  <InfoRow
+                                    label="No of Columns"
+                                    value={selectedAd.casual_ad.no_of_columns.toString()}
+                                  />
+                                  <InfoRow
+                                    label="Ad Height (cm)"
+                                    value={selectedAd.casual_ad.ad_height.toString()}
+                                  />
+                                </>
+                              )}
+
                               <InfoRow
-                                label="Ad height (cm)"
-                                value={selectedAd.casual_ad.ad_height.toString()}
+                                label="Color Option"
+                                value={selectedAd.casual_ad.color_option}
                               />
+
+                              {(selectedAd.casual_ad.has_artwork ||
+                                selectedAd.casual_ad.need_artwork) && (
+                                <span
+                                  className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${
+                                    selectedAd.casual_ad.has_artwork
+                                      ? "bg-green-500/20 text-green-600"
+                                      : "bg-red-500/20 text-red-600"
+                                  }`}
+                                >
+                                  {selectedAd.casual_ad.has_artwork
+                                    ? "Has Artwork"
+                                    : "Need Artwork"}
+                                </span>
+                              )}
                             </>
                           )}
 
-                          <InfoRow
-                            label="Color Option"
-                            value={selectedAd.casual_ad.color_option}
-                          />
+                          {selectedAd.price && (
+                            <InfoRow
+                              label="Price"
+                              value={String(selectedAd.price)}
+                            />
+                          )}
 
-                          <div>
-                            <span
-                              className={`rounded-full px-3 py-1 text-xm font-medium ${
-                                selectedAd.casual_ad.has_artwork
-                                  ? "bg-green-500/20 text-green-300"
-                                  : selectedAd.casual_ad.need_artwork
-                                    ? "bg-red-500/20 text-red-300"
-                                    : ""
-                              }`}
-                            >
-                              {selectedAd.casual_ad.has_artwork
-                                ? "Has Artwork"
-                                : selectedAd.casual_ad.need_artwork
-                                  ? "Need Artwork"
-                                  : ""}
+                          {selectedAd.payment &&
+                            selectedAd.status === "PaymentPending" && (
+                              <button
+                                key={selectedAd.payment.file_path}
+                                type="button"
+                                onClick={() =>
+                                  setPreviewImage(selectedAd.payment.file_path)
+                                }
+                                className="rounded-xl p-2 bg-amber-300"
+                              >
+                                View Payment Receipt
+                              </button>
+                            )}
+
+                          {selectedAd.classified_ad?.is_priority && (
+                            <span className="inline-block rounded-full px-3 py-1 text-xs font-medium bg-red-500/20 text-red-500">
+                              Priority
                             </span>
+                          )}
+
+                          {selectedAd.special_notes && (
+                            <div>
+                              <p className="font-medium text-[var(--color-text-dark-highlight)]">
+                                Special Notes
+                              </p>
+                              <p className="mt-1 text-gray-600 leading-relaxed">
+                                {selectedAd.special_notes}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* RIGHT: AD CONTENT */}
+                        <div className="lg:col-span-2">
+                          <p className="mb-2 text-sm font-medium text-[var(--color-text-dark-highlight)]">
+                            Advertisement Content
+                          </p>
+
+                          <textarea
+                            value={editedText}
+                            onChange={(e) => setEditedText(e.target.value)}
+                            readOnly={[
+                              "Print",
+                              "Approved",
+                              "Declined",
+                              "Cancelled",
+                              "PaymentPending",
+                            ].includes(selectedAd.status || "")}
+                            className={`w-full h-56 rounded-xl border p-4 text-gray-800 resize-none focus:ring-2 focus:ring-[var(--color-primary)] outline-none ${
+                              [
+                                "Print",
+                                "Approved",
+                                "Declined",
+                                "Cancelled",
+                                "PaymentPending",
+                              ].includes(selectedAd.status || "")
+                                ? "bg-gray-100 cursor-not-allowed"
+                                : ""
+                            }`}
+                          />
+                        </div>
+                      </div>
+
+                      {/* IMAGES */}
+                      {selectedAd.uploaded_images &&
+                        selectedAd.uploaded_images?.length > 0 && (
+                          <div className="px-8 py-4 border-t space-y-4">
+                            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                              {selectedAd.uploaded_images.map((url, index) => (
+                                <button
+                                  key={url}
+                                  type="button"
+                                  onClick={() => setPreviewImage(url)}
+                                  className="group"
+                                >
+                                  <img
+                                    src={url}
+                                    alt={`Uploaded image ${index + 1}`}
+                                    className="w-full h-32 object-cover rounded-lg border group-hover:opacity-90 transition"
+                                  />
+                                  <p className="mt-1 text-xs text-center text-gray-500">
+                                    Click to preview
+                                  </p>
+                                </button>
+                              ))}
+                            </div>
+
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm text-gray-500">
+                                {selectedAd.uploaded_images.length} image(s)
+                                uploaded
+                              </span>
+
+                              <label className="flex items-center gap-2 text-sm">
+                                <input
+                                  type="checkbox"
+                                  checked={requestImageChange}
+                                  onChange={(e) =>
+                                    setRequestImageChange(e.target.checked)
+                                  }
+                                />
+                                Request Image Change
+                              </label>
+                            </div>
                           </div>
-                        </>
-                      )}
+                        )}
 
-                    {selectedAd.classified_ad?.is_priority && (
-                      <div>
-                        <span className="rounded-full px-3 py-1 text-xm font-medium bg-red-500/20 text-red-500">
-                          Priority
-                        </span>
+                      {/* PRICE CHANGE */}
+                      <div className="px-8 py-4 border-t">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                          <div>
+                            <label className="flex items-center gap-2 text-sm font-medium">
+                              <input
+                                type="checkbox"
+                                checked={requestPriceChange}
+                                onChange={(e) =>
+                                  setRequestPriceChange(e.target.checked)
+                                }
+                                className="accent-[var(--color-primary)]"
+                              />
+                              Request Price Change
+                            </label>
+                            <p className="mt-2 text-xs text-gray-500">
+                              Request a revision to the advertisement price.
+                            </p>
+                          </div>
+
+                          {requestPriceChange && (
+                            <div className="md:col-span-2 space-y-4 rounded-xl border border-yellow-200 bg-yellow-50 p-4">
+                              <div>
+                                <p className="text-sm font-medium">New Price</p>
+                                <input
+                                  type="number"
+                                  value={newPrice}
+                                  onChange={(e) => setNewPrice(e.target.value)}
+                                  className="mt-1 w-full rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-yellow-400"
+                                />
+                              </div>
+
+                              <div>
+                                <p className="text-sm font-medium">
+                                  Reason for Price Change
+                                </p>
+                                <textarea
+                                  value={priceReason}
+                                  onChange={(e) =>
+                                    setPriceReason(e.target.value)
+                                  }
+                                  rows={3}
+                                  className="mt-1 w-full rounded-lg border px-3 py-2 text-sm resize-none outline-none focus:ring-2 focus:ring-yellow-400"
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    )}
-
-                    {selectedAd.special_notes && (
-                      <div>
-                        <p className="font-medium text-[var(--color-text-dark-highlight)]">
-                          Special Notes
-                        </p>
-                        <p className="mt-1 text-gray-600 leading-relaxed">
-                          {selectedAd.special_notes}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Right: Editable Text */}
-                  <div className="lg:col-span-2">
-                    <p className="mb-2 text-sm font-medium text-[var(--color-text-dark-highlight)]">
-                      Advertisement Content
-                    </p>
-                    <textarea
-                      value={editedText}
-                      onChange={(e) => setEditedText(e.target.value)}
-                      readOnly={[
-                        "Print",
-                        "Approved",
-                        "Declined",
-                        "Cancelled",
-                        "PaymentPending",
-                      ].includes(selectedAd?.status || "")}
-                      className={`w-full h-56 rounded-xl border border-gray-300 p-4 text-gray-800
-      focus:ring-2 focus:ring-[var(--color-primary)] outline-none resize-none
-      ${
-        [
-          "Print",
-          "Approved",
-          "Declined",
-          "Cancelled",
-          "PaymentPending",
-        ].includes(selectedAd?.status || "")
-          ? "bg-gray-100 cursor-not-allowed"
-          : ""
-      }`}
-                    />
-                  </div>
+                    </>
+                  )}
                 </div>
-              )}
-
-              {/* Image */}
-              {selectedAd.upload_image && (
-                <div className="px-8 py-4 flex items-center justify-between gap-4 border-t">
-                  <a
-                    href={selectedAd.upload_image}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm font-medium text-[var(--color-primary-dark)] hover:underline"
-                  >
-                    View Uploaded Image
-                  </a>
-
-                  <label className="flex items-center gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      checked={requestImageChange}
-                      onChange={(e) => setRequestImageChange(e.target.checked)}
-                    />
-                    Request Image Change
-                  </label>
-                </div>
-              )}
+              </div>
 
               {/* Footer Actions */}
               {/* Footer Actions */}
@@ -881,7 +955,7 @@ export default function AdminAdvertisements() {
                       Print
                     </button>
                   )} */}
-                  {["Approved"].includes(selectedAd.status) && (
+                  {["PaymentPending"].includes(selectedAd.status) && (
                     <button
                       onClick={handlePrint}
                       className={`${ACTION_BTN_CLASS} bg-[var(--color-primary-dark)] text-white hover:bg-[var(--color-primary)]`}
@@ -892,6 +966,33 @@ export default function AdminAdvertisements() {
                   )}
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {previewImage && (
+          <div
+            className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center px-4"
+            onClick={() => setPreviewImage(null)}
+          >
+            <div
+              className="relative max-w-4xl w-full"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Close button */}
+              <button
+                type="button"
+                onClick={() => setPreviewImage(null)}
+                className="absolute -top-10 right-0 text-white text-sm hover:underline"
+              >
+                Close ✕
+              </button>
+
+              <img
+                src={previewImage}
+                alt="Image preview"
+                className="w-full max-h-[80vh] object-contain rounded-lg shadow-lg bg-white"
+              />
             </div>
           </div>
         )}

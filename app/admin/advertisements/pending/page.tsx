@@ -9,7 +9,13 @@ interface AdminAdvertisementsPending {
   reference_number: string;
 
   newspaper_name: string;
+  language?: string;
+  id?: string;
+
   advertiser_name: string;
+  advertiser_nic?: string;
+  advertiser_phone?: string;
+  advertiser_address?: string;
 
   ad_type: string;
   classified_category?: string;
@@ -37,6 +43,7 @@ interface AdminAdvertisementsPending {
     color_option: string;
     has_artwork: boolean;
     need_artwork: boolean;
+    no_of_boxes: number; // only exists in set 1
   } | null;
 
   classified_ad?: {
@@ -50,6 +57,7 @@ interface AdminAdvertisementsPending {
     is_co_paper: boolean;
     is_int_bw: boolean;
     is_int_fc: boolean;
+    is_int_highlight?: boolean; // only exists in set 1
   } | null;
 }
 

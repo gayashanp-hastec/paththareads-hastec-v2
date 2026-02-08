@@ -783,9 +783,16 @@ export default function StepSelectAdType({
                     <button
                       type="button"
                       onClick={decreaseMonth}
-                      className="text-[var(--color-primary-dark)] font-bold"
+                      className="text-[var(--color-primary-dark)]"
                     >
-                      &#8592; {/* ← Left arrow */}
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        className="w-6 h-6"
+                        fill="#160f29"
+                      >
+                        <path d="M14.7 5.3a1 1 0 0 1 0 1.4L9.4 12l5.3 5.3a1 1 0 1 1-1.4 1.4l-6-6a1 1 0 0 1 0-1.4l6-6a1 1 0 0 1 1.4 0z" />
+                      </svg>
                     </button>
                     <span className="font-medium">
                       {date.toLocaleString("default", {
@@ -796,9 +803,16 @@ export default function StepSelectAdType({
                     <button
                       type="button"
                       onClick={increaseMonth}
-                      className="text-[var(--color-primary-dark)] font-bold"
+                      className="text-[var(--color-primary-dark)]"
                     >
-                      &#8594; {/* → Right arrow */}
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        className="w-6 h-6"
+                        fill="#160f29"
+                      >
+                        <path d="M9.3 18.7a1 1 0 0 1 0-1.4L14.6 12 9.3 6.7a1 1 0 1 1 1.4-1.4l6 6a1 1 0 0 1 0 1.4l-6 6a1 1 0 0 1-1.4 0z" />
+                      </svg>
                     </button>
                   </div>
                 )}
@@ -829,19 +843,11 @@ export default function StepSelectAdType({
                     setSelectedCategory(e.target.value);
                     updateFormData({ classifiedCategory: e.target.value });
                     setSelectedSubCategory("");
-                    // console.log(formData.classifiedCategory);
-                    // console.log("cat: ", selectedCategory);
-                    // console.log("sub: ", selectedSubCategory);
-                    // console.log("type: ", selectedAdType.key);
                   }}
                   className="border border-gray-300 rounded-lg p-2 w-full focus:ring-2 focus:ring-primary-accent"
                 >
                   <option value="">Select Category</option>
-                  {/* {selectedAdType.categories.map((cat) => (
-                  <option key={cat.category} value={cat.category}>
-                    {cat.category}
-                  </option>
-                ))} */}
+
                   {selectedAdType.key === "classified" && (
                     <>
                       <option value="Real Estate">Real Estate</option>
@@ -886,21 +892,6 @@ export default function StepSelectAdType({
                       (දැන්වීම් ස්වභාවය)
                     </span>{" "}
                   </label>
-                  {/* <select
-                    value={selectedSubCategory}
-                    onChange={(e) => {
-                      setSelectedSubCategory(e.target.value);
-                      updateFormData({ subCategory: e.target.value });
-                    }}
-                    className="border border-gray-300 rounded-lg p-2 w-full focus:ring-2 focus:ring-primary-accent"
-                  >
-                    <option value="">Select Subcategory</option>
-                    {subCategoryOptions.map((sub) => (
-                      <option key={sub} value={sub}>
-                        {sub}
-                      </option>
-                    ))}
-                  </select> */}
                   <select
                     value={formData.subCategory ?? ""}
                     onChange={(e) => {
@@ -1054,14 +1045,7 @@ export default function StepSelectAdType({
                       e.target.value = "";
                     }
                   }}
-                  className="w-full border border-gray-300 rounded-lg p-3
-    focus:ring-2 focus:ring-primary-accent
-    file:mr-4 file:py-2 file:px-4
-    file:rounded-full file:border-0
-    file:bg-primary-accent file:text-white
-    file:cursor-pointer
-    hover:file:bg-primary-accent/90
-    transition"
+                  className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-primary-accent file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-primary-accent file:text-white file:cursor-pointer hover:file:bg-primary-accent/90 transition"
                 />
 
                 {/* Optional status text (non-breaking, visual only) */}
@@ -1090,11 +1074,7 @@ export default function StepSelectAdType({
                               );
                               updateFormData({ uploadedImages: updated });
                             }}
-                            className="absolute top-2 right-2
-            bg-black/70 text-white text-xs
-            rounded-full px-2 py-1
-            opacity-0 group-hover:opacity-100
-            transition"
+                            className="absolute top-2 right-2  bg-black/70 text-white text-xs  rounded-full px-2 py-1  opacity-0 group-hover:opacity-100  transition"
                           >
                             ✕
                           </button>
@@ -1171,15 +1151,11 @@ export default function StepSelectAdType({
 
                     {/* Custom switch */}
                     <span
-                      className={`w-11 h-6 rounded-full relative transition-colors duration-300
-      ${formData.isPlacementEnabled ? "bg-[var(--color-primary-dark)]" : "bg-gray-300"}
-    `}
+                      className={`w-11 h-6 rounded-full relative transition-colors duration-300 ${formData.isPlacementEnabled ? "bg-[var(--color-primary-dark)]" : "bg-gray-300"}`}
                     >
                       {/* The knob */}
                       <span
-                        className={`absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-300
-        ${formData.isPlacementEnabled ? "translate-x-5" : "translate-x-0"}
-      `}
+                        className={`absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-300 ${formData.isPlacementEnabled ? "translate-x-5" : "translate-x-0"}`}
                       />
                     </span>
                   </label>
@@ -1448,7 +1424,7 @@ export default function StepSelectAdType({
               )}
             </div>
 
-            {/* Special Notes */}
+            {/* Special Notes non-casual */}
             <div className=" md:mt-8">
               <label className="block font-medium mb-1">
                 Special Notes{" "}
@@ -1506,46 +1482,37 @@ export default function StepSelectAdType({
                           updateFormData({ sectionId: section.id });
                           console.log("check section id: ", formData.sectionId);
                         }}
-                        className={`
-    min-w-[45%] sm:min-w-[45%] md:min-w-[23%] lg:min-w-[23%]
-    h-[110px] 
-    rounded-xl
-    border
-    px-4
-    py-6
-    flex flex-col items-center justify-center
-    text-center
-    transition-colors transition-shadow duration-200
-    focus:outline-none
-    ${
-      !section.isAvailable
-        ? `
-          bg-gray-50
-          border-gray-200
-          text-gray-400
-          cursor-not-allowed
-        `
-        : isSelected
-          ? `
-          bg-white
-          border-[var(--color-primary)]
-          shadow-[0_0_0_1px_var(--color-primary)]
-        `
-          : `
-          bg-white
-          border-gray-300
-          hover:border-[var(--color-primary-accent)]
-        `
-    }
-  `}
+                        className={` min-w-[45%] sm:min-w-[45%] md:min-w-[23%] lg:min-w-[23%] h-[110px]  rounded-xl border px-4 py-6 flex flex-col items-center justify-center text-center transition-colors transition-shadow duration-200 focus:outline-none ${
+                          !section.isAvailable
+                            ? `  bg-gray-50  border-gray-200  text-gray-400  cursor-not-allowed`
+                            : isSelected
+                              ? ` bg-white border-[var(--color-primary)] shadow-[0_0_0_1px_var(--color-primary)]`
+                              : ` bg-white border-gray-300 hover:border-[var(--color-primary-accent)]`
+                        }`}
                       >
-                        <h4 className="font-semibold text-[var(--color-primary-dark)]">
-                          {section.name}
+                        <h4 className="font-bold text-[var(--color-primary-dark)]">
+                          <span
+                            className="text-sm ml-1"
+                            style={{
+                              fontFamily: "var(--font-sinhala), sans-serif",
+                              fontWeight: "bold",
+                            }}
+                          >
+                            {section.name}
+                          </span>
                         </h4>
 
                         {section.extraNotes && (
                           <p className="mt-1 text-xs text-[var(--color-text-highlight)] text-center">
-                            {section.extraNotes}
+                            <span
+                              className="text-sm ml-1"
+                              style={{
+                                fontFamily: "var(--font-sinhala), sans-serif",
+                                fontSize: "10px",
+                              }}
+                            >
+                              {section.extraNotes}
+                            </span>
                           </p>
                         )}
 
@@ -1645,7 +1612,7 @@ export default function StepSelectAdType({
                       className={`px-4 py-2 text-sm font-semibold transition ${
                         formData.hasOwnArtwork
                           ? "bg-[var(--color-primary-accent)] text-white"
-                          : "bg-white text-[var(--color-primary-dark)] hover:bg-[var(--color-primary-accent)]/20"
+                          : "bg-white text-[var(--color-primary-dark)] hover:bg-primary-accent/20"
                       }`}
                     >
                       Yes
@@ -1771,6 +1738,115 @@ export default function StepSelectAdType({
                         </button>
                       </div>
                     </div>
+
+                    {formData.needArtwork && (
+                      <>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          onChange={async (e) => {
+                            const files = Array.from(e.target.files ?? []);
+                            if (!files.length) return;
+
+                            // Enforce max count
+                            const remainingSlots =
+                              MAX_FILES -
+                              (formData.uploadedImages?.length ?? 0);
+
+                            if (remainingSlots <= 0) {
+                              alert("You can upload a maximum of 8 images.");
+                              return;
+                            }
+
+                            const selectedFiles = files.slice(
+                              0,
+                              remainingSlots,
+                            );
+
+                            // Size validation
+                            const oversized = selectedFiles.find(
+                              (file) => file.size > MAX_SIZE,
+                            );
+                            if (oversized) {
+                              alert("Each image must be under 3 MB.");
+                              return;
+                            }
+
+                            try {
+                              updateFormData({ uploading: true });
+
+                              const uploadedUrls: string[] = [];
+
+                              for (const file of selectedFiles) {
+                                const data =
+                                  await uploadImageToCloudinary(file);
+                                uploadedUrls.push(data.secure_url);
+                              }
+
+                              updateFormData({
+                                uploadedImages: [
+                                  ...(formData.uploadedImages ?? []),
+                                  ...uploadedUrls,
+                                ],
+                                uploading: false,
+                              });
+                            } catch (error) {
+                              console.error(error);
+                              updateFormData({ uploading: false });
+                              alert("One or more images failed to upload.");
+                            } finally {
+                              // allow re-selecting same file again
+                              e.target.value = "";
+                            }
+                          }}
+                          className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-primary-accent file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-primary-accent file:text-white file:cursor-pointer hover:file:bg-primary-accent/90 transition"
+                        />
+
+                        {/* Optional status text (non-breaking, visual only) */}
+                        {formData.uploading && (
+                          <p className="text-sm text-gray-500 mt-2">
+                            Uploading images…
+                          </p>
+                        )}
+                        {formData.uploadedImages?.length > 0 && (
+                          <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
+                            {formData.uploadedImages.map(
+                              (url: string, index: number) => (
+                                <div key={url} className="relative group">
+                                  <img
+                                    src={url}
+                                    alt={`Uploaded ${index + 1}`}
+                                    className="w-full h-32 object-cover rounded-lg border"
+                                  />
+
+                                  {/* Remove button */}
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const updated =
+                                        formData.uploadedImages.filter(
+                                          (_: any, i: any) => i !== index,
+                                        );
+                                      updateFormData({
+                                        uploadedImages: updated,
+                                      });
+                                    }}
+                                    className="absolute top-2 right-2  bg-black/70 text-white text-xs rounded-full px-2 py-1 opacity-0 group-hover:opacity-100 transition"
+                                  >
+                                    ✕
+                                  </button>
+                                </div>
+                              ),
+                            )}
+                          </div>
+                        )}
+
+                        <p className="text-sm text-gray-500 mt-2">
+                          {formData.uploadedImages.length} / 8 images uploaded
+                        </p>
+                      </>
+                    )}
                   </>
                 )}
 
@@ -1844,15 +1920,14 @@ export default function StepSelectAdType({
                           e.target.value = "";
                         }
                       }}
-                      className="w-full border border-gray-300 rounded-lg p-3
-    focus:ring-2 focus:ring-primary-accent
-    file:mr-4 file:py-2 file:px-4
-    file:rounded-full file:border-0
-    file:bg-primary-accent file:text-white
-    file:cursor-pointer
-    hover:file:bg-primary-accent/90
-    transition"
+                      className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-primary-accent file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-primary-accent file:text-white file:cursor-pointer hover:file:bg-primary-accent/90 transition"
                     />
+
+                    {selectedAdType.extra_notes1 && (
+                      <p className="text-xs text-gray-500">
+                        {selectedAdType.extra_notes1}
+                      </p>
+                    )}
 
                     {/* Optional status text (non-breaking, visual only) */}
                     {formData.uploading && (
@@ -1881,11 +1956,7 @@ export default function StepSelectAdType({
                                     );
                                   updateFormData({ uploadedImages: updated });
                                 }}
-                                className="absolute top-2 right-2
-            bg-black/70 text-white text-xs
-            rounded-full px-2 py-1
-            opacity-0 group-hover:opacity-100
-            transition"
+                                className="absolute top-2 right-2  bg-black/70 text-white text-xs rounded-full px-2 py-1 opacity-0 group-hover:opacity-100 transition"
                               >
                                 ✕
                               </button>
@@ -1898,12 +1969,6 @@ export default function StepSelectAdType({
                     <p className="text-sm text-gray-500 mt-2">
                       {formData.uploadedImages.length} / 8 images uploaded
                     </p>
-
-                    {selectedAdType.extra_notes1 && (
-                      <p className="text-xs text-gray-500">
-                        {selectedAdType.extra_notes1}
-                      </p>
-                    )}
                   </div>
                 )}
               </>
@@ -2352,6 +2417,30 @@ export default function StepSelectAdType({
                     )}
                   </>
                 )}
+
+                {/* Special Notes casual */}
+                <div className=" md:mt-8">
+                  <label className="block font-medium mb-1">
+                    Special Notes{" "}
+                    <span
+                      className="text-sm"
+                      style={{
+                        fontFamily: "var(--font-sinhala), sans-serif",
+                      }}
+                    >
+                      (විශේෂ සටහන්)
+                    </span>{" "}
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={formData.specialNotes}
+                    placeholder="Specific Page, Position on a Page etc (නිශ්චිත පිටුව, පිටුවක පිහිටීම ආදිය)"
+                    onChange={(e) =>
+                      updateFormData({ specialNotes: e.target.value })
+                    }
+                    className="border border-gray-300 rounded-lg p-2 w-full focus:ring-2 focus:ring-primary-accent resize-none"
+                  />
+                </div>
               </>
             )}
           </>
