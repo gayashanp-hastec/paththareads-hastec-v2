@@ -816,16 +816,13 @@ export async function POST(req: Request) {
         // });
 
         if (casual_ad?.no_of_boxes > 0) {
-          page.drawLine({
-            start: { x: 487 - CROSS_SIZE, y: 680 - CROSS_SIZE },
-            end: { x: 487 + CROSS_SIZE, y: 680 + CROSS_SIZE },
-            thickness: 1,
-          });
-
-          page.drawLine({
-            start: { x: 487 - CROSS_SIZE, y: 680 + CROSS_SIZE },
-            end: { x: 487 + CROSS_SIZE, y: 680 - CROSS_SIZE },
-            thickness: 1,
+          page.drawText("Box: " + String(casual_ad?.no_of_boxes ?? ""), {
+            x: 243.35,
+            y: 530.8,
+            size: 10,
+            font: SINHALA_REGEX.test(String(casual_ad?.ad_size))
+              ? sinhalaFont
+              : englishFont,
           });
         }
 
