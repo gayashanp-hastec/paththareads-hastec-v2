@@ -412,6 +412,16 @@ model ad_price_change_history {
   @@index([reference_number], map: "idx_ad_price_change_reference")
 }
 
+model promo_ads {
+  id             Int      @id @default(autoincrement())
+  ad_name        String?  @db.VarChar(255)
+  ad_image       String?
+  ad_description String?
+  extra_notes_1  String?
+  is_active      Boolean? @default(true)
+  is_clickable   Boolean? @default(false)
+}
+
 enum role_enum {
   SUPER_ADMIN
   ADMIN
