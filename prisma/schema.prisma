@@ -420,6 +420,7 @@ model promo_ads {
   extra_notes_1  String?
   is_active      Boolean? @default(true)
   is_clickable   Boolean? @default(false)
+  ad_public_id   Int?
 }
 
 enum role_enum {
