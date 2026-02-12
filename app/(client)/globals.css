@@ -200,3 +200,7 @@ button:active {
   background-color: transparent;
   box-shadow: none;
 } */
+
+.carousel-container:hover .carousel-track {
+  animation-play-state: paused;
+}

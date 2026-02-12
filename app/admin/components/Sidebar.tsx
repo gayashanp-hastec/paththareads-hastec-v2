@@ -67,6 +67,7 @@ export default function Sidebar() {
       ],
     },
     { name: "Newspapers", href: "/admin/newspapers" },
+    { name: "Promotions/Offers", href: "/admin/promo" },
     { name: "Users", href: "/admin/users" },
     {
       name: "Other Settings",

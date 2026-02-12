@@ -18,6 +18,7 @@ export async function POST(req: Request) {
     data: {
       ad_name: body.ad_name,
       ad_image: body.ad_image,
+      ad_public_id: body.ad_public_id,
       ad_description: body.ad_description,
       extra_notes_1: body.extra_notes_1,
       is_active: body.is_active,

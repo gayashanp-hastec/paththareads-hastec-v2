@@ -6,43 +6,42 @@ import Link from "next/link";
 import NP1LankadeepaModal from "./components/modals/NP1LankadeepaModal";
 import { ChevronUp } from "lucide-react";
 
+interface PromoAd {
+  id: number;
+  ad_name?: string;
+  ad_image?: string;
+  ad_description?: string;
+  is_active?: boolean;
+  is_clickable?: boolean;
+}
+
 export default function HomePage() {
   const [showAll, setShowAll] = useState(false);
   const [activeTab, setActiveTab] = useState("daily");
   const [activeModal, setActiveModal] = useState<number | null>(null);
   const [showTopBtn, setShowTopBtn] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [promos, setPromos] = useState<PromoAd[]>([]);
 
-  const newspaperTiles = [
-    "/np1.png",
-    "/np2.png",
-    "/np3.png",
-    "/np4.png",
-    "/np1.png",
-    "/newspaper6.png",
-    "/newspaper7.png",
-    "/newspaper8.png",
-    "/newspaper9.png",
-    "/newspaper10.png",
-    "/newspaper11.png",
-    "/newspaper12.png",
-    "/newspaper13.png",
-  ];
-  const newspaperSundayTiles = [
-    "/nps1.png",
-    "/nps2.png",
-    "/np3.png",
-    "/np4.png",
-    "/np1.png",
-    "/newspaper6.png",
-    "/newspaper7.png",
-    "/newspaper8.png",
-    "/newspaper9.png",
-    "/newspaper10.png",
-    "/newspaper11.png",
-    "/newspaper12.png",
-    "/newspaper13.png",
-  ];
+  useEffect(() => {
+    async function loadPromos() {
+      const res = await fetch("/api/promo");
+      const json = await res.json();
+
+      const activePromos = json.data.filter(
+        (p: PromoAd) => p.is_active && p.ad_image,
+      );
+
+      setPromos(activePromos);
+    }
+
+    loadPromos();
+  }, []);
+
+  const secondsPerSlide = 4; // adjust speed here
+
+  const animationDuration =
+    promos.length > 0 ? promos.length * secondsPerSlide : 20;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -59,12 +58,13 @@ export default function HomePage() {
     <main className="flex flex-1 flex-col gap-16 py-4">
       {/* ================= HERO / INTRO SECTION ================= */}
       <section
-        className="relative flex min-h-[90vh] w-full items-center bg-cover bg-center bg-no-repeat"
+        className="relative flex min-h-[90vh] w-full items-center bg-white bg-no-repeat bg-cover"
         style={{ backgroundImage: "url('/banner-4-maroon.png')" }}
       >
-        {/* Content Wrapper */}
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-10 px-6 py-16 md:flex-row md:items-center md:px-12">
-          {/* Left: Text */}
+          {/* Overlay */}
+          {/* <div className="absolute inset-0 bg-white/60"></div> */}
+          {/* LEFT SIDE */}
           <div className="flex flex-1 flex-col gap-6 text-white">
             <h1 className="text-4xl font-extrabold leading-tight tracking-tight md:text-6xl text-[var(--color-text)]">
               Advertise{" "}
@@ -88,7 +88,6 @@ export default function HomePage() {
               </span>
             </p>
 
-            {/* CTA Buttons */}
             <div className="flex flex-col gap-4 sm:flex-row">
               <Link
                 href="/post-ad"
@@ -106,9 +105,50 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Right: Reserved Visual Space */}
-          <div className="hidden flex-1 md:block" />
+          {/* RIGHT SIDE – VERTICAL AUTO CAROUSEL */}
+          <div className="flex flex-1 justify-center w-full">
+            <div className="carousel-container relative h-[520px] w-full max-w-md overflow-hidden rounded-2xl shadow-xl">
+              <div
+                className="carousel-track flex flex-col"
+                style={{ animationDuration: `${animationDuration}s` }}
+              >
+                {[...promos, ...promos].map((promo, index) => (
+                  <div key={index} className="p-2">
+                    <div className="aspect-video overflow-hidden rounded-xl">
+                      <img
+                        src={promo.ad_image}
+                        alt={promo.ad_name}
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
+
+        {/* Animation Styles */}
+        <style jsx>{`
+          .carousel-track {
+            animation-name: scrollVertical;
+            animation-timing-function: linear;
+            animation-iteration-count: infinite;
+          }
+
+          @keyframes scrollVertical {
+            0% {
+              transform: translateY(0%);
+            }
+            100% {
+              transform: translateY(-50%);
+            }
+          }
+
+          .carousel-container:hover .carousel-track {
+            animation-play-state: paused;
+          }
+        `}</style>
       </section>
 
       {/* ================= HOW TO SECTION ================= */}
