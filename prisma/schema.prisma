@@ -421,6 +421,7 @@ model promo_ads {
   is_active      Boolean? @default(true)
   is_clickable   Boolean? @default(false)
   ad_public_id   Int?
+  ad_public_id_2 String?
 }
 
 enum role_enum {
