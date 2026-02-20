@@ -320,9 +320,65 @@ export async function POST(req: Request) {
 
     if (publisherName === "wijeya_newspapers") {
       // Newspapers to publish it on
-      if (language === "SI") {
-        if (newspaper_id === "SUNDAY_LANKADEEPA") {
-          // Draw a cross
+
+      if (newspaper_id === "SUNDAY_LANKADEEPA") {
+        // Draw a cross
+        page.drawLine({
+          start: { x: 487 - CROSS_SIZE, y: 776 - CROSS_SIZE },
+          end: { x: 487 + CROSS_SIZE, y: 776 + CROSS_SIZE },
+          thickness: 1,
+        });
+
+        page.drawLine({
+          start: { x: 487 - CROSS_SIZE, y: 776 + CROSS_SIZE },
+          end: { x: 487 + CROSS_SIZE, y: 776 - CROSS_SIZE },
+          thickness: 1,
+        });
+
+        if (classified_ad?.is_publish_eng) {
+          page.drawLine({
+            start: { x: 487 - CROSS_SIZE, y: 693 - CROSS_SIZE },
+            end: { x: 487 + CROSS_SIZE, y: 693 + CROSS_SIZE },
+            thickness: 1,
+          });
+
+          page.drawLine({
+            start: { x: 487 - CROSS_SIZE, y: 693 + CROSS_SIZE },
+            end: { x: 487 + CROSS_SIZE, y: 693 - CROSS_SIZE },
+            thickness: 1,
+          });
+        }
+      }
+
+      if (newspaper_id === "DAILY_LANKADEEPA") {
+        // Draw a cross
+        page.drawLine({
+          start: { x: 487 - CROSS_SIZE, y: 757 - CROSS_SIZE },
+          end: { x: 487 + CROSS_SIZE, y: 757 + CROSS_SIZE },
+          thickness: 1,
+        });
+
+        page.drawLine({
+          start: { x: 487 - CROSS_SIZE, y: 757 + CROSS_SIZE },
+          end: { x: 487 + CROSS_SIZE, y: 757 - CROSS_SIZE },
+          thickness: 1,
+        });
+      }
+
+      if (newspaper_id === "SUNDAY_TIMES") {
+        page.drawLine({
+          start: { x: 487 - CROSS_SIZE, y: 692 - CROSS_SIZE },
+          end: { x: 487 + CROSS_SIZE, y: 692 + CROSS_SIZE },
+          thickness: 1,
+        });
+
+        page.drawLine({
+          start: { x: 487 - CROSS_SIZE, y: 692 + CROSS_SIZE },
+          end: { x: 487 + CROSS_SIZE, y: 692 - CROSS_SIZE },
+          thickness: 1,
+        });
+
+        if (classified_ad?.is_publish_sin) {
           page.drawLine({
             start: { x: 487 - CROSS_SIZE, y: 776 - CROSS_SIZE },
             end: { x: 487 + CROSS_SIZE, y: 776 + CROSS_SIZE },
@@ -334,65 +390,6 @@ export async function POST(req: Request) {
             end: { x: 487 + CROSS_SIZE, y: 776 - CROSS_SIZE },
             thickness: 1,
           });
-
-          if (classified_ad?.is_publish_eng) {
-            page.drawLine({
-              start: { x: 487 - CROSS_SIZE, y: 693 - CROSS_SIZE },
-              end: { x: 487 + CROSS_SIZE, y: 693 + CROSS_SIZE },
-              thickness: 1,
-            });
-
-            page.drawLine({
-              start: { x: 487 - CROSS_SIZE, y: 693 + CROSS_SIZE },
-              end: { x: 487 + CROSS_SIZE, y: 693 - CROSS_SIZE },
-              thickness: 1,
-            });
-          }
-        }
-
-        if (newspaper_id === "DAILY_LANKADEEPA") {
-          // Draw a cross
-          page.drawLine({
-            start: { x: 487 - CROSS_SIZE, y: 757 - CROSS_SIZE },
-            end: { x: 487 + CROSS_SIZE, y: 757 + CROSS_SIZE },
-            thickness: 1,
-          });
-
-          page.drawLine({
-            start: { x: 487 - CROSS_SIZE, y: 757 + CROSS_SIZE },
-            end: { x: 487 + CROSS_SIZE, y: 757 - CROSS_SIZE },
-            thickness: 1,
-          });
-        }
-      }
-
-      if (language === "EN") {
-        if (newspaper_id === "SUNDAY_TIMES") {
-          page.drawLine({
-            start: { x: 487 - CROSS_SIZE, y: 692 - CROSS_SIZE },
-            end: { x: 487 + CROSS_SIZE, y: 692 + CROSS_SIZE },
-            thickness: 1,
-          });
-
-          page.drawLine({
-            start: { x: 487 - CROSS_SIZE, y: 692 + CROSS_SIZE },
-            end: { x: 487 + CROSS_SIZE, y: 692 - CROSS_SIZE },
-            thickness: 1,
-          });
-
-          if (classified_ad?.is_publish_sin) {
-            page.drawLine({
-              start: { x: 487 - CROSS_SIZE, y: 776 - CROSS_SIZE },
-              end: { x: 487 + CROSS_SIZE, y: 776 + CROSS_SIZE },
-              thickness: 1,
-            });
-
-            page.drawLine({
-              start: { x: 487 - CROSS_SIZE, y: 776 + CROSS_SIZE },
-              end: { x: 487 + CROSS_SIZE, y: 776 - CROSS_SIZE },
-              thickness: 1,
-            });
-          }
         }
       }
 
@@ -439,26 +436,26 @@ export async function POST(req: Request) {
       }
 
       // Draw agent details
-      page.drawText(String(agentName ?? ""), {
-        x: 70,
-        y: 759,
-        size: 10,
-        font: SINHALA_REGEX.test(agentName) ? sinhalaFont : englishFont,
-      });
+      // page.drawText(String(agentName ?? ""), {
+      //   x: 70,
+      //   y: 759,
+      //   size: 10,
+      //   font: SINHALA_REGEX.test(agentName) ? sinhalaFont : englishFont,
+      // });
 
-      page.drawText(String(agentAddress ?? ""), {
-        x: 79,
-        y: 780,
-        size: 10,
-        font: SINHALA_REGEX.test(agentAddress) ? sinhalaFont : englishFont,
-      });
+      // page.drawText(String(agentAddress ?? ""), {
+      //   x: 79,
+      //   y: 780,
+      //   size: 10,
+      //   font: SINHALA_REGEX.test(agentAddress) ? sinhalaFont : englishFont,
+      // });
 
-      page.drawText(String(agentTel ?? ""), {
-        x: 53,
-        y: 727,
-        size: 10,
-        font: SINHALA_REGEX.test(agentTel) ? sinhalaFont : englishFont,
-      });
+      // page.drawText(String(agentTel ?? ""), {
+      //   x: 53,
+      //   y: 727,
+      //   size: 10,
+      //   font: SINHALA_REGEX.test(agentTel) ? sinhalaFont : englishFont,
+      // });
 
       page.drawText(String(word_count ?? ""), {
         x: 310,
@@ -467,12 +464,12 @@ export async function POST(req: Request) {
         font: SINHALA_REGEX.test(word_count) ? sinhalaFont : englishFont,
       });
 
-      page.drawText(String(agentNo ?? ""), {
-        x: 244,
-        y: 727,
-        size: 10,
-        font: SINHALA_REGEX.test(agentNo) ? sinhalaFont : englishFont,
-      });
+      // page.drawText(String(agentNo ?? ""), {
+      //   x: 244,
+      //   y: 727,
+      //   size: 10,
+      //   font: SINHALA_REGEX.test(agentNo) ? sinhalaFont : englishFont,
+      // });
 
       // Draw publish date
       page.drawText(String(publish_date ?? ""), {

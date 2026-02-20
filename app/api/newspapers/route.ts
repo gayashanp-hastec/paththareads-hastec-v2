@@ -26,6 +26,7 @@ export async function GET() {
       combine_sin_tam_price: true,
       allowed_weekdays: true,
       allowed_month_days: true,
+      publisher_email: true,
       created_at: true,
     },
     orderBy: {
@@ -55,6 +56,7 @@ export async function GET() {
     combine_sin_tam_price: n.combine_sin_tam_price,
     allowed_weekdays: n.allowed_weekdays || [],
     allowed_month_days: n.allowed_month_days || [],
+    publisher_email: n.publisher_email,
     created_at: n.created_at,
   }));
 
@@ -87,6 +89,7 @@ export async function POST(req: Request) {
       combine_sin_eng_price,
       allowed_month_days = [],
       allowed_weekdays = [],
+      publisher_email,
       ad_types = [], // optional
     } = body;
 
@@ -136,6 +139,7 @@ export async function POST(req: Request) {
           combine_sin_eng_price,
           allowed_weekdays,
           allowed_month_days,
+          publisher_email,
         },
       });
 

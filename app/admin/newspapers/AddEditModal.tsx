@@ -97,6 +97,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
       combine_sin_tam_price: 0,
       allowed_weekdays: [],
       allowed_month_days: [],
+      publisher_email: "",
     },
   );
 
@@ -306,6 +307,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
       combine_sin_tam_price: Number(form.combine_sin_tam_price),
       allowed_month_days: form.allowed_month_days,
       allowed_weekdays: form.allowed_weekdays,
+      publisher_email: form.publisher_email,
       ad_types: adTypes.map((t) => ({
         key: t.typeKey,
         name: t.name,
@@ -421,6 +423,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
           combine_sin_tam_price: data.combine_sin_tam_price,
           allowed_month_days: data.allowed_month_days,
           allowed_weekdays: data.allowed_weekdays,
+          publisher_email: data.publisher_email,
         });
 
         // 2️⃣ Populate ad types with sections + sizes
@@ -911,6 +914,20 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                   ))}
                 </div>
               )}
+
+              <div className="mt-8">
+                <label className="block text-sm font-medium text-[var(--color-text)]">
+                  Publisher Email
+                </label>
+                <input
+                  type="text"
+                  className={`mt-1 w-1/2 rounded-lg border px-3 py-2 text-sm focus:border-primary focus:outline-none border-gray-300`}
+                  value={form.publisher_email}
+                  onChange={(e) => {
+                    setForm({ ...form, publisher_email: e.target.value });
+                  }}
+                />
+              </div>
             </div>
 
             {/* Type Error */}

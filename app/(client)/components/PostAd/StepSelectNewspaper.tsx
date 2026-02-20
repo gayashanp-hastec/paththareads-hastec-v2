@@ -55,11 +55,11 @@ export default function StepSelectNewspaper({
   });
 
   const handleSelectNewspaper = (paper: any) => {
-    console.log("select newspaper output", paper);
-    console.log(
-      "select newspaper language output",
-      paper.is_lang_combine_allowed,
-    );
+    // console.log("select newspaper output", paper);
+    // console.log(
+    //   "select newspaper language output",
+    //   paper.is_lang_combine_allowed,
+    // );
     updateFormData({
       selectedNewspaper: {
         id: paper.id,
@@ -85,15 +85,22 @@ export default function StepSelectNewspaper({
     });
     console.log("select newspaper form data output", formData);
 
-    setIsNextEnabled?.(true);
+    // setIsNextEnabled?.(true);
+    nextStep();
   };
 
   // Restore state on back / refresh
+  // useEffect(() => {
+  //   if (formData.selectedNewspaper?.id) {
+  //     setIsNextEnabled?.(true);
+  //   }
+  // }, [formData.selectedNewspaper, setIsNextEnabled]);
+
   useEffect(() => {
-    if (formData.selectedNewspaper?.id) {
-      setIsNextEnabled?.(true);
+    if (formData.selectedNewspaper?.id && formData.currentStep === 1) {
+      nextStep();
     }
-  }, [formData.selectedNewspaper, setIsNextEnabled]);
+  }, [formData.selectedNewspaper]);
 
   return (
     <section className="flex flex-col gap-6">

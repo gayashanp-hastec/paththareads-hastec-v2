@@ -174,6 +174,7 @@ export default function StepSelectAdType({
   useEffect(() => {
     if (!selectedNewspaperId) return;
     setLoading(true);
+    updateFormData({ currentStep: 2 });
     fetch(`/api/ad-types/${selectedNewspaperId}`)
       .then((res) => res.json())
       .then((data: AdType[]) => setAdTypes(data))

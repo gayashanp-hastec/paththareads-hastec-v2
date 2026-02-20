@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Sidebar from "../../components/Sidebar";
-import { X } from "lucide-react";
+import { Mail, X } from "lucide-react";
 import {
   CheckCircle,
   XCircle,
@@ -17,6 +17,7 @@ interface Advertisement {
   newspaper_name: string;
   language?: string;
   id?: string;
+  publisher_email?: string | "";
 
   advertiser_name: string;
   advertiser_nic?: string;
@@ -78,6 +79,32 @@ interface Advertisement {
   } | null;
 }
 
+export async function uploadPrintedBlobToCloudinary(file: File | Blob) {
+  const formData = new FormData();
+
+  formData.append("file", file);
+  formData.append(
+    "upload_preset",
+    process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!,
+  );
+  formData.append("folder", "printed"); // 👈 store inside "printed" folder
+
+  const res = await fetch(
+    `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/auto/upload`,
+    {
+      method: "POST",
+      body: formData,
+    },
+  );
+
+  if (!res.ok) {
+    throw new Error("Cloudinary upload failed");
+  }
+
+  const data = await res.json();
+  return data.secure_url as string; // 👈 this will be your print_url
+}
+
 export default function AdminAdvertisements() {
   const [ads, setAds] = useState<Advertisement[]>([]);
   const [filteredAds, setFilteredAds] = useState<Advertisement[]>([]);
@@ -96,6 +123,16 @@ export default function AdminAdvertisements() {
   const ITEMS_PER_PAGE = 15;
 
   const [requestImageChange, setRequestImageChange] = useState(false);
+  const [selectedAds, setSelectedAds] = useState<Advertisement[]>([]);
+  const [selectedPublisher, setSelectedPublisher] = useState<string | "">("");
+  const [differentPublisher, setdifferentPublisher] = useState<Boolean>(false);
+
+  const [dateFrom, setDateFrom] = useState<string>("");
+  const [dateTo, setDateTo] = useState<string>("");
+
+  const [printing, setPrinting] = useState(false);
+
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
   const ACTION_BTN_CLASS =
     "flex items-center justify-center gap-2 w-40 px-4 py-2.5 rounded-lg shadow text-sm font-medium transition";
@@ -115,12 +152,26 @@ export default function AdminAdvertisements() {
 
   // Filtering + sorting
   useEffect(() => {
-    let updated = ads.filter(
-      (ad) =>
+    let updated = ads.filter((ad) => {
+      const matchesSearch =
         ad.reference_number.toLowerCase().includes(search.toLowerCase()) ||
         ad.newspaper_name.toLowerCase().includes(search.toLowerCase()) ||
-        ad.status.toLowerCase().includes(search.toLowerCase()),
-    );
+        ad.advertiser_name.toLowerCase().includes(search.toLowerCase()) ||
+        ad.status.toLowerCase().includes(search.toLowerCase());
+
+      const createdDate = new Date(ad.created_at);
+
+      const fromValid = dateFrom ? createdDate >= new Date(dateFrom) : true;
+      const toValid = dateTo ? createdDate <= new Date(dateTo) : true;
+
+      const statusValid =
+        statusFilter === "all"
+          ? true
+          : ad.status.toLowerCase() === statusFilter.toLowerCase();
+
+      return matchesSearch && fromValid && toValid && statusValid;
+    });
+
     updated.sort((a, b) => {
       if (sortKey === "created_at") {
         return (
@@ -135,7 +186,7 @@ export default function AdminAdvertisements() {
     });
 
     setFilteredAds(updated);
-  }, [search, ads, sortKey]);
+  }, [search, ads, sortKey, dateFrom, dateTo, statusFilter]);
 
   const totalPages = Math.ceil(filteredAds.length / ITEMS_PER_PAGE);
 
@@ -183,6 +234,10 @@ export default function AdminAdvertisements() {
     const data = await refreshed.json();
     setAds(data);
   };
+
+  function blobToFile(blob: Blob, filename: string) {
+    return new File([blob], filename, { type: blob.type });
+  }
 
   // Check if text changed
   const isTextChanged = editedText.trim() !== originalText.trim();
@@ -237,9 +292,53 @@ export default function AdminAdvertisements() {
     }
   };
 
+  const toggleSelectAd = (ad: Advertisement) => {
+    // if (
+    //   ad.status?.toLowerCase() !== "print" ||
+    //   ad.status?.toLowerCase() !== "sent to print"
+    // ) {
+    //   return; // safety guard
+    // }
+
+    const isAlreadySelected = selectedAds.some(
+      (a) => a.reference_number === ad.reference_number,
+    );
+
+    // If first selection → set publisher
+    if (!selectedPublisher) {
+      setSelectedPublisher(ad.publisher_email ?? "");
+      setSelectedAds([ad]);
+      return;
+    }
+
+    // Restrict different publisher
+    if (ad.publisher_email !== selectedPublisher) {
+      // alert("You can only select ads from the same publisher.");
+      setdifferentPublisher(true);
+      return;
+    }
+
+    // Toggle logic
+    if (isAlreadySelected) {
+      const updated = selectedAds.filter(
+        (a) => a.reference_number !== ad.reference_number,
+      );
+
+      setSelectedAds(updated);
+
+      // If empty → reset publisher lock
+      if (updated.length === 0) {
+        setSelectedPublisher("");
+      }
+    } else {
+      setSelectedAds([...selectedAds, ad]);
+    }
+  };
+
   const handlePrint = async () => {
     console.log(selectedAd);
     if (!selectedAd) return;
+    setPrinting(true);
 
     // Trim + split by ONE OR MORE SPACES
     const words = selectedAd.advertisement_text.trim().split(/\s+/); // space-separated words
@@ -329,7 +428,21 @@ export default function AdminAdvertisements() {
 
     const blob = await res.blob();
     if (res.status !== 400) {
-      updateStatus("Sent to Print");
+      updateStatus("Print");
+
+      // 1. upload blob to cloudinary
+      const file = new File([blob], `${selectedAd.reference_number}.pdf`, {
+        type: "application/pdf",
+      });
+
+      const cloudUrl = await uploadPrintedBlobToCloudinary(file);
+
+      // 2. save URL to DB
+      await fetch(`/api/ads/${selectedAd.reference_number}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ print_url: cloudUrl }),
+      });
     }
     const url = URL.createObjectURL(blob);
     window.open(url, "_blank");
@@ -347,6 +460,41 @@ export default function AdminAdvertisements() {
     });
 
     return `${day}.${month}.${year} (${weekday})`;
+  };
+
+  const handleSendSelected = async () => {
+    if (selectedAds.length === 0) return;
+
+    const referenceNumbers = selectedAds.map((ad) => ad.reference_number);
+
+    try {
+      const res = await fetch("/api/ads/send-bulk-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          publisher_email: selectedPublisher,
+          references: referenceNumbers,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.error || "Failed to send email");
+        return;
+      }
+
+      alert("Email sent successfully!");
+
+      // Reset selection
+      setSelectedAds([]);
+      setSelectedPublisher("");
+    } catch (err) {
+      console.error(err);
+      alert("Something went wrong");
+    }
   };
 
   return (
@@ -374,19 +522,47 @@ export default function AdminAdvertisements() {
           />
 
           <div className="flex flex-wrap gap-3">
+            {selectedAds.length > 0 && (
+              <button
+                onClick={() => handleSendSelected()}
+                className="flex items-center gap-2 rounded-xl bg-violet-600 text-white px-4 py-2 text-sm shadow hover:bg-violet-700 transition"
+              >
+                <Mail className="h-4 w-4" />
+                Send Selected ({selectedAds.length})
+              </button>
+            )}
+            <div className="flex items-center gap-2">
+              <input
+                type="date"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+                className="rounded-xl border px-3 py-2 text-sm"
+              />
+              <span className="text-gray-500 text-sm">to</span>
+              <input
+                type="date"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+                className="rounded-xl border px-3 py-2 text-sm"
+              />
+
+              {(dateFrom || dateTo) && (
+                <button
+                  onClick={() => {
+                    setDateFrom("");
+                    setDateTo("");
+                  }}
+                  className="text-baseline text-gray-500 hover:text-red-500 underline ml-1"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+
             {/* Status Filter */}
             <select
-              onChange={(e) =>
-                setFilteredAds(
-                  ads.filter((ad) =>
-                    e.target.value === "all"
-                      ? true
-                      : ad.status.toLowerCase() ===
-                        e.target.value.toLowerCase(),
-                  ),
-                )
-              }
-              defaultValue="all"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
               className="rounded-xl border px-4 py-2 text-sm"
             >
               <option value="all">Show All Statuses</option>
@@ -414,6 +590,7 @@ export default function AdminAdvertisements() {
           <table className="min-w-full text-sm text-left border-collapse">
             <thead className="bg-gray-100 text-gray-700 uppercase text-xs">
               <tr>
+                <th className="px-4 py-3"></th>
                 <th className="px-4 py-3">Reference</th>
                 <th className="px-4 py-3">Advertiser Name</th>
                 <th className="px-4 py-3">Newspaper</th>
@@ -428,19 +605,36 @@ export default function AdminAdvertisements() {
                 paginatedAds.map((ad) => (
                   <tr
                     key={ad.reference_number}
-                    // onClick={() => {
-                    //   if (ad.status.toLowerCase() === "pending") {
-                    //     openModal(ad);
-                    //   } else if (ad.status.toLowerCase() === "approved") {
-                    //     alert("Already approved");
-                    //   }
-                    // }}
-                    onClick={() => {
-                      console.log(selectedAd);
+                    onClick={(e) => {
+                      // Prevent row click from interfering with checkbox
+                      if ((e.target as HTMLElement).closest("input")) return;
                       openModal(ad);
                     }}
-                    className="hover:bg-blue-50 cursor-pointer border-b"
+                    className={`border-b cursor-pointer hover:bg-blue-50 ${
+                      selectedAds.some(
+                        (a) => a.reference_number === ad.reference_number,
+                      )
+                        ? "bg-blue-100"
+                        : ""
+                    }`}
                   >
+                    <td className="px-4 py-2">
+                      {ad.status?.toLowerCase() === "print" ||
+                      ad.status?.toLowerCase() === "sent to print" ? (
+                        <input
+                          className="h-4 w-4"
+                          type="checkbox"
+                          checked={selectedAds.some(
+                            (a) => a.reference_number === ad.reference_number,
+                          )}
+                          onChange={() => toggleSelectAd(ad)}
+                          onClick={(e) => e.stopPropagation()} // prevent row click
+                        />
+                      ) : (
+                        <span className="text-gray-300">—</span> // or empty cell
+                      )}
+                    </td>
+
                     <td className="px-4 py-2 font-mono">
                       {ad.reference_number}
                     </td>
@@ -844,50 +1038,7 @@ export default function AdminAdvertisements() {
               </div>
 
               {/* Footer Actions */}
-              {/* Footer Actions */}
               <div className="border-t bg-gray-50 px-8 py-6">
-                {/* Read-only text when finalized */}
-                {/* {[
-                  "Approved",
-                  "Cancelled",
-                  "Declined",
-                  "PaymentPending",
-                ].includes(selectedAd.status) && (
-                  <textarea
-                    value={editedText}
-                    readOnly
-                    className="mb-4 w-full h-40 rounded-xl border p-4 text-gray-800 resize-none bg-gray-100"
-                  />
-                )} */}
-
-                {/* Image section */}
-                {/* {selectedAd?.upload_image && (
-                  <div className="mb-4 flex items-center justify-between">
-                    <a
-                      href={selectedAd.upload_image}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 rounded-lg border border-[var(--color-primary)]
-                   px-4 py-2 text-sm font-medium text-[var(--color-primary-dark)]
-                   hover:bg-[var(--color-primary-accent)] hover:text-white transition"
-                    >
-                      <ImageIcon className="w-4 h-4" />
-                      View Image
-                    </a>
-
-                    <label className="flex items-center gap-2 text-sm">
-                      <input
-                        type="checkbox"
-                        checked={requestImageChange}
-                        onChange={(e) =>
-                          setRequestImageChange(e.target.checked)
-                        }
-                      />
-                      Request Image Change
-                    </label>
-                  </div>
-                )} */}
-
                 {/* Action buttons */}
                 <div className="flex flex-wrap justify-end gap-3">
                   {[
@@ -935,40 +1086,33 @@ export default function AdminAdvertisements() {
                       </button>
                     )}
 
-                  {/* {["Approved"].includes(selectedAd.status) && (
-                    <button
-                      onClick={async () => {
-                        if (!selectedAd) return;
-
-                        const res = await fetch("/api/ads/print", {
-                          method: "POST",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({
-                            advertisement_text: editedText,
-                            reference_number: selectedAd.reference_number,
-                          }),
-                        });
-
-                        const blob = await res.blob();
-                        const url = URL.createObjectURL(blob);
-                        window.open(url, "_blank");
-                      }}
-                      className={`${ACTION_BTN_CLASS} bg-[var(--color-primary-dark)] text-white hover:bg-[var(--color-primary)]`}
-                    >
-                      <Printer className="w-4 h-4" />
-                      Print
-                    </button>
-                  )} */}
                   {["PaymentPending"].includes(selectedAd.status) && (
                     <button
                       onClick={handlePrint}
-                      className={`${ACTION_BTN_CLASS} bg-[var(--color-primary-dark)] text-white hover:bg-[var(--color-primary)]`}
+                      disabled={printing}
+                      className={`${ACTION_BTN_CLASS} bg-[var(--color-primary-dark)] text-white hover:bg-[var(--color-primary)] ${
+                        printing ? "opacity-70 cursor-not-allowed" : ""
+                      }`}
                     >
-                      <Printer className="w-4 h-4" />
-                      Print
+                      {printing ? (
+                        <>
+                          <RefreshCw className="w-4 h-4 animate-spin" />
+                          Printing...
+                        </>
+                      ) : (
+                        <>
+                          <Printer className="w-4 h-4" />
+                          Print
+                        </>
+                      )}
                     </button>
                   )}
                 </div>
+              </div>
+              <div className="border-t bg-gray-50 px-8 py-6 text-center">
+                {selectedAd.status === "Approved" && (
+                  <p className="font-semibold">Waiting for Payment</p>
+                )}
               </div>
             </div>
           </div>
@@ -997,6 +1141,32 @@ export default function AdminAdvertisements() {
                 alt="Image preview"
                 className="w-full max-h-[80vh] object-contain rounded-lg shadow-lg bg-white"
               />
+            </div>
+          </div>
+        )}
+
+        {differentPublisher && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+            <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
+              <h3 className="text-lg font-semibold text-[var(--color-primary-dark)]">
+                Alert
+              </h3>
+
+              <p className="mt-2 text-sm text-gray-600">
+                You can only select multiple ads that belong to the same
+                publisher email. Deselect the current selection or choose ads
+                from the same publisher.
+              </p>
+
+              <div className="mt-6 flex justify-end gap-3">
+                <button
+                  onClick={() => setdifferentPublisher(false)}
+                  className="rounded-lg border border-gray-300 px-4 py-2 text-sm
+             transition hover:bg-gray-100"
+                >
+                  OK
+                </button>
+              </div>
             </div>
           </div>
         )}
