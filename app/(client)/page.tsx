@@ -59,13 +59,11 @@ export default function HomePage() {
       {/* ================= HERO / INTRO SECTION ================= */}
       <section
         className="relative flex min-h-[90vh] w-full items-center bg-white bg-no-repeat bg-cover"
-        style={{ backgroundImage: "url('/banner-4-maroon.png')" }}
+        // style={{ backgroundImage: "url('/banner-4-maroon.png')" }}
       >
-        <div className="mx-auto flex w-full max-w-7xl flex-col gap-10 px-6 py-16 md:flex-row md:items-center md:px-12">
-          {/* Overlay */}
-          {/* <div className="absolute inset-0 bg-white/60"></div> */}
+        <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-10 px-4 py-16 md:flex-row md:items-center md:px-6">
           {/* LEFT SIDE */}
-          <div className="flex flex-1 flex-col gap-6 text-white">
+          <div className="flex w-full md:w-[40%] flex-col gap-6 text-white">
             <h1 className="text-4xl font-extrabold leading-tight tracking-tight md:text-6xl text-[var(--color-text)]">
               Advertise{" "}
               <span className="text-[var(--color-primary)]">Smarter</span>
@@ -88,26 +86,19 @@ export default function HomePage() {
               </span>
             </p>
 
-            <div className="flex flex-col gap-4 sm:flex-row">
+            <div className="flex flex-col gap-4 sm:flex-row justify-center md:justify-start md:mt-4">
               <Link
                 href="/post-ad"
-                className="specialBtn inline-flex items-center justify-center rounded-md px-8 py-3 text-base font-medium transition hover:brightness-110"
+                className="specialBtn inline-flex items-center justify-center rounded-md px-12 py-4 text-base font-medium transition"
               >
-                Post Ad
-              </Link>
-
-              <Link
-                href="/#how-to-section"
-                className="inline-flex items-center justify-center rounded-md border border-primary px-8 py-3 text-base font-medium text-primary transition hover:bg-primary-accent hover:text-white"
-              >
-                How To
+                Post Ad Now
               </Link>
             </div>
           </div>
 
           {/* RIGHT SIDE – VERTICAL AUTO CAROUSEL */}
-          <div className="flex flex-1 justify-center w-full">
-            <div className="carousel-container relative h-[520px] w-full max-w-md overflow-hidden rounded-2xl shadow-xl">
+          <div className="flex w-full md:w-[60%] justify-center">
+            <div className="carousel-container relative h-[520px] w-full max-w-xl overflow-hidden rounded-2xl shadow-xl">
               <div
                 className="carousel-track flex flex-col"
                 style={{ animationDuration: `${animationDuration}s` }}
@@ -152,7 +143,7 @@ export default function HomePage() {
       </section>
 
       {/* ================= HOW TO SECTION ================= */}
-      <section
+      {/* <section
         id="how-to-section"
         className="mx-auto flex w-full max-w-7xl flex-col gap-10 rounded-lg bg-gray-50 px-6 py-14 md:px-12"
       >
@@ -243,7 +234,7 @@ export default function HomePage() {
             Get Started
           </Link>
         </div>
-      </section>
+      </section> */}
 
       {/* ================= NEWSPAPER TABS ================= */}
       {/* <section className="flex flex-col gap-8"> */}

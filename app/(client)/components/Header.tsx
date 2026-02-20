@@ -16,8 +16,8 @@ export default function Header() {
 
   const navLinks = [
     { name: "Home", href: "/" },
-    { name: "How To", href: "/#how-to-section" },
-    { name: "Ad Board", href: "/#" },
+    { name: "How To", href: "/how-to" },
+    { name: "Online Ads", href: "/online-ads" },
     { name: "About Us", href: "/about-us" },
     { name: "Reviews", href: "/#" },
     { name: "Contact Us", href: "/contact-us" },
@@ -55,8 +55,8 @@ export default function Header() {
           "bg-gradient-to-b from-[#042a36] via-[#06394a] via-[#0a4b5f] to-[#0e5f73]",
           "text-white shadow-md",
           isScrolled
-            ? "h-20 bg-gradient-to-b from-[#042a36]/95 via-[#06394a]/95 via-[#0a4b5f]/95 to-[#0e5f73]/95 backdrop-blur-md"
-            : "h-32 md:h-44 bg-gradient-to-b from-[#042a36] via-[#06394a] via-[#0a4b5f] to-[#0e5f73]",
+            ? "h-24 bg-gradient-to-b from-[#042a36]/95 via-[#06394a]/95 via-[#0a4b5f]/95 to-[#0e5f73]/95 backdrop-blur-md"
+            : "h-36 md:h-44 bg-gradient-to-b from-[#042a36] via-[#06394a] via-[#0a4b5f] to-[#0e5f73]",
         )}
       >
         <div className="mx-auto flex h-full max-w-7xl flex-col px-4 md:px-8">
@@ -77,8 +77,8 @@ export default function Header() {
               <Image
                 src="/sample-logo-1.png"
                 alt="Paththare Ads Logo"
-                width={isScrolled ? 110 : 140}
-                height={50}
+                width={isScrolled ? 110 : 170}
+                height={60}
                 className="object-contain transition-all"
                 priority
               />
@@ -99,7 +99,7 @@ export default function Header() {
                 <Link
                   href="/post-ad"
                   onClick={(e) => handlePostAdClick(e, "/post-ad")}
-                  className="rounded-full bg-orange-accent px-4 py-1.5 text-sm font-medium text-primary-dark transition hover:brightness-110"
+                  className="rounded-xl bg-primary-dark px-6 py-2 text-sm font-medium text-white transition hover:brightness-110"
                 >
                   Post Your Ad
                 </Link>
@@ -116,12 +116,12 @@ export default function Header() {
           </div>
 
           <nav className="hidden justify-center md:flex">
-            <ul className="flex gap-8 pb-3 text-base">
+            <ul className="flex gap-8 py-3 text-base">
               {navLinks.map((item) => (
                 <li key={item.name}>
                   <Link
                     href={item.href}
-                    className="transition hover:text-[var(--color-text-highlight)]"
+                    className="text-lg font-semibold transition hover:text-[var(--color-text-highlight)]"
                   >
                     {item.name}
                   </Link>

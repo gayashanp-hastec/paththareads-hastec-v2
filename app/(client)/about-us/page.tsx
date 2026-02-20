@@ -11,7 +11,7 @@ export default function AboutUsPage() {
             About Paththare Ads
           </h1>
 
-          <p className="text-gray-700 text-lg leading-relaxed text-center">
+          <p className="text-gray-700 text-lg leading-relaxed">
             Paththare Ads is a dedicated online newspaper advertising platform
             created to simplify access to Sri Lankan print media for both local
             and overseas advertisers. The platform is designed to support
@@ -19,7 +19,7 @@ export default function AboutUsPage() {
             to connect with Sri Lanka’s leading newspapers.
           </p>
 
-          <p className="text-gray-700 text-lg leading-relaxed text-center">
+          <p className="text-gray-700 text-lg leading-relaxed">
             Through a structured and professionally managed process, Paththare
             Ads facilitates the placement of personal, corporate, and commercial
             advertisements with a strong focus on transparency, accuracy, and
@@ -29,7 +29,7 @@ export default function AboutUsPage() {
             standards.
           </p>
 
-          <p className="text-gray-700 text-lg leading-relaxed text-center">
+          <p className="text-gray-700 text-lg leading-relaxed">
             Paththare Ads operates under Media Link (Pvt) Ltd, an established
             media advertising agency founded in 2009. With over a decade of
             expertise in newspaper, television, and radio (ATL) advertising, the

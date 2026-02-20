@@ -117,6 +117,7 @@ model advertisements {
   updated_at              DateTime?                 @default(now()) @db.Timestamp(6)
   newspaper_serial_no     Int?
   uploaded_images         String[]                  @default([])
+  print_url               String?
   ad_price_change_history ad_price_change_history[]
   ad_review_history       ad_review_history[]
   ad_status_history       ad_status_history[]
@@ -221,6 +222,7 @@ model newspapers {
   combine_sin_eng_price      Int?             @default(0)
   combine_sin_tam_price      Int?             @default(0)
   publisher_id               Int              @default(1)
+  publisher_email            String?
   ad_types                   ad_types[]
   advertisements             advertisements[]
   publishers                 publishers       @relation(fields: [publisher_id], references: [id], map: "fk_newspapers_publishers")

@@ -63,6 +63,7 @@ interface AdType {
 }
 
 interface FormData {
+  currentStep: number;
   selectedNewspaper: Newspaper | null;
   adType: string | null;
   adTypeObject?: AdType | null;
@@ -135,6 +136,7 @@ export default function PostAdPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [formData, setFormData] = useState<FormData>({
+    currentStep: 1,
     selectedNewspaper: null,
     adType: null,
     adTypeObject: null,
@@ -202,7 +204,7 @@ export default function PostAdPage() {
     switch (currentStep) {
       case 1:
         if (!formData.selectedNewspaper) {
-          toast.error("Please select a newspaper before proceeding.");
+          // toast.error("Please select a newspaper before proceeding.");
           return false;
         }
         return true;
@@ -492,6 +494,12 @@ export default function PostAdPage() {
         return null;
     }
   };
+
+  useEffect(() => {
+    if (currentStep === 1) {
+      setIsNextEnabled(!!formData.selectedNewspaper);
+    }
+  }, [currentStep, formData.selectedNewspaper]);
 
   // ---------------- Render ----------------
   return (

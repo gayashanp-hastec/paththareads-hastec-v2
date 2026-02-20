@@ -176,6 +176,17 @@ button {
   background-color: var(--color-text-highlight);
 }
 
+.specialBtn2 {
+  background-color: var(--color-button);
+  color: white;
+  transition: color 0.3s ease;
+}
+
+.specialBtn2:hover {
+  color: var(--color-button);
+  background-color: var(--color-primary);
+}
+
 @keyframes float-slow {
   0%,
   100% {

@@ -18,14 +18,17 @@ export default function Footer() {
         >
           Terms & Conditions
         </button>
-        <Link href="#" className="hover:text-gray-700 transition">
+        {/* <Link href="#" className="hover:text-gray-700 transition">
           Privacy Policy
-        </Link>
-        <Link href="#" className="hover:text-gray-700 transition">
+        </Link> */}
+        {/* <Link href="#" className="hover:text-gray-700 transition">
           Cookies
-        </Link>
+        </Link> */}
         <Link href="/about-us" className="hover:text-gray-700 transition">
-          About
+          About Us
+        </Link>
+        <Link href="/contact-us" className="hover:text-gray-700 transition">
+          Contact Us
         </Link>
       </nav>
 
