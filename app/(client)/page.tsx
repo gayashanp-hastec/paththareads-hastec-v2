@@ -97,7 +97,7 @@ export default function HomePage() {
           </div>
 
           {/* RIGHT SIDE – VERTICAL AUTO CAROUSEL */}
-          <div className="flex w-full md:w-[60%] justify-center">
+          <div className="flex w-full md:w-[60%] justify-end xs:justify-center">
             <div className="carousel-container relative h-[520px] w-full max-w-xl overflow-hidden rounded-2xl shadow-xl">
               <div
                 className="carousel-track flex flex-col"
