@@ -84,6 +84,7 @@ export async function PUT(
       combine_sin_eng_price,
       allowed_month_days = [],
       allowed_weekdays = [],
+      publisher_email,
       ad_types = [],
     } = body;
 
@@ -123,6 +124,7 @@ export async function PUT(
           combine_sin_eng_price,
           allowed_weekdays,
           allowed_month_days,
+          publisher_email,
         },
       }),
     );

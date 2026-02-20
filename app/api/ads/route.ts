@@ -41,6 +41,7 @@ export async function GET() {
           name: true,
           id: true,
           language: true,
+          publisher_email: true,
         },
       },
 
@@ -98,6 +99,7 @@ export async function GET() {
 
     newspaper_name: ad.newspapers?.name ?? ad.newspaper_name ?? "—",
     language: ad.newspapers?.language,
+    publisher_email: ad.newspapers?.publisher_email,
 
     ad_type: ad.ad_type,
     classified_category: ad.classified_category,
