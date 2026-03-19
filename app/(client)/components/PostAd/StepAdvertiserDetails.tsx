@@ -56,7 +56,7 @@ export default function StepAdvertiserDetails({
 
   return (
     <>
-      <div className="bg-primary text-white px-6 py-3 rounded-lg shadow-md text-center">
+      <div className="bg-primary text-white px-6 py-3 mb-8 rounded-lg shadow-md text-center">
         <h5 className="text-sm">Selected Newspaper</h5>
         <h5
           className="text-xl font-semibold"
@@ -72,12 +72,27 @@ export default function StepAdvertiserDetails({
       <form onSubmit={handleSubmit} className="flex flex-col gap-8">
         <h2 className="text-2xl md:text-3xl font-bold text-center">
           Advertiser Details
+          <br />
+          <span
+            className="text-sm md:text-sm font-bold text-center"
+            style={{ fontFamily: "var(--font-sinhala), sans-serif" }}
+          >
+            දැන්වීම්කරුගේ විස්තර
+          </span>
         </h2>
 
         <div className="flex flex-col gap-6 md:w-2/3 mx-auto">
           {/* Name */}
           <div>
-            <label className="block mb-2 font-medium">Name *</label>
+            <label className="block mb-2 font-medium">
+              Name{" "}
+              <span
+                className="text-sm"
+                style={{ fontFamily: "var(--font-sinhala), sans-serif" }}
+              >
+                (දැන්වීම්කරුගේ නම) *
+              </span>
+            </label>
             <input
               type="text"
               value={formData.advertiserName || ""}
@@ -89,7 +104,15 @@ export default function StepAdvertiserDetails({
 
           {/* Address */}
           <div>
-            <label className="block mb-2 font-medium">Address *</label>
+            <label className="block mb-2 font-medium">
+              Address{" "}
+              <span
+                className="text-sm"
+                style={{ fontFamily: "var(--font-sinhala), sans-serif" }}
+              >
+                (දැන්වීම්කරුගේ ලිපිනය) *
+              </span>
+            </label>
             <input
               type="text"
               value={formData.advertiserAddress || ""}
@@ -102,7 +125,7 @@ export default function StepAdvertiserDetails({
           </div>
 
           {/* Postal Address */}
-          <div>
+          {/* <div>
             <label className="block mb-2 font-medium">
               Postal Address (If same, keep blank)
             </label>
@@ -115,11 +138,19 @@ export default function StepAdvertiserDetails({
               className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-primary-accent"
               placeholder="Postal address (optional)"
             />
-          </div>
+          </div> */}
 
           {/* Phone */}
           <div>
-            <label className="block mb-2 font-medium">Phone No. *</label>
+            <label className="block mb-2 font-medium">
+              Phone No.{" "}
+              <span
+                className="text-sm"
+                style={{ fontFamily: "var(--font-sinhala), sans-serif" }}
+              >
+                (දැන්වීම්කරුගේ දුරකතන අංකය) *
+              </span>
+            </label>
             <PhoneInput
               country={"lk"}
               value={formData.advertiserPhone || ""}
@@ -143,14 +174,22 @@ export default function StepAdvertiserDetails({
               </p>
             ) : (
               <p className="text-sm text-gray-500 mt-1">
-                Example: {countryDialCode} 712345678
+                Example: {countryDialCode} 712 345 678
               </p>
             )}
           </div>
 
           {/* NIC */}
           <div>
-            <label className="block mb-2 font-medium">NIC *</label>
+            <label className="block mb-2 font-medium">
+              NIC{" "}
+              <span
+                className="text-sm"
+                style={{ fontFamily: "var(--font-sinhala), sans-serif" }}
+              >
+                (දැන්වීම්කරුගේ ජාතික හැඳුනුම්පත් අංකය) *
+              </span>
+            </label>
             <input
               type="text"
               maxLength={12}
@@ -163,7 +202,15 @@ export default function StepAdvertiserDetails({
 
           {/* Email */}
           <div>
-            <label className="block mb-2 font-medium">Email Address *</label>
+            <label className="block mb-2 font-medium">
+              Email Address{" "}
+              <span
+                className="text-sm"
+                style={{ fontFamily: "var(--font-sinhala), sans-serif" }}
+              >
+                (දැන්වීම්කරුගේ ඊමේල් ලිපිනය) *
+              </span>
+            </label>
             <input
               type="email"
               value={formData.advertiserEmail || ""}
