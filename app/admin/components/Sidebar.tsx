@@ -62,11 +62,11 @@ export default function Sidebar() {
     { name: "Dashboard", href: "/admin" },
     {
       name: "Advertisements",
-      href: "/admin/all",
-      subItems: [
-        { name: "Pending", href: "/admin/advertisements/pending" },
-        { name: "All", href: "/admin/advertisements/all" },
-      ],
+      href: "/admin/advertisements/all",
+      // subItems: [
+      //   { name: "Pending", href: "/admin/advertisements/pending" },
+      //   { name: "All", href: "/admin/advertisements/all" },
+      // ],
     },
     { name: "Newspapers", href: "/admin/newspapers" },
     { name: "Promotions/Offers", href: "/admin/promo" },

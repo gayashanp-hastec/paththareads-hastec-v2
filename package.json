@@ -40,6 +40,7 @@
     "react-dom": "19.1.0",
     "react-hot-toast": "^2.6.0",
     "react-phone-input-2": "^2.15.1",
+    "recharts": "^3.8.0",
     "regenerator-runtime": "^0.14.1",
     "resend": "^6.3.0",
     "tailwindcss": "^4.1.12",
