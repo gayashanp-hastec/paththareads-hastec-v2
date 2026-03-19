@@ -77,8 +77,8 @@ export default function Header() {
               <Image
                 src="/sample-logo-1.png"
                 alt="Paththare Ads Logo"
-                width={isScrolled ? 140 : 220}
-                height={60}
+                width={isScrolled ? 140 : 300}
+                height={100}
                 className="object-contain transition-all"
                 priority
               />
