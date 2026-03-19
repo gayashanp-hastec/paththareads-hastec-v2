@@ -209,22 +209,22 @@ export async function POST(req: Request) {
     const trackingLink = `${process.env.NEXT_PUBLIC_BASE_URL}/ads/track/${referenceNumber}?t=${rawToken}`;
 
     // Send email (test mode)
-    const { data: emailData, error: emailError } = await resend.emails.send({
-      from: "onboarding@resend.dev",
-      to: advertiser.email,
-      subject: "TEST: Your Advertisement Submission – Track Status",
-      html: `
-    <h2>Thank you for submitting your advertisement!</h2>
-    <p><b>Reference:</b> ${referenceNumber}</p>
-    <p>Track here: <a href="${trackingLink}" target="_blank">${trackingLink}</a></p>
-  `,
-    });
+    //   const { data: emailData, error: emailError } = await resend.emails.send({
+    //     from: "onboarding@resend.dev",
+    //     to: advertiser.email,
+    //     subject: "TEST: Your Advertisement Submission – Track Status",
+    //     html: `
+    //   <h2>Thank you for submitting your advertisement!</h2>
+    //   <p><b>Reference:</b> ${referenceNumber}</p>
+    //   <p>Track here: <a href="${trackingLink}" target="_blank">${trackingLink}</a></p>
+    // `,
+    //   });
 
-    if (emailError) {
-      console.error("Email send failed:", emailError);
-    } else {
-      console.log("Email sent:", emailData);
-    }
+    //   if (emailError) {
+    //     console.error("Email send failed:", emailError);
+    //   } else {
+    //     console.log("Email sent:", emailData);
+    //   }
 
     // Send SMS
     let to = "user"

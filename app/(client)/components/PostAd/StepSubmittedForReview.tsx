@@ -59,7 +59,7 @@ export default function StepSubmittedForReview({
             {cleanedLink}
           </a>
           <br />
-          <span>This link has also been emailed to you.</span>
+          <span>Check your Messages for the link.</span>
         </p>
       ) : (
         <p className="text-gray-500 italic pt-5">
