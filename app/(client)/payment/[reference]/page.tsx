@@ -21,6 +21,7 @@ export default function PaymentPage({ params }: Props) {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [price, setPrice] = useState<number | null>(null);
   const [loadingPrice, setLoadingPrice] = useState(true);
+  const [alertMessage, setAlertMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (!token) return;
@@ -34,9 +35,11 @@ export default function PaymentPage({ params }: Props) {
           throw new Error(data.error || "Failed to fetch ad");
         }
 
-        if (data.ad.status !== "Approved") {
-          throw new Error("Ad not approved for payment");
-        }
+        console.log(data);
+
+        // if (data.ad.status !== "PaymentPending") {
+        //   throw new Error("Ad not approved for payment");
+        // }
 
         setPrice(data.ad.price ?? 0);
       } catch (err) {
@@ -49,6 +52,30 @@ export default function PaymentPage({ params }: Props) {
 
     fetchPrice();
   }, [reference, token]);
+
+  const updateStatus = async (
+    status: string,
+    message: string,
+    errMessage: string,
+  ) => {
+    const res = await fetch(`/api/ads/updateStatus`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        reference_number: reference,
+        status,
+      }),
+    });
+
+    const result = await res.json();
+
+    if (!res.ok) {
+      setAlertMessage(errMessage + (result.error || "Unknown error"));
+      return;
+    } else {
+      setAlertMessage(message);
+    }
+  };
 
   const handleProceed = async () => {
     if (!file) {
@@ -63,7 +90,7 @@ export default function PaymentPage({ params }: Props) {
       // 1️⃣ Upload to Cloudinary
       const uploadResult = await uploadImageToCloudinary(
         file,
-        setUploadProgress
+        setUploadProgress,
       );
 
       const secureUrl = uploadResult.secure_url;
@@ -84,8 +111,13 @@ export default function PaymentPage({ params }: Props) {
         throw new Error(data.message || "Payment submission failed");
       }
 
+      updateStatus(
+        "PaymentDone",
+        "Payment submitted successfully. Await for Ad Processed status in your Ad Tracker",
+        "Payment Failed",
+      );
+
       // 3️⃣ Redirect
-      window.location.href = `/ads/track/${reference}?t=${token}`;
     } catch (err) {
       console.error(err);
       alert("Failed to submit payment. Please try again.");
@@ -96,7 +128,7 @@ export default function PaymentPage({ params }: Props) {
 
   async function uploadImageToCloudinary(
     file: File,
-    onProgress?: (percent: number) => void
+    onProgress?: (percent: number) => void,
   ) {
     return new Promise<any>((resolve, reject) => {
       const xhr = new XMLHttpRequest();
@@ -105,12 +137,12 @@ export default function PaymentPage({ params }: Props) {
       formData.append("file", file);
       formData.append(
         "upload_preset",
-        process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!
+        process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!,
       );
 
       xhr.open(
         "POST",
-        `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`
+        `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
       );
 
       xhr.upload.onprogress = (event) => {
@@ -257,11 +289,51 @@ export default function PaymentPage({ params }: Props) {
             </div>
           )}
 
+          {alertMessage && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+              <div className="rounded-xl bg-[var(--color-primary-dark)] p-6 w-80 text-white shadow-lg">
+                <h2 className="text-lg font-semibold mb-4">Notice</h2>
+
+                <p className="mb-6 text-sm">{alertMessage}</p>
+
+                <div className="flex justify-end">
+                  <button
+                    onClick={() => {
+                      setAlertMessage(null);
+                      window.location.href = `/ads/track/${reference}?t=${token}`;
+                    }}
+                    className="rounded-full bg-[var(--color-orange-accent)] px-4 py-1.5 text-sm font-medium text-[var(--color-primary-dark)] transition hover:brightness-110"
+                  >
+                    OK
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {activeTab === "online" && (
             <div className="py-10 text-gray-500 text-center">
               Online payment options will be available soon.
             </div>
           )}
+
+          {loadingPrice && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+          <div className="bg-[var(--color-primary-dark)] text-white rounded-xl p-6 w-80 shadow-xl text-center">
+            <div className="mb-4 flex justify-center">
+              <div className="h-8 w-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+            </div>
+
+            <h2 className="text-lg font-semibold mb-2">Loading payment amount...</h2>
+
+            {/* <p className="text-sm opacity-90">
+              {currentStep === 1 && "Loading ad types..."}
+              {currentStep === 2 && "Preparing advertiser form..."}
+              {currentStep === 3 && "Submitting advertisement..."}
+            </p> */}
+          </div>
+        </div>
+      )}
         </div>
       </section>
     </main>

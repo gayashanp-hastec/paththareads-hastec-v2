@@ -18,7 +18,7 @@ export default function StepAdvertiserDetails({
 }: StepAdvertiserDetailsProps) {
   const [isPhoneValid, setIsPhoneValid] = useState(true);
   const [countryDialCode, setCountryDialCode] = useState(
-    formData.countryCode || "+94"
+    formData.countryCode || "+94",
   );
   const [showTerms, setShowTerms] = useState(false);
   const [agreed, setAgreed] = useState(false);
@@ -51,20 +51,24 @@ export default function StepAdvertiserDetails({
   };
 
   const handleSubmit = (e: React.FormEvent) => {
-    // e.preventDefault();
-
-    // // Optionally validate before submitting
-    // if (!isPhoneValid) {
-    //   toast.error("Please enter a valid phone number before submitting.");
-    //   return;
-    // }
-
-    // ✅ Trigger parent submit function
     onSubmitForReview?.();
   };
 
   return (
     <>
+      <div className="bg-primary text-white px-6 py-3 rounded-lg shadow-md text-center">
+        <h5 className="text-sm">Selected Newspaper</h5>
+        <h5
+          className="text-xl font-semibold"
+          style={{
+            fontFamily: "var(--font-sinhala), sans-serif",
+          }}
+        >
+          {formData.selectedNewspaper.name_sinhala
+            ? formData.selectedNewspaper.name_sinhala
+            : formData.selectedNewspaper.name}
+        </h5>
+      </div>
       <form onSubmit={handleSubmit} className="flex flex-col gap-8">
         <h2 className="text-2xl md:text-3xl font-bold text-center">
           Advertiser Details

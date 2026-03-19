@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import toast from "react-hot-toast";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import AdGridCanvas from "../AdGridCanvas";
+import { ChevronUp } from "lucide-react";
 
 interface StepSelectAdTypeProps {
   formData: any;
@@ -79,6 +80,53 @@ interface AdType {
   sections: AdSection[];
 }
 
+const vehicleBrands = [
+  "Toyota",
+  "Nissan",
+  "Suzuki",
+  "Honda",
+  "Mitsubishi",
+  "Mazda",
+  "Daihatsu",
+  "Isuzu",
+  "Subaru",
+
+  "Hyundai",
+  "Kia",
+  "SsangYong",
+
+  "Tata",
+  "Mahindra",
+  "Ashok Leyland",
+
+  "Perodua",
+  "Proton",
+
+  "BMW",
+  "Mercedes-Benz",
+  "Audi",
+  "Volkswagen",
+  "Porsche",
+  "Land Rover",
+  "Jaguar",
+  "Mini",
+  "Volvo",
+
+  "Peugeot",
+  "Renault",
+
+  "MG",
+  "Chery",
+  "BYD",
+  "Great Wall",
+  "Haval",
+
+  "Tesla",
+
+  "Micro",
+  "DFSK",
+];
+
 export default function StepSelectAdType({
   formData,
   updateFormData,
@@ -107,6 +155,7 @@ export default function StepSelectAdType({
   const [subCategoryOptions, setSubCategoryOptions] = useState<
     { name: string; classification_number: number | null }[]
   >([]);
+  const secondaryTypesSection = useRef<HTMLDivElement | null>(null);
 
   const [selectedSize, setselectedSize] = useState<string>(""); // user selected size full, custom...
   const [selectedColor, setselectedColor] = useState<number>(0); // stores value for colors for casual ads
@@ -114,6 +163,10 @@ export default function StepSelectAdType({
   const [selectedAdHeight, setselectedAdHeight] = useState<number>(
     formData.selectedNewspaper.min_ad_height,
   );
+  const [selectedDistrict, setselectedDistrict] = useState<string>("");
+  const [selectedProvince, setselectedProvince] = useState<string>("");
+  const [showScrollMessage, setShowScrollMessage] = useState(false);
+
   const [noOfColumnsPerPage, setNoOfColumnsPerPage] = useState<number>(
     formData.selectedNewspaper.no_col_per_page,
   );
@@ -133,8 +186,10 @@ export default function StepSelectAdType({
   const allowed_weekdays = formData.selectedNewspaper?.allowed_weekdays ?? [];
   const allowed_month_days =
     formData.selectedNewspaper?.allowed_month_days ?? [];
-  console.log("days here: ", allowed_weekdays);
-  console.log("days here: ", allowed_month_days);
+  // console.log("days here: ", allowed_weekdays);
+  // console.log("days here: ", allowed_month_days);
+
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const MAX_FILES = 8;
   const MAX_SIZE = 3 * 1024 * 1024; // 3MB
@@ -160,8 +215,13 @@ export default function StepSelectAdType({
 
   const now = new Date();
 
+  const ad_time_limit = formData.selectedNewspaper?.ad_time_limit
+    ? formData.selectedNewspaper?.ad_time_limit
+    : 22;
   const minDate =
-    now.getHours() >= 1 ? new Date(now.setDate(now.getDate() + 1)) : new Date();
+    now.getHours() >= ad_time_limit
+      ? new Date(now.getFullYear(), now.getMonth(), now.getDate() + 2)
+      : new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
 
   const formatDateLocal = (date: Date) => {
     const yyyy = date.getFullYear();
@@ -229,6 +289,9 @@ export default function StepSelectAdType({
       selectedAdHeight,
       maxColHeight,
     );
+
+    console.log("look here: ", formData.adTypeObject.count_first_words);
+    console.log("look again: ", formData);
   };
 
   const selectedSectionData = selectedAdType?.sections?.find(
@@ -659,9 +722,71 @@ export default function StepSelectAdType({
               "Place Ad in Sinhala & English Papers",
             ],
           ];
+  function parseStyledText(text: string) {
+    const elements: any[] = [];
+    let buffer = "";
+    let mode: "normal" | "bold" | "italic" = "normal";
 
+    for (let i = 0; i < text.length; i++) {
+      // Bold start
+      if (text[i] === "\\" && text[i + 1] === "b") {
+        if (buffer) elements.push({ text: buffer, mode });
+        buffer = "";
+        mode = "bold";
+        i++;
+        continue;
+      }
+
+      // Italic start
+      if (text[i] === "\\" && text[i + 1] === "i") {
+        if (buffer) elements.push({ text: buffer, mode });
+        buffer = "";
+        mode = "italic";
+        i++;
+        continue;
+      }
+
+      // End styling (\\)
+      if (text[i] === "\\" && text[i + 1] === "\\") {
+        if (buffer) elements.push({ text: buffer, mode });
+        buffer = "";
+        mode = "normal";
+        i++;
+        continue;
+      }
+
+      // Line break (\n)
+      if (text[i] === "\\" && text[i + 1] === "n") {
+        if (buffer) elements.push({ text: buffer, mode });
+        elements.push({ type: "br" });
+        buffer = "";
+        i++;
+        continue;
+      }
+
+      buffer += text[i];
+    }
+
+    if (buffer) elements.push({ text: buffer, mode });
+
+    return elements;
+  }
   return (
     <div className="space-y-6">
+      <div className="bg-primary text-white px-6 py-3 rounded-lg shadow-md text-center">
+        <h5 className="text-sm">Selected Newspaper</h5>
+        <h5
+          className="text-xl font-semibold"
+          style={{
+            fontFamily: "var(--font-sinhala), sans-serif",
+          }}
+        >
+          {formData.selectedNewspaper.name_sinhala
+            ? formData.selectedNewspaper.name_sinhala
+            : formData.selectedNewspaper.name}
+        </h5>
+      </div>
+      <div className="flex justify-center mt-6 mb-12"></div>
       <h2 className="text-2xl font-bold text-center mb-2">Select Ad Type</h2>
       <h2
         style={{
@@ -674,32 +799,54 @@ export default function StepSelectAdType({
 
       <div className="grid grid-cols-2 gap-6 mb-8">
         {[
-          { key: "classified", name: "Classified" },
-          { key: "casual", name: "Casual" },
+          {
+            key: "classified",
+            name: "Classified",
+            description:
+              "Classified ads, Brides & Grooms, Death Notices, Name Changes and other formal announcements.",
+          },
+          {
+            key: "casual",
+            name: "Casual",
+            description:
+              "Colorful ads, thank you notes, greetings, announcements, and short personal messages.",
+          },
         ].map((item) => (
           <div
             key={item.key}
-            className={`border border-primary rounded-lg p-4 my-8 flex flex-col items-center cursor-pointer transition text-4xl text-primary-dark
-        ${
-          selectedMainAdType === item.key
-            ? "ring-2 ring-primary-dark"
-            : "hover:ring-2 hover:ring-primary-dark"
-        }`}
+            className={`border border-primary rounded-lg p-4 my-8 flex flex-col items-center cursor-pointer transition text-primary-dark
+      ${
+        selectedMainAdType === item.key
+          ? "ring-2 ring-primary-dark"
+          : "hover:ring-2 hover:ring-primary-dark"
+      }`}
             onClick={() => {
               setselectedMainAdType(item.key as "classified" | "casual");
-              setSelectedAdType(null); // optional: reset selection below
+              setSelectedAdType(null);
+              setShowScrollMessage(true);
+              setTimeout(() => setShowScrollMessage(false), 1);
+              secondaryTypesSection.current?.scrollIntoView({
+                behavior: "smooth",
+                block: "start",
+              });
             }}
           >
             <div className="w-[120px] h-[30px] flex items-center justify-center mb-2 rounded-md text-lg font-semibold">
               {item.name}
             </div>
-            {/* <h3 className="font-semibold text-center">{item.name}</h3> */}
+
+            <p className="text-sm text-center text-gray-600 mt-2">
+              {item.description}
+            </p>
           </div>
         ))}
       </div>
 
       {selectedMainAdType && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+        <div
+          ref={secondaryTypesSection}
+          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"
+        >
           {loading
             ? Array.from({ length: 6 }).map((_, i) => (
                 <AdTypeSkeleton key={i} />
@@ -727,12 +874,12 @@ export default function StepSelectAdType({
                   <h3 className="font-semibold text-center">{ad.name}</h3>
 
                   {ad.extra_notes1 && (
-                    <p className="text-xs text-gray-500 text-center">
+                    <p className="text-sm text-gray-500 text-center">
                       {ad.extra_notes1}
                     </p>
                   )}
                   {ad.extra_notes2 && (
-                    <p className="text-xs text-gray-500 text-center">
+                    <p className="text-sm text-gray-500 text-center">
                       {ad.extra_notes2}
                     </p>
                   )}
@@ -741,10 +888,10 @@ export default function StepSelectAdType({
         </div>
       )}
 
-      <div className="space-y-4 md:w-2/3 mx-auto md:mt-8">
+      <div className="space-y-4 md:w-full mx-auto md:mt-8 md:flex-column overflow-visible">
         {/* Fields for non-Casual Ads */}
         {selectedAdType && selectedAdType?.key !== "casual" && (
-          <>
+          <div className="md:w-full">
             {/* Publish Date */}
             <div className="w-full">
               <label className="block font-medium mb-1">
@@ -758,6 +905,7 @@ export default function StepSelectAdType({
                 <span className="text-red-500">*</span>
               </label>
 
+              {/* publish date for non casual */}
               <DatePicker
                 selected={
                   formData.publishDate
@@ -820,7 +968,6 @@ export default function StepSelectAdType({
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-accent)]"
               />
             </div>
-
             {/* Category Dropdown */}
             {(selectedAdType.key === "classified" ||
               selectedAdType.key === "photo_classified" ||
@@ -878,7 +1025,36 @@ export default function StepSelectAdType({
                 </select>
               </div>
             )}
+            {selectedCategory === "Automobile" && (
+              <div className="md:mt-8 w-full md:w-1/2">
+                <label className="block font-medium mb-1">
+                  Vehicle Brand{" "}
+                  <span
+                    className="text-sm"
+                    style={{ fontFamily: "var(--font-sinhala), sans-serif" }}
+                  >
+                    (වාහන වර්ගය)
+                  </span>{" "}
+                </label>
+                <select
+                  value={formData.vehicle_brand ?? ""}
+                  onChange={(e) => {
+                    const value = e.target.value || null;
+                    updateFormData({ vehicle_brand: value });
+                    console.log(formData);
+                  }}
+                  className="border border-gray-300 rounded-lg p-2 w-full focus:ring-2 focus:ring-primary-accent"
+                >
+                  <option value="">Select Vehicle Brand</option>
 
+                  {vehicleBrands.map((brand) => (
+                    <option key={brand} value={brand}>
+                      {brand}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             {/* Subcategory Dropdown */}
             {selectedAdType.key !== "marriage" &&
               selectedAdType.key !== "photo_classified" &&
@@ -918,7 +1094,98 @@ export default function StepSelectAdType({
                   </select>
                 </div>
               )}
+            {/* district for classified */}
+            {selectedAdType.key !== "marriage" && (
+              <div className="w-full md:w-1/2">
+                <label className="block font-medium mb-1 md:mt-8">
+                  District{" "}
+                  <span
+                    className="text-sm"
+                    style={{
+                      fontFamily: "var(--font-sinhala), sans-serif",
+                    }}
+                  >
+                    (දිස්ත්‍රික්කය)
+                  </span>{" "}
+                  {/* <span className="text-red-500">*</span> */}
+                </label>
+                <select
+                  value={selectedDistrict}
+                  onChange={(e) => {
+                    setselectedDistrict(e.target.value);
+                    updateFormData({ district: e.target.value });
+                    // setSelectedSubCategory("");
+                  }}
+                  className="border border-gray-300 rounded-lg p-2 w-full focus:ring-2 focus:ring-primary-accent"
+                >
+                  <option value="">Select District</option>
 
+                  <option value="Ampara">Ampara</option>
+                  <option value="Anuradhapura">Anuradhapura</option>
+                  <option value="Badulla">Badulla</option>
+                  <option value="Batticaloa">Batticaloa</option>
+                  <option value="Colombo">Colombo</option>
+                  <option value="Galle">Galle</option>
+                  <option value="Gampaha">Gampaha</option>
+                  <option value="Hambantota">Hambantota</option>
+                  <option value="Jaffna">Jaffna</option>
+                  <option value="Kalutara">Kalutara</option>
+                  <option value="Kandy">Kandy</option>
+                  <option value="Kegalle">Kegalle</option>
+                  <option value="Kilinochchi">Kilinochchi</option>
+                  <option value="Kurunegala">Kurunegala</option>
+                  <option value="Mannar">Mannar</option>
+                  <option value="Matale">Matale</option>
+                  <option value="Matara">Matara</option>
+                  <option value="Monaragala">Monaragala</option>
+                  <option value="Mullaitivu">Mullaitivu</option>
+                  <option value="Nuwara Eliya">Nuwara Eliya</option>
+                  <option value="Polonnaruwa">Polonnaruwa</option>
+                  <option value="Puttalam">Puttalam</option>
+                  <option value="Ratnapura">Ratnapura</option>
+                  <option value="Trincomalee">Trincomalee</option>
+                  <option value="Vavuniya">Vavuniya</option>
+                </select>
+              </div>
+            )}
+            {/* district for classified */}
+            {selectedAdType.key === "marriage" && (
+              <div className="w-full md:w-1/2">
+                <label className="block font-medium mb-1 md:mt-8">
+                  Province{" "}
+                  <span
+                    className="text-sm"
+                    style={{
+                      fontFamily: "var(--font-sinhala), sans-serif",
+                    }}
+                  >
+                    (පළාත)
+                  </span>{" "}
+                  {/* <span className="text-red-500">*</span> */}
+                </label>
+                <select
+                  value={selectedProvince}
+                  onChange={(e) => {
+                    setselectedProvince(e.target.value);
+                    updateFormData({ province: e.target.value });
+                    // setSelectedSubCategory("");
+                  }}
+                  className="border border-gray-300 rounded-lg p-2 w-full focus:ring-2 focus:ring-primary-accent"
+                >
+                  <option value="">Select Province</option>
+
+                  <option value="central">Central</option>
+                  <option value="eastern">Eastern</option>
+                  <option value="north_central">North Central</option>
+                  <option value="northern">Northern</option>
+                  <option value="north_western">North Western</option>
+                  <option value="sabaragamuwa">Sabaragamuwa</option>
+                  <option value="southern">Southern</option>
+                  <option value="uva">Uva</option>
+                  <option value="western">Western</option>
+                </select>
+              </div>
+            )}
             {/* Advertisement Text */}
             <div className="relative md:mt-8">
               <label className="block font-medium mb-1">
@@ -977,7 +1244,6 @@ export default function StepSelectAdType({
                 </span>{" "}
               </p>
             </div>
-
             {/* Image uploads for types other than casual */}
             {selectedAdType?.is_upload_image && (
               <div className="md:mt-8">
@@ -1091,12 +1357,16 @@ export default function StepSelectAdType({
 
                 {selectedAdType.extra_notes1 && (
                   <p className="text-xs text-gray-500">
-                    {selectedAdType.extra_notes1}
+                    <span
+                      style={{ fontFamily: "var(--font-sinhala), sans-serif" }}
+                    >
+                      {selectedAdType.extra_notes1}
+                    </span>{" "}
+                    <span className="text-red-500">**</span>
                   </p>
                 )}
               </div>
             )}
-
             {/* Priority checkbox */}
             {formData.selectedNewspaper.type?.toLowerCase() === "sunday" && (
               <div className="flex flex-col md:flex-row gap-4 md:mt-8">
@@ -1123,164 +1393,177 @@ export default function StepSelectAdType({
                 </label>
               </div>
             )}
-
             {/* Placement & Digital Publications Options - CO Paper, INT BW, INT FC, INT HL */}
-            {selectedMainAdType && (
-              <div className="mt-6 rounded-xl border border-gray-300 bg-white p-4 shadow-sm relative">
-                {/* Header + Toggle */}
-                <div className="flex items-center justify-between">
-                  {/* Enable / Disable Toggle */}
-                  <label className="flex items-center justify-between gap-2 cursor-pointer">
-                    <span className="text-sm text-gray-600">Enable</span>
 
-                    {/* Hidden checkbox controls state */}
-                    <input
-                      type="checkbox"
-                      checked={formData.isPlacementEnabled}
-                      onChange={(e) => {
-                        const enabled = e.target.checked;
-                        updateFormData({
-                          isPlacementEnabled: enabled,
-                          userIntFC: false,
-                          userIntBW: false,
-                          userCOPaper: false,
-                          userIntHighlight: false,
-                        });
-                      }}
-                      className="sr-only" // visually hidden but accessible
-                    />
+            {selectedMainAdType &&
+              (selectedAdType.co_paper_price !== 0 ||
+                selectedAdType.internet_bw_price !== 0 ||
+                selectedAdType.internet_fc_price !== 0 ||
+                selectedAdType.internet_highlight_price !== 0) && (
+                <div className="mt-6 rounded-xl border border-gray-300 bg-white p-4 shadow-sm relative">
+                  {/* Header + Toggle */}
+                  <div className="flex items-center justify-between">
+                    {/* Enable / Disable Toggle */}
+                    <label className="flex items-center justify-between gap-2 cursor-pointer">
+                      <span className="text-sm text-gray-600">Enable</span>
 
-                    {/* Custom switch */}
-                    <span
-                      className={`w-11 h-6 rounded-full relative transition-colors duration-300 ${formData.isPlacementEnabled ? "bg-[var(--color-primary-dark)]" : "bg-gray-300"}`}
-                    >
-                      {/* The knob */}
-                      <span
-                        className={`absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-300 ${formData.isPlacementEnabled ? "translate-x-5" : "translate-x-0"}`}
+                      {/* Hidden checkbox controls state */}
+                      <input
+                        type="checkbox"
+                        checked={formData.isPlacementEnabled}
+                        onChange={(e) => {
+                          const enabled = e.target.checked;
+                          updateFormData({
+                            isPlacementEnabled: enabled,
+                            userIntFC: false,
+                            userIntBW: false,
+                            userCOPaper: false,
+                            userIntHighlight: false,
+                          });
+                        }}
+                        className="sr-only" // visually hidden but accessible
                       />
-                    </span>
-                  </label>
-                </div>
 
-                <h3 className="mb-1 font-normal text-[var(--color-primary-dark)] text-center">
-                  Placement & Digital Publications Options
-                </h3>
-                <h3
-                  className="mb-2 font-normal text-[var(--color-primary-dark)] text-center text-sm"
-                  style={{ fontFamily: "var(--font-sinhala), sans-serif" }}
-                >
-                  (ස්ථානගත කිරීම සහ ඩිජිටල් ප්‍රකාශන සටහන්)
-                </h3>
+                      {/* Custom switch */}
+                      <span
+                        className={`w-11 h-6 rounded-full relative transition-colors duration-300 ${formData.isPlacementEnabled ? "bg-[var(--color-primary-dark)]" : "bg-gray-300"}`}
+                      >
+                        {/* The knob */}
+                        <span
+                          className={`absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-300 ${formData.isPlacementEnabled ? "translate-x-5" : "translate-x-0"}`}
+                        />
+                      </span>
+                    </label>
+                  </div>
 
-                {/* Main Section: Disable if toggle is off */}
-                <div
-                  className={`grid grid-cols-2 gap-4 w-full py-4 transition-opacity ${
-                    !formData.isPlacementEnabled
-                      ? "opacity-50 pointer-events-none"
-                      : ""
-                  }`}
-                >
-                  {/* ================= PART 1 ================= */}
-                  <div className="col-span-2 md:col-span-1 flex flex-col">
-                    <p className="mb-2 text-sm text-center text-gray-600">
-                      Select <strong>one</strong> internet publication option
-                    </p>
+                  <h3 className="mb-1 font-normal text-[var(--color-primary-dark)] text-center">
+                    Placement & Digital Publications Options
+                  </h3>
+                  <h3
+                    className="mb-2 font-normal text-[var(--color-primary-dark)] text-center text-sm"
+                    style={{ fontFamily: "var(--font-sinhala), sans-serif" }}
+                  >
+                    (ස්ථානගත කිරීම සහ ඩිජිටල් ප්‍රකාශන සටහන්)
+                  </h3>
 
-                    <div className="grid grid-cols-2 gap-4">
-                      {/* Internet Full Color */}
-                      <button
-                        type="button"
-                        onClick={() =>
-                          updateFormData({ userIntFC: true, userIntBW: false })
-                        }
-                        className={`h-full rounded-xl border p-4 text-left transition-all
+                  {/* Main Section: Disable if toggle is off */}
+                  <div
+                    className={`grid grid-cols-2 gap-4 w-full py-4 transition-opacity ${
+                      !formData.isPlacementEnabled
+                        ? "opacity-50 pointer-events-none"
+                        : ""
+                    }`}
+                  >
+                    {/* ================= PART 1 ================= */}
+                    <div className="col-span-2 md:col-span-1 flex flex-col">
+                      <p className="mb-2 text-sm text-center text-gray-600">
+                        Select <strong>one</strong> internet publication option
+                      </p>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        {/* Internet Full Color */}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            updateFormData({
+                              userIntFC: true,
+                              userIntBW: false,
+                            })
+                          }
+                          className={`h-full rounded-xl border p-4 text-left transition-all
             ${
               formData.userIntFC
                 ? "bg-[var(--color-primary-dark)] border-[var(--color-primary-dark)] text-white"
                 : "border-gray-300 hover:border-[var(--color-primary)]"
             }`}
-                      >
-                        <p className="font-medium">Internet Full Color</p>
-                        <p
-                          className={`text-xs mt-1 ${
-                            formData.userIntFC
-                              ? "text-white/80"
-                              : "text-gray-500"
-                          }`}
                         >
-                          Display ad in full colour on digital platforms
-                        </p>
-                      </button>
+                          <p className="font-medium">Internet Full Color</p>
+                          <p
+                            className={`text-xs mt-1 ${
+                              formData.userIntFC
+                                ? "text-white/80"
+                                : "text-gray-500"
+                            }`}
+                          >
+                            Display ad in full colour on digital platforms
+                          </p>
+                        </button>
 
-                      {/* Internet Black & White */}
-                      <button
-                        type="button"
-                        onClick={() =>
-                          updateFormData({ userIntBW: true, userIntFC: false })
-                        }
-                        className={`h-full rounded-xl border p-4 text-left transition-all
+                        {/* Internet Black & White */}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            updateFormData({
+                              userIntBW: true,
+                              userIntFC: false,
+                            })
+                          }
+                          className={`h-full rounded-xl border p-4 text-left transition-all
             ${
               formData.userIntBW
                 ? "bg-[var(--color-primary-dark)] border-[var(--color-primary-dark)] text-white"
                 : "border-gray-300 hover:border-[var(--color-primary)]"
             }`}
-                      >
-                        <p className="font-medium">Internet Black & White</p>
-                        <p
-                          className={`text-xs mt-1 ${
-                            formData.userIntBW
-                              ? "text-white/80"
-                              : "text-gray-500"
-                          }`}
                         >
-                          Grayscale digital advertisement placement
-                        </p>
-                      </button>
+                          <p className="font-medium">Internet Black & White</p>
+                          <p
+                            className={`text-xs mt-1 ${
+                              formData.userIntBW
+                                ? "text-white/80"
+                                : "text-gray-500"
+                            }`}
+                          >
+                            Grayscale digital advertisement placement
+                          </p>
+                        </button>
+                      </div>
                     </div>
-                  </div>
 
-                  {/* ================= PART 2 ================= */}
-                  <div className="col-span-2 md:col-span-1 flex flex-col">
-                    <p className="mb-2 text-sm text-center text-gray-600">
-                      Select additional placement & highlight options (optional)
-                    </p>
+                    {/* ================= PART 2 ================= */}
+                    <div className="col-span-2 md:col-span-1 flex flex-col">
+                      <p className="mb-2 text-sm text-center text-gray-600">
+                        Select additional placement & highlight options
+                        (optional)
+                      </p>
 
-                    <div className="grid grid-cols-2 gap-4">
-                      {/* CO Paper */}
-                      <button
-                        type="button"
-                        onClick={() =>
-                          updateFormData({ userCOPaper: !formData.userCOPaper })
-                        }
-                        className={`h-full rounded-xl border p-4 text-left transition-all
+                      <div className="grid grid-cols-2 gap-4">
+                        {/* CO Paper */}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            updateFormData({
+                              userCOPaper: !formData.userCOPaper,
+                            })
+                          }
+                          className={`h-full rounded-xl border p-4 text-left transition-all
             ${
               formData.userCOPaper
                 ? "bg-[var(--color-primary-dark)] border-[var(--color-primary-dark)] text-white"
                 : "border-gray-300 hover:border-[var(--color-primary)]"
             }`}
-                      >
-                        <p className="font-medium">CO Paper</p>
-                        <p
-                          className={`text-xs mt-1 ${
-                            formData.userCOPaper
-                              ? "text-white/80"
-                              : "text-gray-500"
-                          }`}
                         >
-                          Placement decided by the newspaper
-                        </p>
-                      </button>
+                          <p className="font-medium">CO Paper</p>
+                          <p
+                            className={`text-xs mt-1 ${
+                              formData.userCOPaper
+                                ? "text-white/80"
+                                : "text-gray-500"
+                            }`}
+                          >
+                            Placement decided by the newspaper
+                          </p>
+                        </button>
 
-                      {/* Internet Highlight */}
-                      <button
-                        type="button"
-                        disabled={!formData.userIntBW && !formData.userIntFC}
-                        onClick={() =>
-                          updateFormData({
-                            userIntHighlight: !formData.userIntHighlight,
-                          })
-                        }
-                        className={`h-full rounded-xl border p-4 text-left transition-all
+                        {/* Internet Highlight */}
+                        <button
+                          type="button"
+                          disabled={!formData.userIntBW && !formData.userIntFC}
+                          onClick={() =>
+                            updateFormData({
+                              userIntHighlight: !formData.userIntHighlight,
+                            })
+                          }
+                          className={`h-full rounded-xl border p-4 text-left transition-all
             ${
               !formData.userIntBW && !formData.userIntFC
                 ? "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed"
@@ -1288,26 +1571,24 @@ export default function StepSelectAdType({
                   ? "bg-[var(--color-primary-dark)] border-[var(--color-primary-dark)] text-white"
                   : "border-gray-300 hover:border-[var(--color-primary)]"
             }`}
-                      >
-                        <p className="font-medium">Internet Highlight</p>
-                        <p
-                          className={`text-xs mt-1 ${
-                            formData.userIntHighlight
-                              ? "text-white/80"
-                              : "text-gray-500"
-                          }`}
                         >
-                          Featured placement to attract more views
-                        </p>
-                      </button>
+                          <p className="font-medium">Internet Highlight</p>
+                          <p
+                            className={`text-xs mt-1 ${
+                              formData.userIntHighlight
+                                ? "text-white/80"
+                                : "text-gray-500"
+                            }`}
+                          >
+                            Featured placement to attract more views
+                          </p>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
-
+              )}
             {/* Background tint price */}
-
             {selectedAdType.tint_color_price > 0 && (
               <div className="flex flex-col md:flex-row gap-4 md:mt-8">
                 <label className="flex items-center space-x-2">
@@ -1333,7 +1614,6 @@ export default function StepSelectAdType({
                 </label>
               </div>
             )}
-
             {/* Language Combination Checkbox */}
             {selectedMainAdType === "classified" &&
               formData.selectedNewspaper?.is_lang_combine_allowed && (
@@ -1362,7 +1642,6 @@ export default function StepSelectAdType({
                   </label>
                 </div>
               )}
-
             {/* English and Tamil Language checkboxes */}
             {selectedMainAdType === "classified" &&
               formData.userLangCombineSelected && (
@@ -1398,7 +1677,6 @@ export default function StepSelectAdType({
                   ))}
                 </div>
               )}
-
             {/* Post in website? checkbox */}
             <div>
               {selectedAdType.is_allow_combined && (
@@ -1424,7 +1702,6 @@ export default function StepSelectAdType({
                 </label>
               )}
             </div>
-
             {/* Special Notes non-casual */}
             <div className=" md:mt-8">
               <label className="block font-medium mb-1">
@@ -1448,12 +1725,12 @@ export default function StepSelectAdType({
                 className="border border-gray-300 rounded-lg p-2 w-full focus:ring-2 focus:ring-primary-accent resize-none"
               />
             </div>
-          </>
+          </div>
         )}
 
         {/* Fields for Casual Types */}
         {selectedAdType && selectedAdType?.key === "casual" && (
-          <>
+          <div className="md:w-full">
             <h2 className="text-2xl font-bold text-center mb-2">
               Select Ad Section
             </h2>
@@ -1543,7 +1820,7 @@ export default function StepSelectAdType({
                     </span>
                     <span className="text-red-500">*</span>
                   </label>
-
+                  {/* publish date for casual */}
                   <DatePicker
                     selected={
                       formData.publishDate
@@ -1927,6 +2204,7 @@ export default function StepSelectAdType({
                     {selectedAdType.extra_notes1 && (
                       <p className="text-xs text-gray-500">
                         {selectedAdType.extra_notes1}
+                        <span className="text-red-500">**</span>
                       </p>
                     )}
 
@@ -2444,18 +2722,69 @@ export default function StepSelectAdType({
                 </div>
               </>
             )}
-          </>
+          </div>
         )}
 
         {selectedAdType && (
-          <>
-            {/* <AdGridCanvas
-            noOfColumnsPerPage={noOfColumnsPerPage}
-            maxColHeight={maxColHeight}
-          /> */}
+          <div className="sticky bottom-0 w-full flex justify-center z-40">
+            <div className="w-full md:w-1/2">
+              {/* Expandable Panel */}
+              <div
+                className={`transition-all duration-300 overflow-hidden ${
+                  isExpanded ? "max-h-[40vh]" : "max-h-0"
+                }`}
+              >
+                <div className="bg-primary/50 shadow-lg p-4">
+                  <h3 className="text-lg font-semibold mb-3 text-[var(--color-primary-dark)]">
+                    Price Breakdown
+                  </h3>
 
-            {/* Pricing */}
-            <div className="bg-gray-100 p-5 rounded-xl shadow-sm sm:max-w-md w-full mx-auto">
+                  <ul className="divide-y divide-gray-200">
+                    {priceBreakdown.map((item, i) => (
+                      <li
+                        key={i}
+                        className="flex justify-between py-2 text-sm text-[var(--color-text)]"
+                      >
+                        <span>{item.label}</span>
+                        <span className="font-medium">
+                          LKR {item.amount.toLocaleString()}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+
+              {/* Bottom Bar */}
+              <div className="bg-[var(--color-primary)] text-white px-5 py-3 flex justify-between items-center shadow-lg">
+                <div>
+                  <span className="text-sm opacity-80">Total</span>
+                  <div className="text-lg font-bold">
+                    LKR {totalPrice.toLocaleString()}
+                  </div>
+                </div>
+
+                {/* Arrow Button */}
+                <button
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  className="bg-[var(--color-orange-accent)] text-[var(--color-primary-dark)] w-10 h-10 flex items-center justify-center rounded-full"
+                >
+                  <span
+                    className={`transition-transform duration-300 ${
+                      isExpanded ? "rotate-180" : ""
+                    }`}
+                  >
+                    ▲
+                  </span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* {selectedAdType && (
+          <div className="md:w-1/3">
+            <div className="bg-blue-100 p-5 rounded-xl shadow-sm sm:max-w-md w-full mx-auto">
               <h3 className="text-lg font-semibold mb-3 text-[var(--color-primary-dark)]">
                 Price
               </h3>
@@ -2483,9 +2812,24 @@ export default function StepSelectAdType({
                 </span>
               </div>
             </div>
-          </>
-        )}
+          </div>
+        )} */}
       </div>
+
+      {showScrollMessage && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 border border-b-blue-950 bg-white text-primary-dark px-4 py-3 rounded-lg shadow-lg animate-bounce text-center">
+          Scroll down to continue ↓
+          <br />
+          <span
+            className="text-sm"
+            style={{
+              fontFamily: "var(--font-sinhala), sans-serif",
+            }}
+          >
+            (පහලට යන්න)
+          </span>
+        </div>
+      )}
 
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
@@ -2498,41 +2842,56 @@ export default function StepSelectAdType({
               &times;
             </button>
 
-            <div className="p-6 space-y-5">
+            <div className="p-6 space-y-5 max-h-[70vh] overflow-y-auto">
               <h2 className="text-xl md:text-2xl font-bold text-[var(--color-primary-dark)] text-center">
                 Casual Advertisement Tips
               </h2>
 
-              <ul className="list-disc list-inside text-sm md:text-base space-y-2 text-gray-700">
-                <li>
-                  <span className="font-semibold">Width:</span> measured in
-                  columns; 1 column = 3.8 cm
-                </li>
-                <li>
-                  <span className="font-semibold">Height:</span> measured in
-                  centimeters
-                </li>
-                <li>
-                  <span className="font-semibold">
-                    Cost Calculation: (Width × Height × per Column Rate) + Tax
-                  </span>
-                </li>
-              </ul>
+              {!formData.selectedNewspaper?.lm_description && (
+                <p className="text-center text-gray-400 text-sm">
+                  No information available.
+                </p>
+              )}
 
-              {/* Sample Image */}
-              <div className="flex justify-center">
-                <img
-                  src="/casual-ad-sample.png"
-                  alt="Sample ad layout"
-                  className="max-w-full h-auto rounded-lg border border-[var(--color-primary-accent)] shadow-sm"
-                />
-              </div>
+              {/* Dynamic Description */}
+              {formData.selectedNewspaper?.lm_description && (
+                <div className="text-sm md:text-base text-gray-700 leading-relaxed">
+                  {parseStyledText(
+                    formData.selectedNewspaper.lm_description,
+                  ).map((part, index) => {
+                    if (part.type === "br") return <br key={index} />;
 
-              {/* Optional Note */}
-              <p className="text-xs text-gray-500 text-center">
-                Tip: Use the grid and ad height sliders to customize your ad
-                size precisely.
-              </p>
+                    if (part.mode === "bold") {
+                      return (
+                        <span key={index} className="font-semibold">
+                          {part.text}
+                        </span>
+                      );
+                    }
+
+                    if (part.mode === "italic") {
+                      return (
+                        <span key={index} className="italic">
+                          {part.text}
+                        </span>
+                      );
+                    }
+
+                    return <span key={index}>{part.text}</span>;
+                  })}
+                </div>
+              )}
+
+              {/* Dynamic Image */}
+              {formData.selectedNewspaper?.lm_image && (
+                <div className="flex justify-center">
+                  <img
+                    src={formData.selectedNewspaper.lm_image}
+                    alt="Learn more"
+                    className="max-w-full h-auto rounded-lg border border-[var(--color-primary-accent)] shadow-sm"
+                  />
+                </div>
+              )}
             </div>
           </div>
         </div>

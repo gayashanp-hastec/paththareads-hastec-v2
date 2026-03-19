@@ -14,6 +14,7 @@ type AdData = {
   price?: number | null;
   latest_price_change?: {
     requested_price: number;
+    old_price: number;
     reason: string;
     status: string;
     created_at: string;
@@ -33,6 +34,7 @@ export default function TrackAdClient({ reference }: { reference: string }) {
   const [isEdited, setIsEdited] = useState(false);
   const [maxWords, setMaxWords] = useState<number | null>(null);
   const [expiry, setExpiry] = useState<string | null>(null);
+  const [alertMessage, setAlertMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (!token) {
@@ -150,21 +152,64 @@ export default function TrackAdClient({ reference }: { reference: string }) {
     } else alert(data.error || "Failed");
   }
 
+  const updateStatus = async (
+    status: string,
+    message: string,
+    errMessage: string,
+  ) => {
+    const res = await fetch(`/api/ads/updateStatus`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        reference_number: reference,
+        status,
+      }),
+    });
+
+    const result = await res.json();
+
+    if (!res.ok) {
+      setAlertMessage(errMessage + (result.error || "Unknown error"));
+      return;
+    }
+
+    setAlertMessage(message);
+  };
+
+  const [isProcessing, setIsProcessing] = useState(false);
+
   async function handleConfirm() {
     if (isEdited)
       return alert(
         "Cannot confirm while you edited text. Use Resubmit or revert.",
       );
-    const res = await fetch(`/api/ads/${reference}/confirm`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token }),
-    });
-    const data = await res.json();
-    if (data.ok) {
-      alert("Confirmed and approved. Thank you!");
-      fetchAd();
-    } else alert(data.error || "Failed to confirm");
+
+    try {
+      setIsProcessing(true);
+
+      const res = await fetch(`/api/ads/${reference}/confirm`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token }),
+      });
+
+      const data = await res.json();
+
+      if (data.ok) {
+        updateStatus(
+          "PaymentPending",
+          "Confirmed and approved. Thank you!",
+          "Error!",
+        );
+        fetchAd();
+      } else {
+        alert(data.error || "Failed to confirm");
+      }
+    } catch (err) {
+      alert("Network error");
+    } finally {
+      setIsProcessing(false);
+    }
   }
 
   async function handleCancel() {
@@ -184,19 +229,17 @@ export default function TrackAdClient({ reference }: { reference: string }) {
   }
 
   async function handlePayment() {
-    // const res = await fetch(`/api/ads/${reference}/proceed-payment`, {
-    //   method: "POST",
-    //   headers: { "Content-Type": "application/json" },
-    //   body: JSON.stringify({ token }),
-    // });
-    // const data = await res.json();
-    // if (data.ok) {
-    // alert("Payment initiated successfully. Redirecting soon...");
-    // Example: navigate to /payment/[reference]
-    window.location.href = `/payment/${reference}?t=${token}`;
-    // } else {
-    //   alert(data.error || "Failed to proceed with payment.");
-    // }
+    try {
+      setIsProcessing(true);
+
+      // small delay ensures React renders the overlay before redirect
+      setTimeout(() => {
+        window.location.href = `/payment/${reference}?t=${token}`;
+      }, 100);
+    } catch (err) {
+      setIsProcessing(false);
+      alert("Failed to initiate payment.");
+    }
   }
 
   async function uploadImageToCloudinary(file: File) {
@@ -406,12 +449,15 @@ export default function TrackAdClient({ reference }: { reference: string }) {
       )}
       {ad.latest_price_change && (
         <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <p className="text-sm font-semibold text-yellow-800 mb-1">
-            Price Change Requested
+          <p className="text-sm font-semibold mb-1">
+            Initial Price:{" "}
+            <span className="font-normal">
+              {ad.latest_price_change.old_price.toLocaleString()}
+            </span>
           </p>
 
           <p className="text-lg font-bold text-yellow-900">
-            New Price: LKR{" "}
+            Requested Price Change: LKR{" "}
             {ad.latest_price_change.requested_price.toLocaleString()}
           </p>
 
@@ -424,7 +470,7 @@ export default function TrackAdClient({ reference }: { reference: string }) {
             {new Date(ad.latest_price_change.created_at).toLocaleString()}
           </p>
 
-          <span
+          {/* <span
             className={`inline-block mt-2 px-2 py-0.5 rounded-full text-xs ${
               ad.latest_price_change.status === "Pending"
                 ? "bg-yellow-200 text-yellow-900"
@@ -434,7 +480,7 @@ export default function TrackAdClient({ reference }: { reference: string }) {
             }`}
           >
             {ad.latest_price_change.status}
-          </span>
+          </span> */}
         </div>
       )}
 
@@ -482,6 +528,7 @@ export default function TrackAdClient({ reference }: { reference: string }) {
           "Resubmitted",
           "UpdateImage",
           "PriceChange",
+          "PaymentPending",
         ].includes(ad.status) && (
           <button
             onClick={handleCancel}
@@ -496,7 +543,7 @@ export default function TrackAdClient({ reference }: { reference: string }) {
           </button>
         )}
 
-        {ad.status === "Approved" && (
+        {(ad.status === "Approved" || ad.status === "PaymentPending") && (
           <button
             onClick={handlePayment}
             className="px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm sm:text-base font-medium transition-all shadow-sm"
@@ -525,6 +572,41 @@ export default function TrackAdClient({ reference }: { reference: string }) {
           </button>
         )}
       </div>
+
+      {alertMessage && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="rounded-xl bg-[var(--color-primary-dark)] p-6 w-80 text-white shadow-lg">
+            <h2 className="text-lg font-semibold mb-4">Notice</h2>
+
+            <p className="mb-6 text-sm">{alertMessage}</p>
+
+            <div className="flex justify-end">
+              <button
+                onClick={() => setAlertMessage(null)}
+                className="rounded-full bg-[var(--color-orange-accent)] px-4 py-1.5 text-sm font-medium text-[var(--color-primary-dark)] transition hover:brightness-110"
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isProcessing && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+          <div className="bg-[var(--color-primary-dark)] text-white rounded-xl p-6 w-80 shadow-xl text-center">
+            <div className="mb-4 flex justify-center">
+              <div className="h-8 w-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+            </div>
+
+            <h2 className="text-lg font-semibold mb-2">Processing...</h2>
+
+            <p className="text-sm opacity-90">
+              Please wait while we confirm your advertisement.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

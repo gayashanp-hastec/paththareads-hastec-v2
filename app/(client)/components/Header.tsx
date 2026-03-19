@@ -59,8 +59,8 @@ export default function Header() {
             : "h-36 md:h-44 bg-gradient-to-b from-[#042a36] via-[#06394a] via-[#0a4b5f] to-[#0e5f73]",
         )}
       >
-        <div className="mx-auto flex h-full max-w-7xl flex-col px-4 md:px-8">
-          {!isScrolled && (
+        <div className="mx-auto flex h-full max-w-7/10 flex-col px-4 md:px-4">
+          {/* {!isScrolled && (
             <div className="hidden items-center justify-end py-1 text-xs sm:flex">
               <a
                 href="mailto:themedialink@gmail.com"
@@ -70,14 +70,14 @@ export default function Header() {
                 themedialink@gmail.com
               </a>
             </div>
-          )}
+          )} */}
 
           <div className="flex flex-1 items-center justify-between gap-4">
             <Link href="/" className="flex items-center">
               <Image
                 src="/sample-logo-1.png"
                 alt="Paththare Ads Logo"
-                width={isScrolled ? 110 : 170}
+                width={isScrolled ? 140 : 220}
                 height={60}
                 className="object-contain transition-all"
                 priority
@@ -99,7 +99,8 @@ export default function Header() {
                 <Link
                   href="/post-ad"
                   onClick={(e) => handlePostAdClick(e, "/post-ad")}
-                  className="rounded-xl bg-primary-dark px-6 py-2 text-sm font-medium text-white transition hover:brightness-110"
+                  // className="rounded-xl bg-primary-dark px-6 py-2 text-sm font-medium text-white transition hover:brightness-110"
+                  className="specialBtn rounded-xl px-6 py-2"
                 >
                   Post Your Ad
                 </Link>
@@ -172,7 +173,7 @@ export default function Header() {
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setConfirmModalOpen(false)}
-                className="rounded-full bg-[var(--color-button)] px-4 py-1.5 text-sm font-medium transition hover:bg-[var(--color-button-hover)] text-white"
+                className="rounded-full bg-[var(--color-button)] px-4 py-1.5 text-sm font-medium transition hover:bg-[var(--color-primary)] text-white"
               >
                 Cancel
               </button>

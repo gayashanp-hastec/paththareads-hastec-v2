@@ -70,6 +70,8 @@ interface FormData {
   uploading: boolean;
   classifiedCategory: string | null;
   subCategory?: string;
+  district: string | null;
+  province: string | null;
   publishDate: string;
   adText: string;
   backgroundColor: boolean;
@@ -106,7 +108,7 @@ interface FormData {
   adSizeType: string;
   boxType: number;
 
-  vehicleModel: string;
+  vehicle_brand: string;
   vehicleType: string;
   vehicleYear: string;
   totalPrice: number | null;
@@ -134,6 +136,8 @@ export default function PostAdPage() {
   const [referenceNumber, setReferenceNumber] = useState("");
   const [trackingLink, setTrackingLink] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [alertMessage, setAlertMessage] = useState<string | null>(null);
 
   const [formData, setFormData] = useState<FormData>({
     currentStep: 1,
@@ -142,6 +146,8 @@ export default function PostAdPage() {
     adTypeObject: null,
     uploading: false,
     classifiedCategory: null,
+    district: null,
+    province: null,
     publishDate: "",
     adText: "",
     backgroundColor: false,
@@ -176,7 +182,7 @@ export default function PostAdPage() {
     colorOption: "",
     adSizeType: "",
     boxType: 0,
-    vehicleModel: "",
+    vehicle_brand: "",
     vehicleType: "",
     vehicleYear: "",
     totalPrice: null,
@@ -204,22 +210,22 @@ export default function PostAdPage() {
     switch (currentStep) {
       case 1:
         if (!formData.selectedNewspaper) {
-          // toast.error("Please select a newspaper before proceeding.");
+          //setAlertMessage("Please select a newspaper before proceeding.");
           return false;
         }
         return true;
       case 2:
         if (!formData.adType) {
-          toast.error("Please select an ad type.");
+          setAlertMessage("Please select an ad type!");
           return false;
         }
         if (!formData.publishDate) {
           // console.log(formData.selectedNewspaper);
-          toast.error("Publish date is required.");
+          setAlertMessage("Publish date is required!");
           return false;
         }
         if (formData.adType !== "casual" && !formData.adText.trim()) {
-          toast.error("Advertisement text cannot be empty.");
+          setAlertMessage("Advertisement text cannot be empty!");
           return false;
         }
         if (
@@ -228,7 +234,7 @@ export default function PostAdPage() {
           !formData.adText.trim() &&
           adType_?.max_words !== 0
         ) {
-          toast.error("Advertisement text cannot be empty.");
+          setAlertMessage("Advertisement text cannot be empty!");
           return false;
         }
         if (
@@ -236,7 +242,7 @@ export default function PostAdPage() {
           formData.needArtwork &&
           !formData.adText.trim()
         ) {
-          toast.error("Advertisement text cannot be empty.");
+          setAlertMessage("Advertisement text cannot be empty!");
           return false;
         }
 
@@ -245,7 +251,7 @@ export default function PostAdPage() {
             formData.boxType === 0 &&
             (formData.adSizeType === "" || formData.colorOption === "")
           ) {
-            toast.error("Please select size and color!");
+            setAlertMessage("Please select size and color!");
             return false;
           }
         }
@@ -255,21 +261,21 @@ export default function PostAdPage() {
           adType_?.is_upload_image &&
           formData.uploadedImages.length === 0
         ) {
-          toast.error("Please upload an image!");
+          setAlertMessage("Please upload an image!");
           return false;
         }
         if (formData.adSizeType === "custom" && formData.noOfColumns === 0) {
-          toast.error("Please select a column size!");
+          setAlertMessage("Please select a column size!");
           return false;
         }
 
         const hasProfanity = await checkProfanity(formData.adText);
         if (hasProfanity) {
-          toast.error("Advertisement text contains inappropriate words.");
+          setAlertMessage("Advertisement text contains inappropriate words!");
           return false;
         }
         // if (formData.adType === "classified" && !formData.classifiedCategory) {
-        //   toast.error("Please select a classified category.");
+        //  setAlertMessage("Please select a classified category.");
         //   return false;
         // }
         if (
@@ -278,51 +284,51 @@ export default function PostAdPage() {
           !formData.uploadedImage &&
           formData.uploadedImages.length === 0
         ) {
-          toast.error("Please upload an image!");
+          setAlertMessage("Please upload an image!");
           return false;
         }
-        console.log("on ad type select: ", formData);
+        // console.log("on ad type select: ", formData);
         return true;
       case 3:
         if (!formData.advertiserName.trim()) {
-          toast.error("Advertiser name is required.");
+          setAlertMessage("Advertiser name is required!");
           return false;
         }
         if (!formData.advertiserAddress.trim()) {
-          toast.error("Advertiser address is required.");
+          setAlertMessage("Advertiser address is required!");
           return false;
         }
         if (!formData.advertiserPhone.trim()) {
-          toast.error("Phone number is required.");
+          setAlertMessage("Phone number is required!");
           return false;
         }
         if (!/^\d+$/.test(formData.advertiserPhone.trim())) {
-          toast.error("Phone number must contain only digits.");
+          setAlertMessage("Phone number must contain only digits!");
           return false;
         }
         if (!formData.advertiserNIC.trim()) {
-          toast.error("NIC is required.");
+          setAlertMessage("NIC is required!");
           return false;
         }
         if (
           formData.advertiserNIC.trim().length !== 12 &&
           formData.advertiserNIC.trim().length !== 10
         ) {
-          toast.error("NIC must only be 10 or 12 characters long.");
+          setAlertMessage("NIC must only be 10 or 12 characters long!");
           return false;
         }
         if (!formData.advertiserEmail.trim()) {
-          toast.error("Email address is required.");
+          setAlertMessage("Email address is required!");
           return false;
         }
         if (
           !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.advertiserEmail.trim())
         ) {
-          toast.error("Invalid email format.");
+          setAlertMessage("Invalid email format!");
           return false;
         }
         if (!formData.tmagree) {
-          toast.error("Please accept the Terms & Conditions to continue.");
+          setAlertMessage("Please accept the Terms & Conditions to continue.");
           return false;
         }
         return true;
@@ -336,11 +342,27 @@ export default function PostAdPage() {
     const isValid = await validateStep();
     console.log("at payload", formData.sectionId);
     if (!isValid) return;
-    if (currentStep < 3) setCurrentStep((prev) => prev + 1);
+
+    setIsProcessing(true);
+
+    // simulate processing delay (or wait for API if needed)
+    setTimeout(() => {
+      if (currentStep < 3) {
+        setCurrentStep((prev) => prev + 1);
+      }
+      setIsProcessing(false);
+    }, 8000); // adjust duration if needed
   };
 
   const prevStep = () => {
-    if (currentStep > 1) setCurrentStep((prev) => prev - 1);
+    setIsProcessing(true);
+
+    setTimeout(() => {
+      if (currentStep > 1) {
+        setCurrentStep((prev) => prev - 1);
+      }
+      setIsProcessing(false);
+    }, 4000);
   };
 
   // ---------------- Submit For Review ----------------
@@ -364,6 +386,8 @@ export default function PostAdPage() {
           ad_type: formData.adType || "",
           classified_category: formData.classifiedCategory || null,
           subcategory: formData.subCategory || null,
+          district: formData.district || null,
+          province: formData.province || null,
           publish_date: formData.publishDate,
           advertisement_text: formData.adText,
           background_color: formData.backgroundColor,
@@ -392,6 +416,8 @@ export default function PostAdPage() {
           is_int_higlight: formData.userIntHighlight,
           section_id: formData.sectionId,
           is_priority: formData.priorityPrice,
+          ad_type_id: formData.adTypeObject?.id,
+          vehicle_brand: formData.vehicle_brand,
         },
       };
 
@@ -402,7 +428,7 @@ export default function PostAdPage() {
       });
 
       if (!res.ok) {
-        toast.error("Failed to submit. Try again later.");
+        setAlertMessage("Failed to submit. Try again later.");
         return;
       }
 
@@ -413,7 +439,7 @@ export default function PostAdPage() {
       setCurrentStep(4);
     } catch (err: any) {
       console.error(err);
-      toast.error("Server error while submitting.");
+      setAlertMessage("Server error while submitting.");
     } finally {
       setIsSubmitting(false);
     }
@@ -589,6 +615,43 @@ export default function PostAdPage() {
                 Leave
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {alertMessage && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="rounded-xl bg-[var(--color-primary-dark)] p-6 w-80 text-white shadow-lg">
+            <h2 className="text-lg font-semibold mb-4">Notice</h2>
+
+            <p className="mb-6 text-sm">{alertMessage}</p>
+
+            <div className="flex justify-end">
+              <button
+                onClick={() => setAlertMessage(null)}
+                className="rounded-full bg-[var(--color-orange-accent)] px-4 py-1.5 text-sm font-medium text-[var(--color-primary-dark)] transition hover:brightness-110"
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isProcessing && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+          <div className="bg-[var(--color-primary-dark)] text-white rounded-xl p-6 w-80 shadow-xl text-center">
+            <div className="mb-4 flex justify-center">
+              <div className="h-8 w-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+            </div>
+
+            <h2 className="text-lg font-semibold mb-2">Loading...</h2>
+
+            {/* <p className="text-sm opacity-90">
+              {currentStep === 1 && "Loading ad types..."}
+              {currentStep === 2 && "Preparing advertiser form..."}
+              {currentStep === 3 && "Submitting advertisement..."}
+            </p> */}
           </div>
         </div>
       )}

@@ -22,6 +22,9 @@ export default function HomePage() {
   const [showTopBtn, setShowTopBtn] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [promos, setPromos] = useState<PromoAd[]>([]);
+  //new slider
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
 
   useEffect(() => {
     async function loadPromos() {
@@ -52,6 +55,24 @@ export default function HomePage() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  useEffect(() => {
+    if (promos.length === 0 || isPaused) return;
+
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % promos.length);
+    }, 6000);
+
+    return () => clearInterval(interval);
+  }, [promos, isPaused]);
+
+  const nextSlide = () => {
+    setCurrentIndex((prev) => (prev + 1) % promos.length);
+  };
+
+  const prevSlide = () => {
+    setCurrentIndex((prev) => (prev === 0 ? promos.length - 1 : prev - 1));
+  };
+
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
   return (
@@ -64,14 +85,17 @@ export default function HomePage() {
         <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-10 px-4 py-16 md:flex-row md:items-center md:px-6">
           {/* LEFT SIDE */}
           <div className="flex w-full md:w-[40%] flex-col gap-6 text-white">
-            <h1 className="text-4xl font-extrabold leading-tight tracking-tight md:text-6xl text-[var(--color-text)]">
-              Advertise{" "}
-              <span className="text-[var(--color-primary)]">Smarter</span>
+            <h1 className="text-4xl font-bold leading-tight tracking-tight md:text-6xl text-[var(--color-text)]">
+              Reserve your Newspaper Ad in{" "}
+              <span className="text-[var(--color-primary)]">Minutes</span>
             </h1>
 
             <p className="max-w-xl text-base leading-relaxed md:text-lg text-[var(--color-text)]">
-              Create and manage your ads effortlessly with{" "}
-              <strong>Paththare Ads</strong>. Your campaign, your control.
+              The easiest way to design and publish classified and casual ads in
+              Sri Lankan Newspapers. Whether it’s for your business or a
+              personal sale, get your message in front of millions, all from the
+              palm of your hand. <strong>Fast, simple,</strong> and{" "}
+              <strong>effective</strong>.
             </p>
 
             <p className="max-w-xl text-base leading-relaxed md:text-lg text-[var(--color-text)]">
@@ -82,21 +106,21 @@ export default function HomePage() {
                   fontFamily: "var(--font-sinhala), sans-serif",
                 }}
               >
-                සමඟින් ඔබේ දැන්වීම් පහසුවෙන් නිර්මාණය කර කළමනාකරණය කරන්න
+                සමගින් ඔබගේ ඕනෑම දැන්වීමක් පහසුවෙන් නිර්මාණය කර පළකරවාගන්න.
               </span>
             </p>
 
             <div className="flex flex-col gap-4 sm:flex-row justify-center md:justify-start md:mt-4">
               <Link
                 href="/post-ad"
-                className="specialBtn inline-flex items-center justify-center rounded-md px-12 py-4 text-base font-medium transition"
+                className="specialBtn inline-flex items-center justify-center rounded-md px-12 py-4 text-xl font-medium transition"
               >
                 Post Ad Now
               </Link>
             </div>
           </div>
 
-          {/* RIGHT SIDE – VERTICAL AUTO CAROUSEL */}
+          {/* RIGHT SIDE – VERTICAL AUTO CAROUSEL
           <div className="flex w-full md:w-[60%] justify-end xs:justify-center">
             <div className="carousel-container relative h-[520px] w-full max-w-xl overflow-hidden rounded-2xl shadow-xl">
               <div
@@ -113,6 +137,72 @@ export default function HomePage() {
                       />
                     </div>
                   </div>
+                ))}
+              </div>
+            </div>
+          </div> */}
+
+          {/* RIGHT SIDE – PREMIUM CAROUSEL */}
+          <div className="flex w-full md:w-[60%] justify-center">
+            <div
+              className="relative w-full max-w-4xl overflow-hidden rounded-2xl shadow-2xl"
+              onMouseEnter={() => setIsPaused(true)}
+              onMouseLeave={() => setIsPaused(false)}
+            >
+              {/* SLIDES */}
+              <div
+                className="flex transition-transform duration-700 ease-in-out"
+                style={{
+                  transform: `translateX(-${currentIndex * 100}%)`,
+                }}
+              >
+                {promos.map((promo) => (
+                  <div key={promo.id} className="min-w-full">
+                    {promo.is_clickable ? (
+                      <a href="#" className="block">
+                        <img
+                          src={promo.ad_image}
+                          alt={promo.ad_name}
+                          className="h-[510px] w-[906] object-cover"
+                        />
+                      </a>
+                    ) : (
+                      <img
+                        src={promo.ad_image}
+                        alt={promo.ad_name}
+                        className="h-[510px] w-[906] object-cover"
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {/* PREVIOUS */}
+              <button
+                onClick={prevSlide}
+                className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-black/40 px-3 py-2 text-white backdrop-blur hover:bg-black/60"
+              >
+                ‹
+              </button>
+
+              {/* NEXT */}
+              <button
+                onClick={nextSlide}
+                className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-black/40 px-3 py-2 text-white backdrop-blur hover:bg-black/60"
+              >
+                ›
+              </button>
+
+              {/* DOTS */}
+              <div className="absolute bottom-4 flex w-full justify-center gap-2">
+                {promos.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentIndex(index)}
+                    className={`h-2 w-2 rounded-full transition-all ${
+                      currentIndex === index ? "bg-white w-5" : "bg-white/50"
+                    }`}
+                  />
                 ))}
               </div>
             </div>
@@ -141,152 +231,6 @@ export default function HomePage() {
           }
         `}</style>
       </section>
-
-      {/* ================= HOW TO SECTION ================= */}
-      {/* <section
-        id="how-to-section"
-        className="mx-auto flex w-full max-w-7xl flex-col gap-10 rounded-lg bg-gray-50 px-6 py-14 md:px-12"
-      >
-        <header className="flex flex-col items-center gap-4 text-center">
-          <h2 className="text-3xl font-bold md:text-4xl">
-            How to Post Your Ad
-          </h2>
-          <p className="max-w-2xl text-base text-gray-700 md:text-lg">
-            Follow these simple steps to create, submit, and publish your ad
-            with Paththare Ads.
-          </p>
-          <p className="max-w-2xl text-sm text-gray-500">
-            Paththare Ads{" "}
-            <span
-              className="md:text-xs"
-              style={{
-                fontFamily: "var(--font-sinhala), sans-serif",
-              }}
-            >
-              සමඟ ඔබේ දැන්වීම නිර්මාණය කිරීමට, ඉදිරිපත් කිරීමට සහ ප්‍රකාශයට පත්
-              කිරීමට මෙම සරල පියවර අනුගමනය කරන්න.
-            </span>
-          </p>
-        </header>
-
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-          {[...Array(6)].map((_, i) => (
-            <div
-              key={i}
-              className="flex flex-col items-center gap-4 rounded-lg bg-white p-6 text-center shadow-sm transition hover:shadow-md"
-            >
-              <span className="text-3xl font-bold text-primary-accent">
-                {i + 1}
-              </span>
-              <div>
-                <h3 className="text-lg font-semibold">
-                  {
-                    [
-                      "Select Paper",
-                      "Select Ad Type",
-                      "Create Your Ad",
-                      "Ad Approval",
-                      "Payment Details",
-                      "Ad Publish",
-                    ][i]
-                  }
-                </h3>
-                <h5
-                  style={{
-                    fontFamily: "var(--font-sinhala), sans-serif",
-                  }}
-                  className="text-sm font-semibold md:mt-1"
-                >
-                  {
-                    [
-                      "(පුවත්පත තෝරන්න)",
-                      "(දැන්වීම් වර්ගය තෝරන්න)",
-                      "(දැන්වීමේ විස්තර ඇතුල් කරන්න)",
-                      "(අනුමැතිය ලබාගැනීම)",
-                      "(ගෙවීම් විස්තර)",
-                      "(දැන්වීම පළ කිරීම)",
-                    ][i]
-                  }
-                </h5>
-              </div>
-
-              <p className="text-sm leading-relaxed text-gray-600">
-                {
-                  [
-                    "First, select your preferred newspaper from the list.",
-                    "Choose your ad type: Classified, Photo Classified, or Casual.",
-                    "Enter your ad details and submit any required documents.",
-                    "Paththare Ads will notify you via email when your ad is approved.",
-                    "Submit your payment via Ezy Cash, MCash, or bank deposit.",
-                    "We’ll send your ad details directly to the newspaper once payment is settled.",
-                  ][i]
-                }
-              </p>
-            </div>
-          ))}
-        </div>
-
-        <div className="flex justify-center">
-          <Link
-            href="/post-ad"
-            className="rounded-md bg-primary px-6 py-3 text-white transition hover:brightness-110"
-          >
-            Get Started
-          </Link>
-        </div>
-      </section> */}
-
-      {/* ================= NEWSPAPER TABS ================= */}
-      {/* <section className="flex flex-col gap-8"> */}
-      {/* Tabs */}
-      {/* <div className="flex justify-center gap-4">
-          {["daily", "sunday"].map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab as any)}
-              className={`rounded-md px-6 py-2 text-sm font-medium transition ${
-                activeTab === tab
-                  ? "bg-primary text-white shadow"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}
-            >
-              {tab === "daily" ? "Daily Newspapers" : "Sunday Newspapers"}
-            </button>
-          ))}
-        </div> */}
-
-      {/* Tiles */}
-      {/* <div className="flex flex-wrap justify-center gap-4">
-          {(activeTab === "daily" ? newspaperTiles : newspaperSundayTiles)
-            .slice(0, showAll ? undefined : 5)
-            .map((tile, idx) => (
-              <button
-                key={idx}
-                onClick={() => setActiveModal(idx)}
-                className="flex h-24 w-44 items-center justify-center overflow-hidden rounded-lg shadow transition hover:scale-105 md:h-36 md:w-72"
-              >
-                <Image
-                  src={tile}
-                  alt={`Newspaper ${idx + 1}`}
-                  width={300}
-                  height={150}
-                  className="h-full w-full object-cover"
-                />
-              </button>
-            ))}
-        </div> */}
-
-      {/* {!showAll && (
-          <div className="flex justify-center pt-6">
-            <Link
-              href="/post-ad"
-              className="rounded-md bg-primary px-6 py-3 text-white transition hover:brightness-110"
-            >
-              Get Started
-            </Link>
-          </div>
-        )} */}
-      {/* </section> */}
 
       {/* ================= MODAL ================= */}
       <NP1LankadeepaModal
