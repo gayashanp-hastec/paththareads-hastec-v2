@@ -3,185 +3,181 @@
 import { useEffect, useState } from "react";
 import Sidebar from "./components/Sidebar";
 import Link from "next/link";
-import { Newspaper, Users, BarChart3, Settings } from "lucide-react";
+import { Newspaper } from "lucide-react";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+} from "recharts";
 
 export default function AdminDashboard() {
-  const [pendingCount, setPendingCount] = useState<number | null>(null);
-  const [loadingAds, setLoadingAds] = useState(true);
+  const [ads, setAds] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchPendingCount = async () => {
+    const fetchAds = async () => {
       try {
-        setLoadingAds(true);
-
-        // const res = await fetch("/api/ads?t=${Date.now()}"); // the timestamp is added to prevent caching because the URL changes each time.
-        const res = await fetch("/api/ads", {
-          cache: "no-store", //essential to prevent caching otherwise want refresh
-        });
+        const res = await fetch("/api/ads", { cache: "no-store" });
         const data = await res.json();
-
-        const pending = data.filter(
-          (ad: any) => ad.status?.toLowerCase() === "pending",
-        ).length;
-
-        setPendingCount(pending);
-      } catch (error) {
-        console.error("Error fetching pending ads:", error);
-        setPendingCount(0);
+        setAds(data);
+      } catch (err) {
+        console.error(err);
       } finally {
-        setLoadingAds(false);
+        setLoading(false);
       }
     };
 
-    // run immediately
-    fetchPendingCount();
-
-    // run every 60 seconds
-    const interval = setInterval(fetchPendingCount, 60000);
-
-    return () => clearInterval(interval);
+    fetchAds();
   }, []);
+
+  // ----------------------------
+  // GRAPH DATA PROCESSING
+  // ----------------------------
+
+  // 1. Ads Created Over Time
+  const adsOverTime = Object.values(
+    ads.reduce((acc: any, ad: any) => {
+      const date = new Date(ad.created_at).toLocaleDateString();
+      acc[date] = acc[date] || { date, count: 0 };
+      acc[date].count += 1;
+      return acc;
+    }, {}),
+  );
+
+  // 2. Revenue Over Time
+  const revenueOverTime = Object.values(
+    ads.reduce((acc: any, ad: any) => {
+      const date = new Date(ad.publish_date).toLocaleDateString();
+      acc[date] = acc[date] || { date, revenue: 0 };
+      acc[date].revenue += Number(ad.price || 0);
+      return acc;
+    }, {}),
+  );
+
+  // 3. Top Newspapers
+  const newspapersData = Object.values(
+    ads.reduce((acc: any, ad: any) => {
+      const name = ad.newspaper_name || "Unknown";
+      acc[name] = acc[name] || { name, count: 0 };
+      acc[name].count += 1;
+      return acc;
+    }, {}),
+  ).slice(0, 5);
 
   const tiles = [
     {
       name: "Advertisements",
       icon: <Newspaper size={26} />,
-      redlink: "admin/",
+      redlink: "admin/advertisements/all/",
     },
     {
       name: "Manage Newspapers",
       icon: <Newspaper size={26} />,
       redlink: "admin/newspapers/",
     },
-    // { name: "Reports", icon: <BarChart3 size={26} /> },
-    // { name: "Settings", icon: <Settings size={26} /> },
   ];
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-gray-100 to-gray-200">
-      <Sidebar />
+    <div className="flex h-screen overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200">
+      {/* Sidebar (FIXED) */}
+      <div className="h-full sticky top-0">
+        <Sidebar />
+      </div>
 
-      {/* Main Content */}
-      <main className="flex-1 p-6 md:p-8 overflow-auto space-y-6">
+      {/* Main Content (SCROLLABLE ONLY THIS) */}
+      <main className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6">
         <h4 className="text-right font-semibold text-gray-600">
           Paththare Ads Admin
         </h4>
 
         <h2 className="text-2xl font-bold">Quick Links</h2>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mt-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
           {tiles.map((tile) => (
             <div
               key={tile.name}
-              className={`relative bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-lg p-6 
-              flex flex-col items-center justify-center hover:shadow-2xl hover:scale-[1.03] 
-              transition-transform duration-300 cursor-pointer
-              ${
-                tile.name === "Advertisements" &&
-                !loadingAds &&
-                pendingCount !== null &&
-                pendingCount > 0
-                  ? "ring-2 ring-red-400"
-                  : ""
-              }`}
+              className="bg-white rounded-2xl shadow-lg p-6 flex flex-col items-center hover:scale-[1.03] transition"
             >
               <div className="text-blue-600 mb-3">{tile.icon}</div>
-              <span className="text-lg font-semibold text-gray-800">
-                {tile.name}
-              </span>
+              <span className="text-lg font-semibold">{tile.name}</span>
 
-              {/* Skeleton shimmer for loading Ads */}
-              {tile.name === "Advertisements" && loadingAds && (
-                <div className="mt-5 w-full flex flex-col gap-3">
-                  <div className="h-6 w-full rounded-lg bg-gray-300 relative overflow-hidden">
-                    <div className="absolute top-0 left-0 h-full w-1/2 bg-gray-100 opacity-50 animate-shimmer"></div>
-                  </div>
-                  <div className="h-6 w-full rounded-lg bg-gray-300 relative overflow-hidden">
-                    <div className="absolute top-0 left-0 h-full w-1/2 bg-gray-100 opacity-50 animate-shimmer"></div>
-                  </div>
-                </div>
-              )}
-
-              {/* Badge for pending ads */}
-              {/* {tile.name === "Advertisements" &&
-                !loadingAds &&
-                pendingCount !== null &&
-                pendingCount > 0 && (
-                  <span className="absolute top-3 right-3 inline-flex items-center justify-center px-2.5 py-1.5 text-xs font-bold leading-none text-white bg-red-600 rounded-full shadow-md animate-pulse-slow">
-                    {pendingCount}
-                  </span>
-                )} */}
-
-              {/* Dynamic Buttons */}
-              {tile.name === "Advertisements" && !loadingAds ? (
-                pendingCount && pendingCount > 0 ? (
-                  <div className="mt-5 w-full flex flex-col sm:flex-row gap-3">
-                    <Link
-                      href="/admin/advertisements/all"
-                      className="flex-1 text-center bg-blue-500 text-white rounded-xl py-2 hover:bg-blue-600 transition"
-                    >
-                      All Ads
-                    </Link>
-                    <Link
-                      href="/admin/advertisements/pending"
-                      className="flex-1 text-center bg-red-500 text-white rounded-xl py-2 hover:bg-red-600 transition"
-                    >
-                      Pending ({pendingCount})
-                    </Link>
-                  </div>
-                ) : (
-                  <Link
-                    href="/admin/advertisements"
-                    className="mt-5 w-full text-center bg-blue-500 text-white rounded-xl py-2 hover:bg-blue-600 transition"
-                  >
-                    Manage Ads
-                  </Link>
-                )
-              ) : (
-                tile.name !== "Advertisements" && (
-                  <button className="mt-5 w-full bg-gray-900 text-white rounded-xl py-2 hover:bg-gray-800 transition">
-                    <Link href={tile.redlink}>View {tile.name}</Link>
-                  </button>
-                )
-              )}
+              <button className="mt-5 w-full bg-gray-900 text-white rounded-xl py-2">
+                <Link href={tile.redlink}>View {tile.name}</Link>
+              </button>
             </div>
           ))}
         </div>
 
         <h2 className="text-2xl font-bold mt-8">Insights</h2>
-        <div className="bg-white rounded-2xl shadow p-6 h-64 flex items-center justify-center text-gray-400">
-          [Graphs coming soon]
-        </div>
+
+        {loading ? (
+          <div className="text-gray-400">
+            <h1>Loading charts...</h1>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Ads Over Time */}
+            <div className="bg-white p-4 rounded-2xl shadow h-80">
+              <h3 className="font-semibold mb-2 text-center">Ads Over Time</h3>
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={adsOverTime}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" />
+                  <YAxis />
+                  <Tooltip />
+                  <Line type="monotone" dataKey="count" />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Top Newspapers */}
+            <div className="bg-white p-4 rounded-2xl shadow h-80">
+              <h3 className="font-semibold mb-2 text-center">Top Newspapers</h3>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={newspapersData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="count">
+                    {newspapersData.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={`hsl(${(index / newspapersData.length) * 360}, 70%, 50%)`}
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Revenue Over Time */}
+            <div className="bg-white p-4 rounded-2xl shadow h-80 col-span-2">
+              <h3 className="font-semibold mb-2 text-center">
+                Revenue Over Time
+              </h3>
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={revenueOverTime}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" />
+                  <YAxis />
+                  <Tooltip />
+                  <Line type="monotone" dataKey="revenue" />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        )}
       </main>
-
-      <style jsx>{`
-        @keyframes pulse-slow {
-          0%,
-          100% {
-            opacity: 1;
-            transform: scale(1);
-          }
-          50% {
-            opacity: 0.7;
-            transform: scale(1.02);
-          }
-        }
-        .animate-pulse-slow {
-          animation: pulse-slow 2.5s infinite;
-        }
-
-        @keyframes shimmer {
-          0% {
-            transform: translateX(-100%);
-          }
-          100% {
-            transform: translateX(100%);
-          }
-        }
-        .animate-shimmer {
-          animation: shimmer 1.5s infinite;
-        }
-      `}</style>
     </div>
   );
 }
