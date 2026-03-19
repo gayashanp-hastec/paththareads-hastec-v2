@@ -98,6 +98,9 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
       allowed_weekdays: [],
       allowed_month_days: [],
       publisher_email: "",
+      lm_image: "",
+      lm_description: "",
+      ad_time_limit: 0,
     },
   );
 
@@ -108,6 +111,9 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
   const [adTypeOptions, setAdTypeOptions] = useState<string[]>([]);
 
   const [modalAlert, setModalAlert] = useState<string | null>(null);
+
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const validate = () => {
     const newErrors: any = {};
@@ -272,6 +278,45 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
     }
   };
   */
+  async function uploadImageToCloudinary(
+    file: File,
+    onProgress?: (percent: number) => void,
+  ) {
+    return new Promise<any>((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      const formData = new FormData();
+
+      formData.append("file", file);
+      formData.append(
+        "upload_preset",
+        process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!,
+      );
+
+      xhr.open(
+        "POST",
+        `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
+      );
+
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable && onProgress) {
+          const percent = Math.round((event.loaded / event.total) * 100);
+          onProgress(percent);
+        }
+      };
+
+      xhr.onload = () => {
+        if (xhr.status === 200) {
+          resolve(JSON.parse(xhr.responseText));
+        } else {
+          reject(new Error("Cloudinary upload failed"));
+        }
+      };
+
+      xhr.onerror = () => reject(new Error("Upload error"));
+
+      xhr.send(formData);
+    });
+  }
 
   /* ---------------- SAVE ---------------- */
   const save = async () => {
@@ -308,6 +353,9 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
       allowed_month_days: form.allowed_month_days,
       allowed_weekdays: form.allowed_weekdays,
       publisher_email: form.publisher_email,
+      lm_image: form.lm_image,
+      lm_description: form.lm_description,
+      ad_time_limit: form.ad_time_limit,
       ad_types: adTypes.map((t) => ({
         key: t.typeKey,
         name: t.name,
@@ -424,6 +472,9 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
           allowed_month_days: data.allowed_month_days,
           allowed_weekdays: data.allowed_weekdays,
           publisher_email: data.publisher_email,
+          lm_image: data.lm_image,
+          lm_description: data.lm_description,
+          ad_time_limit: data.ad_time_limit,
         });
 
         // 2️⃣ Populate ad types with sections + sizes
@@ -561,6 +612,55 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
             ["Sinhala & English Paper Price", "combine_sin_eng_price"],
           ];
 
+  function parseStyledText(text: string) {
+    const elements: any[] = [];
+    let buffer = "";
+    let mode: "normal" | "bold" | "italic" = "normal";
+
+    for (let i = 0; i < text.length; i++) {
+      // Bold start
+      if (text[i] === "\\" && text[i + 1] === "b") {
+        if (buffer) elements.push({ text: buffer, mode });
+        buffer = "";
+        mode = "bold";
+        i++;
+        continue;
+      }
+
+      // Italic start
+      if (text[i] === "\\" && text[i + 1] === "i") {
+        if (buffer) elements.push({ text: buffer, mode });
+        buffer = "";
+        mode = "italic";
+        i++;
+        continue;
+      }
+
+      // End styling (\\)
+      if (text[i] === "\\" && text[i + 1] === "\\") {
+        if (buffer) elements.push({ text: buffer, mode });
+        buffer = "";
+        mode = "normal";
+        i++;
+        continue;
+      }
+
+      // Line break (\n)
+      if (text[i] === "\\" && text[i + 1] === "n") {
+        if (buffer) elements.push({ text: buffer, mode });
+        elements.push({ type: "br" });
+        buffer = "";
+        i++;
+        continue;
+      }
+
+      buffer += text[i];
+    }
+
+    if (buffer) elements.push({ text: buffer, mode });
+
+    return elements;
+  }
   // components/NewspaperSkeleton.tsx
   function NewspaperSkeleton() {
     return (
@@ -915,18 +1015,202 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                 </div>
               )}
 
+              <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                <div className="mt-8">
+                  <label className="block text-sm font-medium text-[var(--color-text)]">
+                    Publisher Email
+                  </label>
+                  <input
+                    type="text"
+                    className={`mt-1 w-full rounded-lg border px-3 py-2 text-sm focus:border-primary focus:outline-none border-gray-300`}
+                    value={form.publisher_email}
+                    onChange={(e) => {
+                      setForm({ ...form, publisher_email: e.target.value });
+                    }}
+                  />
+                </div>
+                <div className="mt-8">
+                  <label className="block text-sm font-medium text-[var(--color-text)]">
+                    Ad Publish Time Limit
+                  </label>
+
+                  <select
+                    className="mt-1 w-1/2 rounded-lg border px-3 py-2 text-sm focus:border-primary focus:outline-none border-gray-300"
+                    value={form.ad_time_limit || 22}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        ad_time_limit: parseInt(e.target.value, 10),
+                      })
+                    }
+                  >
+                    <option value="" disabled>
+                      Select Hour
+                    </option>
+
+                    {Array.from({ length: 24 }, (_, i) => (
+                      <option key={i} value={i}>
+                        {i.toString().padStart(2, "0")}:00
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
               <div className="mt-8">
                 <label className="block text-sm font-medium text-[var(--color-text)]">
-                  Publisher Email
+                  Learn More Image
                 </label>
+
+                {/* Image Upload */}
+                <div
+                  className="mt-2 flex h-32 w-full cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-gray-300 text-sm text-gray-500 hover:border-primary"
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={async (e) => {
+                    e.preventDefault();
+                    const file = e.dataTransfer.files?.[0];
+                    if (!file) return;
+
+                    if (file.size > 15 * 1024 * 1024) {
+                      alert("Image must be less than 15MB");
+                      return;
+                    }
+
+                    try {
+                      setUploading(true);
+                      setUploadProgress(0);
+
+                      const res = await uploadImageToCloudinary(
+                        file,
+                        (percent) => {
+                          setUploadProgress(percent);
+                        },
+                      );
+
+                      setForm({
+                        ...form,
+                        lm_image: res.secure_url,
+                      });
+                    } catch {
+                      alert("Image upload failed");
+                    } finally {
+                      setUploading(false);
+                    }
+                  }}
+                  onClick={() =>
+                    document.getElementById("hiddenFileInput")?.click()
+                  }
+                >
+                  Drag & Drop image here or click to upload
+                </div>
+
+                {/* Hidden fallback input */}
                 <input
-                  type="text"
-                  className={`mt-1 w-1/2 rounded-lg border px-3 py-2 text-sm focus:border-primary focus:outline-none border-gray-300`}
-                  value={form.publisher_email}
-                  onChange={(e) => {
-                    setForm({ ...form, publisher_email: e.target.value });
+                  id="hiddenFileInput"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+
+                    if (file.size > 15 * 1024 * 1024) {
+                      alert("Image must be less than 15MB");
+                      return;
+                    }
+
+                    try {
+                      setUploading(true);
+                      setUploadProgress(0);
+
+                      const res = await uploadImageToCloudinary(
+                        file,
+                        (percent) => {
+                          setUploadProgress(percent);
+                        },
+                      );
+
+                      setForm({
+                        ...form,
+                        lm_image: res.secure_url,
+                      });
+                    } catch {
+                      alert("Image upload failed");
+                    } finally {
+                      setUploading(false);
+                    }
                   }}
                 />
+
+                {/* Upload Progress */}
+                {uploading && (
+                  <p className="mt-2 text-xs text-gray-500">
+                    Uploading... {uploadProgress}%
+                  </p>
+                )}
+
+                {/* Preview */}
+                {form.lm_image && (
+                  <img
+                    src={form.lm_image}
+                    alt="Preview"
+                    className="mt-3 h-32 rounded-lg border object-cover"
+                  />
+                )}
+
+                {/* Text Area */}
+                <div className="mt-4">
+                  <label className="block text-sm font-medium text-[var(--color-text)]">
+                    Learn More Description
+                  </label>
+                  <textarea
+                    rows={4}
+                    className="mt-1 w-full rounded-lg border px-3 py-2 text-sm focus:border-primary focus:outline-none border-gray-300"
+                    value={form.lm_description || ""}
+                    onChange={(e) => {
+                      setForm({ ...form, lm_description: e.target.value });
+                    }}
+                  />
+
+                  {/* Tip */}
+                  <p className="mt-2 text-xs text-gray-500">
+                    Tip: Use <span className="font-mono">\b</span> for bold,{" "}
+                    <span className="font-mono">\i</span> for italic. Use{" "}
+                    <span className="font-mono">\\</span> to end each styling.
+                    Use <span className="font-mono">\n</span> for line break.
+                  </p>
+                </div>
+
+                {form.lm_description && (
+                  <div className="mt-4 p-3 text-sm bg-gray-50">
+                    <div className="mb-4">
+                      <p className="font-semibold">Preview: </p>
+                    </div>
+                    {parseStyledText(form.lm_description).map((part, index) => {
+                      if (part.type === "br") {
+                        return <br key={index} />;
+                      }
+
+                      if (part.mode === "bold") {
+                        return (
+                          <span key={index} className="font-semibold">
+                            {part.text}
+                          </span>
+                        );
+                      }
+
+                      if (part.mode === "italic") {
+                        return (
+                          <span key={index} className="italic">
+                            {part.text}
+                          </span>
+                        );
+                      }
+
+                      return <span key={index}>{part.text}</span>;
+                    })}
+                  </div>
+                )}
               </div>
             </div>
 

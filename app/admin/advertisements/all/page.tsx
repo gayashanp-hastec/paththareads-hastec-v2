@@ -27,6 +27,7 @@ interface Advertisement {
   ad_type: string;
   classified_category?: string;
   subcategory?: string;
+  count_first_words?: number | null;
 
   publish_date?: string | null;
   created_at: string;
@@ -41,7 +42,9 @@ interface Advertisement {
   uploaded_images?: string[] | null;
 
   price?: number | null;
+  updated_price?: number | null;
   status: string;
+  print_url: string;
 
   casual_ad?: {
     ad_size: string;
@@ -65,6 +68,9 @@ interface Advertisement {
     is_int_bw: boolean;
     is_int_fc: boolean;
     is_int_highlight?: boolean; // only exists in set 1
+    district?: string;
+    province?: string;
+    vehicle_brand?: string;
   } | null;
 
   payment?: {
@@ -90,7 +96,7 @@ export async function uploadPrintedBlobToCloudinary(file: File | Blob) {
   formData.append("folder", "printed"); // 👈 store inside "printed" folder
 
   const res = await fetch(
-    `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/auto/upload`,
+    `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/raw/upload`,
     {
       method: "POST",
       body: formData,
@@ -135,7 +141,7 @@ export default function AdminAdvertisements() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
   const ACTION_BTN_CLASS =
-    "flex items-center justify-center gap-2 w-40 px-4 py-2.5 rounded-lg shadow text-sm font-medium transition";
+    "flex items-center justify-center gap-2 w-50 px-4 py-2.5 rounded-lg shadow text-sm font-medium transition";
 
   // Fetch ads
   useEffect(() => {
@@ -217,6 +223,13 @@ export default function AdminAdvertisements() {
         reference_number: selectedAd.reference_number,
         status,
         advertisement_text: editedText,
+        old_price: selectedAd.price,
+        price_change: requestPriceChange
+          ? {
+              new_price: Number(newPrice),
+              reason: priceReason,
+            }
+          : null,
       }),
     });
 
@@ -369,6 +382,7 @@ export default function AdminAdvertisements() {
         ad_type: selectedAd.ad_type,
         category: selectedAd.classified_category ?? null,
         subcategory: selectedAd.subcategory ?? null,
+        count_first_words: selectedAd.count_first_words ?? null,
 
         /* ---------------- Dates ---------------- */
         publish_date: formatDateYMD(
@@ -421,14 +435,51 @@ export default function AdminAdvertisements() {
               is_int_bw: selectedAd.classified_ad.is_int_bw,
               is_int_fc: selectedAd.classified_ad.is_int_fc,
               is_int_highlight: selectedAd.classified_ad.is_int_highlight,
+              district: selectedAd.classified_ad.district,
+              province: selectedAd.classified_ad.province,
+              vehicle_brand: selectedAd.classified_ad.vehicle_brand,
             }
           : null,
       }),
     });
 
+    function generatePublisherEmail(ad: Advertisement) {
+      const category =
+        ad.ad_type === "Classified"
+          ? (ad.classified_category ?? "N/A")
+          : (ad.casual_ad?.ad_size ?? "N/A");
+
+      const publicationDate = ad.publish_date
+        ? new Date(ad.publish_date).toLocaleDateString()
+        : "TBD";
+
+      const printUrl = ad.print_url ?? "URL not available yet";
+
+      return `
+Dear Publisher,
+
+The following advertisement has been processed in Paththare Ads:
+
+Reference Number: ${ad.reference_number}
+Advertiser Name: ${ad.advertiser_name}
+Ad Type / Category: ${ad.ad_type} / ${category}
+Newspaper: ${ad.newspaper_name}
+Publish Date: ${publicationDate}
+Price: ${ad.price ?? "N/A"}
+
+The advertisement has been printed and can be accessed at the following URL:
+${printUrl}
+
+Please review and proceed accordingly.
+
+Best regards,
+Paththare Ads Team
+`;
+    }
+
     const blob = await res.blob();
     if (res.status !== 400) {
-      updateStatus("Print");
+      updateStatus("AdProcessed");
 
       // 1. upload blob to cloudinary
       const file = new File([blob], `${selectedAd.reference_number}.pdf`, {
@@ -443,6 +494,18 @@ export default function AdminAdvertisements() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ print_url: cloudUrl }),
       });
+
+      setPrinting(false);
+
+      setAds((prev) =>
+        prev.map((ad) =>
+          ad.reference_number === selectedAd.reference_number
+            ? { ...ad, print_url: cloudUrl }
+            : ad,
+        ),
+      );
+
+      setSelectedAd((prev) => prev && { ...prev, print_url: cloudUrl });
     }
     const url = URL.createObjectURL(blob);
     window.open(url, "_blank");
@@ -465,23 +528,63 @@ export default function AdminAdvertisements() {
   const handleSendSelected = async () => {
     if (selectedAds.length === 0) return;
 
-    const referenceNumbers = selectedAds.map((ad) => ad.reference_number);
-
     try {
+      // Publisher email (assumes same publisher for all selected ads)
+      const publisherEmail = selectedPublisher;
+      if (!publisherEmail) {
+        alert("Publisher email is missing");
+        return;
+      }
+
+      // Email subject
+      const subject = `Advertisements Summary - ${new Date().toLocaleDateString()}`;
+
+      // Build email body for all selected ads
+      let body = `<h2>Advertisements Processed in Paththare Ads</h2><ul>`;
+      selectedAds.forEach((ad) => {
+        const category =
+          ad.ad_type === "Classified"
+            ? (ad.classified_category ?? "N/A")
+            : (ad.casual_ad?.ad_size ?? "N/A");
+
+        const publicationDate = ad.publish_date
+          ? new Date(ad.publish_date).toLocaleDateString()
+          : "TBD";
+
+        const printUrl = ad.print_url ?? "URL not available yet";
+
+        body += `
+        <li style="margin-bottom: 16px;">
+          <strong>Reference Number:</strong> ${ad.reference_number}<br/>
+          <strong>Advertiser Name:</strong> ${ad.advertiser_name}<br/>
+          <strong>Ad Type / Category:</strong> ${ad.ad_type} / ${category}<br/>
+          <strong>Newspaper:</strong> ${ad.newspaper_name}<br/>
+          <strong>Publish Date:</strong> ${publicationDate}<br/>
+          <strong>Price:</strong> ${ad.price ?? "N/A"}<br/>
+          <strong>Print File:</strong> 
+<a href="${printUrl}" target="_blank" style="color:#2563eb; text-decoration:underline;">
+  Download Advertisement PDF
+</a>
+        </li>
+      `;
+      });
+      body += `</ul>`;
+
+      // Send request to API
       const res = await fetch("/api/ads/send-bulk-email", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          publisher_email: selectedPublisher,
-          references: referenceNumbers,
+          to: publisherEmail, // must match backend
+          subject,
+          body,
         }),
       });
 
-      const data = await res.json();
-
       if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
         alert(data.error || "Failed to send email");
         return;
       }
@@ -493,7 +596,7 @@ export default function AdminAdvertisements() {
       setSelectedPublisher("");
     } catch (err) {
       console.error(err);
-      alert("Something went wrong");
+      alert("Something went wrong while sending email");
     }
   };
 
@@ -566,10 +669,10 @@ export default function AdminAdvertisements() {
               className="rounded-xl border px-4 py-2 text-sm"
             >
               <option value="all">Show All Statuses</option>
-              <option value="approved">Approved</option>
               <option value="pending">Pending</option>
+              <option value="approved">Approved</option>
               <option value="resubmitted">Resubmitted</option>
-              <option value="print">Print</option>
+              <option value="print">Processed Ads</option>
             </select>
 
             {/* Sort */}
@@ -809,6 +912,21 @@ export default function AdminAdvertisements() {
                             value={selectedAd.subcategory}
                           />
 
+                          <InfoRow
+                            label="District"
+                            value={selectedAd.classified_ad?.district}
+                          />
+
+                          <InfoRow
+                            label="Province"
+                            value={selectedAd.classified_ad?.province}
+                          />
+
+                          <InfoRow
+                            label="Vehicle"
+                            value={selectedAd.classified_ad?.vehicle_brand}
+                          />
+
                           {selectedAd.casual_ad && (
                             <>
                               <span
@@ -874,6 +992,58 @@ export default function AdminAdvertisements() {
 
                           {selectedAd.payment &&
                             selectedAd.status === "PaymentPending" && (
+                              <button
+                                key={selectedAd.payment.file_path}
+                                type="button"
+                                onClick={() => {
+                                  if (selectedAd.payment) {
+                                    setPreviewImage(
+                                      selectedAd.payment.file_path,
+                                    );
+                                  }
+                                }}
+                                className="rounded-xl p-2 bg-amber-300"
+                              >
+                                View Payment Receipt
+                              </button>
+                            )}
+                          {selectedAd.payment &&
+                            selectedAd.status === "PaymentDone" && (
+                              <button
+                                key={selectedAd.payment.file_path}
+                                type="button"
+                                onClick={() => {
+                                  if (selectedAd.payment) {
+                                    setPreviewImage(
+                                      selectedAd.payment.file_path,
+                                    );
+                                  }
+                                }}
+                                className="rounded-xl p-2 bg-amber-300"
+                              >
+                                View Payment Receipt
+                              </button>
+                            )}
+                          {selectedAd.payment &&
+                            selectedAd.status === "Print" && (
+                              <button
+                                key={selectedAd.payment.file_path}
+                                type="button"
+                                onClick={() => {
+                                  if (selectedAd.payment) {
+                                    setPreviewImage(
+                                      selectedAd.payment.file_path,
+                                    );
+                                  }
+                                }}
+                                className="rounded-xl p-2 bg-amber-300"
+                              >
+                                View Payment Receipt
+                              </button>
+                            )}
+
+                          {selectedAd.payment &&
+                            selectedAd.status === "AdProcessed" && (
                               <button
                                 key={selectedAd.payment.file_path}
                                 type="button"
@@ -984,54 +1154,66 @@ export default function AdminAdvertisements() {
                         )}
 
                       {/* PRICE CHANGE */}
-                      <div className="px-8 py-4 border-t">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                          <div>
-                            <label className="flex items-center gap-2 text-sm font-medium">
-                              <input
-                                type="checkbox"
-                                checked={requestPriceChange}
-                                onChange={(e) =>
-                                  setRequestPriceChange(e.target.checked)
-                                }
-                                className="accent-[var(--color-primary)]"
-                              />
-                              Request Price Change
-                            </label>
-                            <p className="mt-2 text-xs text-gray-500">
-                              Request a revision to the advertisement price.
-                            </p>
-                          </div>
-
-                          {requestPriceChange && (
-                            <div className="md:col-span-2 space-y-4 rounded-xl border border-yellow-200 bg-yellow-50 p-4">
-                              <div>
-                                <p className="text-sm font-medium">New Price</p>
+                      {[
+                        "Pending",
+                        "Revision",
+                        "Resubmitted",
+                        "UpdateImage",
+                        "PriceChange",
+                      ].includes(selectedAd.status) && (
+                        <div className="px-8 py-4 border-t">
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div>
+                              <label className="flex items-center gap-2 text-sm font-medium">
                                 <input
-                                  type="number"
-                                  value={newPrice}
-                                  onChange={(e) => setNewPrice(e.target.value)}
-                                  className="mt-1 w-full rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-yellow-400"
-                                />
-                              </div>
-
-                              <div>
-                                <p className="text-sm font-medium">
-                                  Reason for Price Change
-                                </p>
-                                <textarea
-                                  value={priceReason}
+                                  type="checkbox"
+                                  checked={requestPriceChange}
                                   onChange={(e) =>
-                                    setPriceReason(e.target.value)
+                                    setRequestPriceChange(e.target.checked)
                                   }
-                                  rows={3}
-                                  className="mt-1 w-full rounded-lg border px-3 py-2 text-sm resize-none outline-none focus:ring-2 focus:ring-yellow-400"
+                                  className="accent-[var(--color-primary)]"
                                 />
-                              </div>
+                                Request Price Change
+                              </label>
+                              <p className="mt-2 text-xs text-gray-500">
+                                Request a revision to the advertisement price.
+                              </p>
                             </div>
-                          )}
+
+                            {requestPriceChange && (
+                              <div className="md:col-span-2 space-y-4 rounded-xl border border-yellow-200 bg-yellow-50 p-4">
+                                <div>
+                                  <p className="text-sm font-medium">
+                                    New Price
+                                  </p>
+                                  <input
+                                    type="number"
+                                    value={newPrice}
+                                    onChange={(e) =>
+                                      setNewPrice(e.target.value)
+                                    }
+                                    className="mt-1 w-full rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-yellow-400"
+                                  />
+                                </div>
+
+                                <div>
+                                  <p className="text-sm font-medium">
+                                    Reason for Price Change
+                                  </p>
+                                  <textarea
+                                    value={priceReason}
+                                    onChange={(e) =>
+                                      setPriceReason(e.target.value)
+                                    }
+                                    rows={3}
+                                    className="mt-1 w-full rounded-lg border px-3 py-2 text-sm resize-none outline-none focus:ring-2 focus:ring-yellow-400"
+                                  />
+                                </div>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </>
                   )}
                 </div>
@@ -1056,19 +1238,39 @@ export default function AdminAdvertisements() {
                     </button>
                   )}
 
+                  {/* {(isTextChanged || requestImageChange || newPrice) && (
+                    <button
+                      onClick={() =>
+                        updateStatus(
+                          requestImageChange
+                            ? "UpdateImage"
+                            : requestImageChange && newPrice
+                              ? "UpdateImagePrice"
+                              : isTextChanged && newPrice
+                                ? "RevisionPrice"
+                                : "Revision",
+                        )
+                      }
+                      className={`${ACTION_BTN_CLASS} bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-accent)]`}
+                    >
+                      <RefreshCw className="w-4 h-4" />
+                      Request Revision
+                    </button>
+                  )} */}
+
                   {[
                     "Pending",
                     "Revision",
                     "Resubmitted",
                     "UpdateImage",
                   ].includes(selectedAd.status) &&
-                    (isTextChanged || requestImageChange) && (
+                    (isTextChanged || requestImageChange || newPrice) && (
                       <button
                         onClick={() => updateStatus("Revision")}
-                        className={`${ACTION_BTN_CLASS} bg-blue-600 text-white hover:bg-blue-700`}
+                        className={`${ACTION_BTN_CLASS} bg-orange-600 text-white hover:bg-blue-700`}
                       >
                         <RefreshCw className="w-4 h-4" />
-                        Resubmit
+                        Revision
                       </button>
                     )}
 
@@ -1076,7 +1278,8 @@ export default function AdminAdvertisements() {
                     selectedAd.status,
                   ) &&
                     !isTextChanged &&
-                    !requestImageChange && (
+                    !requestImageChange &&
+                    !newPrice && (
                       <button
                         onClick={() => updateStatus("Approved")}
                         className={`${ACTION_BTN_CLASS} bg-green-600 text-white hover:bg-green-700`}
@@ -1086,7 +1289,9 @@ export default function AdminAdvertisements() {
                       </button>
                     )}
 
-                  {["PaymentPending"].includes(selectedAd.status) && (
+                  {["PaymentDone", "Print", "AdProcessed"].includes(
+                    selectedAd.status,
+                  ) && (
                     <button
                       onClick={handlePrint}
                       disabled={printing}

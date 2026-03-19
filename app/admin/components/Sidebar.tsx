@@ -30,6 +30,8 @@ export default function Sidebar() {
     };
 
     fetchPendingCount();
+    // const interval = setInterval(fetchPendingCount, 60000);
+    // return () => clearInterval(interval);
   }, []);
 
   /* ---------------- Auto-open submenu by route ---------------- */
