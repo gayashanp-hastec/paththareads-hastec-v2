@@ -13,11 +13,17 @@ export default function AdminDashboard() {
     const fetchPendingCount = async () => {
       try {
         setLoadingAds(true);
-        const res = await fetch("/api/ads");
+
+        // const res = await fetch("/api/ads?t=${Date.now()}"); // the timestamp is added to prevent caching because the URL changes each time.
+        const res = await fetch("/api/ads", {
+          cache: "no-store", //essential to prevent caching otherwise want refresh
+        });
         const data = await res.json();
+
         const pending = data.filter(
           (ad: any) => ad.status?.toLowerCase() === "pending",
         ).length;
+
         setPendingCount(pending);
       } catch (error) {
         console.error("Error fetching pending ads:", error);
@@ -27,7 +33,13 @@ export default function AdminDashboard() {
       }
     };
 
+    // run immediately
     fetchPendingCount();
+
+    // run every 60 seconds
+    const interval = setInterval(fetchPendingCount, 60000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const tiles = [

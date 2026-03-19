@@ -3,7 +3,7 @@ import prisma from "@/lib/prisma";
 
 export async function POST(
   request: NextRequest,
-  context: { params: Promise<{ reference: string }> }
+  context: { params: Promise<{ reference: string }> },
 ) {
   try {
     const { reference } = await context.params;
@@ -14,14 +14,14 @@ export async function POST(
     if (!imageUrl) {
       return NextResponse.json(
         { success: false, message: "Image URL is missing" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // Update advertisement status
     await prisma.advertisements.update({
       where: { reference_number: reference },
-      data: { status: "PaymentPending" },
+      data: { status: "PaymentDone" },
     });
 
     // Save Cloudinary URL 👇 (FIX for comment 101)
@@ -39,7 +39,7 @@ export async function POST(
     console.error("Error submitting payment:", err);
     return NextResponse.json(
       { success: false, error: (err as Error).message },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

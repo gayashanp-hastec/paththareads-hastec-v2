@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import { Resend } from "resend";
 import crypto from "crypto";
+import { sendSMS } from "@/lib/sendSms";
+import { buildAdSubmitSMS } from "@/lib/buildSmsMessage";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -122,6 +124,7 @@ export async function POST(req: Request) {
         price: advertisement.price ? parseFloat(advertisement.price) : null,
         status: "Pending",
         newspaper_serial_no: advertisement.newspaper_serial_no,
+        ad_type_id: advertisement.ad_type_id ?? null,
       },
     });
 
@@ -155,6 +158,9 @@ export async function POST(req: Request) {
           is_int_bw: advertisement.is_int_bw ?? false,
           is_int_fc: advertisement.is_int_fc ?? false,
           is_int_highlight: advertisement.is_int_highlight ?? false,
+          district: advertisement.district ?? "",
+          province: advertisement.province ?? "",
+          vehicle_brand: advertisement.vehicle_brand ?? "",
         },
       });
     }
@@ -218,6 +224,39 @@ export async function POST(req: Request) {
       console.error("Email send failed:", emailError);
     } else {
       console.log("Email sent:", emailData);
+    }
+
+    // Send SMS
+    let to = "user"
+    let status = "pending"
+    const smsMessageUser = buildAdSubmitSMS({
+      referenceNumber,
+      trackingLink,
+      to, status,
+    });
+
+    const smsResUser = await sendSMS({
+      to: advertiser.phone,
+      message: smsMessageUser ?? "",
+    });
+
+    to = "admin"
+    const smsMessageAdmin = buildAdSubmitSMS({
+      referenceNumber,
+      trackingLink,
+      to,
+      status,
+    });
+
+    const smsResAdmin = await sendSMS({
+      to: "+94770400185",
+      message: smsMessageAdmin ?? "",
+    });
+
+    if (!smsResUser.success) {
+      console.error("SMS failed:", smsResUser.error);
+    } else {
+      console.log("SMS sent successfully");
     }
 
     return NextResponse.json({

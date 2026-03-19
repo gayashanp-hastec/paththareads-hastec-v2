@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
+import { sendSMS } from "@/lib/sendSms";
+import { buildAdSubmitSMS } from "@/lib/buildSmsMessage";
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -26,11 +29,14 @@ export async function POST(req: Request) {
       status,
       advertisement_text,
       price_change,
+      old_price,
     );
 
     // Fetch the original ad to get the original text
     const originalAd = await prisma.advertisements.findUnique({
-      where: { reference_number },
+      where: { reference_number }, include: {
+        advertisers: true, // 👈 get phone number
+      },
     });
 
     if (!originalAd) {
@@ -86,6 +92,50 @@ export async function POST(req: Request) {
         where: { reference_number },
         data: { status: "PriceChange", price: price_change.new_price },
       });
+    }
+
+    if (status === "PaymentPending") {
+      await prisma.ad_price_change_history.updateMany({
+        where: { reference_number },
+        data: { status: "PaymentPending" },
+      });
+    }
+
+    // Send SMS
+    const referenceNumber = reference_number
+    let trackingLink = "_"
+    let to = "user"
+    // let status = "pending"
+    const smsMessageUser = buildAdSubmitSMS({
+      referenceNumber,
+      trackingLink,
+      to, status,
+    });
+
+    const smsResUser = await sendSMS({
+      to: originalAd.advertisers?.phone ?? "",
+      message: smsMessageUser ?? "",
+    });
+
+    if (status === "PaymentDone" || status === "Resubmit") {
+      to = "admin"
+      const smsMessageAdmin = buildAdSubmitSMS({
+        referenceNumber,
+        trackingLink,
+        to,
+        status,
+      });
+
+      const smsResAdmin = await sendSMS({
+        to: "+94770400185",
+        message: smsMessageAdmin ?? "",
+      });
+    }
+
+    if (!smsResUser.success) {
+      console.error("SMS failed:", smsResUser.error);
+    } else {
+      console.log("SMS sent successfully");
     }
 
     return NextResponse.json({

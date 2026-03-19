@@ -12,6 +12,11 @@ export async function GET() {
       ad_type: true,
       classified_category: true,
       subcategory: true,
+      ad_types: {
+        select: {
+          count_first_words: true,
+        },
+      },
 
       publish_date: true,
       created_at: true,
@@ -26,6 +31,7 @@ export async function GET() {
 
       price: true,
       status: true,
+      print_url: true,
 
       advertisers: {
         select: {
@@ -70,6 +76,9 @@ export async function GET() {
           is_int_fc: true,
           is_int_highlight: true,
           is_priority: true,
+          district: true,
+          province: true,
+          vehicle_brand: true,
         },
       },
 
@@ -104,6 +113,7 @@ export async function GET() {
     ad_type: ad.ad_type,
     classified_category: ad.classified_category,
     subcategory: ad.subcategory,
+    count_first_words: ad.ad_types?.count_first_words ?? null,
 
     publish_date: ad.publish_date,
     created_at: ad.created_at,
@@ -118,6 +128,7 @@ export async function GET() {
 
     price: ad.price,
     status: ad.status,
+    print_url: ad.print_url,
 
     advertiser_name: ad.advertisers?.name ?? "—",
     advertiser_nic: ad.advertisers?.nic ?? "—",
@@ -126,45 +137,48 @@ export async function GET() {
 
     casual_ad: ad.casual_ads
       ? {
-          ad_size: ad.casual_ads.ad_size,
-          no_of_columns: ad.casual_ads.no_of_columns,
-          ad_height: ad.casual_ads.ad_height,
-          color_option: ad.casual_ads.color_option,
-          has_artwork: ad.casual_ads.has_artwork,
-          need_artwork: ad.casual_ads.need_artwork,
-          no_of_boxes: ad.casual_ads.no_of_boxes,
-        }
+        ad_size: ad.casual_ads.ad_size,
+        no_of_columns: ad.casual_ads.no_of_columns,
+        ad_height: ad.casual_ads.ad_height,
+        color_option: ad.casual_ads.color_option,
+        has_artwork: ad.casual_ads.has_artwork,
+        need_artwork: ad.casual_ads.need_artwork,
+        no_of_boxes: ad.casual_ads.no_of_boxes,
+      }
       : null,
 
     classified_ad:
       ad.classified_ads.length > 0
         ? {
-            is_publish_eng: ad.classified_ads[0].is_publish_eng,
-            is_publish_tam: ad.classified_ads[0].is_publish_tam,
-            is_publish_sin: ad.classified_ads[0].is_publish_sin,
-            is_publish_sin_eng: ad.classified_ads[0].is_publish_sin_eng,
-            is_publish_sin_tam: ad.classified_ads[0].is_publish_sin_tam,
-            is_publish_eng_tam: ad.classified_ads[0].is_publish_eng_tam,
-            is_co_paper: ad.classified_ads[0].is_co_paper,
-            is_int_bw: ad.classified_ads[0].is_int_bw,
-            is_int_fc: ad.classified_ads[0].is_int_fc,
-            is_int_highlight: ad.classified_ads[0].is_int_highlight,
-            is_priority: ad.classified_ads[0].is_priority,
-          }
+          is_publish_eng: ad.classified_ads[0].is_publish_eng,
+          is_publish_tam: ad.classified_ads[0].is_publish_tam,
+          is_publish_sin: ad.classified_ads[0].is_publish_sin,
+          is_publish_sin_eng: ad.classified_ads[0].is_publish_sin_eng,
+          is_publish_sin_tam: ad.classified_ads[0].is_publish_sin_tam,
+          is_publish_eng_tam: ad.classified_ads[0].is_publish_eng_tam,
+          is_co_paper: ad.classified_ads[0].is_co_paper,
+          is_int_bw: ad.classified_ads[0].is_int_bw,
+          is_int_fc: ad.classified_ads[0].is_int_fc,
+          is_int_highlight: ad.classified_ads[0].is_int_highlight,
+          is_priority: ad.classified_ads[0].is_priority,
+          district: ad.classified_ads[0].district,
+          province: ad.classified_ads[0].province,
+          vehicle_brand: ad.classified_ads[0].vehicle_brand,
+        }
         : null,
 
     payment:
       ad.payment_ads.length > 0
         ? {
-            amount: ad.payment_ads[0].amount,
-            status: ad.payment_ads[0].status,
-            payment_date: ad.payment_ads[0].payment_date,
-            verified_by: ad.payment_ads[0].verified_by,
-            remarks: ad.payment_ads[0].remarks,
-            file_path: ad.payment_ads[0].file_path,
-            original_filename: ad.payment_ads[0].original_filename,
-            created_at: ad.payment_ads[0].created_at,
-          }
+          amount: ad.payment_ads[0].amount,
+          status: ad.payment_ads[0].status,
+          payment_date: ad.payment_ads[0].payment_date,
+          verified_by: ad.payment_ads[0].verified_by,
+          remarks: ad.payment_ads[0].remarks,
+          file_path: ad.payment_ads[0].file_path,
+          original_filename: ad.payment_ads[0].original_filename,
+          created_at: ad.payment_ads[0].created_at,
+        }
         : null,
   }));
 

@@ -85,6 +85,9 @@ export async function PUT(
       allowed_month_days = [],
       allowed_weekdays = [],
       publisher_email,
+      lm_image,
+      lm_description,
+      ad_time_limit,
       ad_types = [],
     } = body;
 
@@ -125,6 +128,9 @@ export async function PUT(
           allowed_weekdays,
           allowed_month_days,
           publisher_email,
+          lm_image,
+          lm_description,
+          ad_time_limit,
         },
       }),
     );
@@ -230,20 +236,20 @@ export async function PUT(
                 },
                 ad_section_box_pricing:
                   section.supports_box_ads &&
-                  section.ad_section_box_pricing?.length
+                    section.ad_section_box_pricing?.length
                     ? {
-                        createMany: {
-                          data: section.ad_section_box_pricing.map(
-                            (bp: any) => ({
-                              box_number_dec: bp.box_number,
-                              box_number: 1,
-                              price: bp.price,
-                              extra_note_1: bp.extra_note_1 ?? null,
-                              extra_note_2: bp.extra_note_2 ?? null,
-                            }),
-                          ),
-                        },
-                      }
+                      createMany: {
+                        data: section.ad_section_box_pricing.map(
+                          (bp: any) => ({
+                            box_number_dec: bp.box_number,
+                            box_number: 1,
+                            price: bp.price,
+                            extra_note_1: bp.extra_note_1 ?? null,
+                            extra_note_2: bp.extra_note_2 ?? null,
+                          }),
+                        ),
+                      },
+                    }
                     : undefined,
               })),
             },
