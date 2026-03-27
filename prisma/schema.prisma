@@ -120,6 +120,7 @@ model advertisements {
   print_url               String?
   updated_price           Decimal?                  @db.Decimal(10, 2)
   ad_type_id              Int?
+  tracking_link           String?
   ad_price_change_history ad_price_change_history[]
   ad_review_history       ad_review_history[]
   ad_status_history       ad_status_history[]
@@ -229,6 +230,8 @@ model newspapers {
   lm_image                   String?
   lm_description             String?
   ad_time_limit              Int?
+  day_before                 String?
+  date_before                String?
   ad_types                   ad_types[]
   advertisements             advertisements[]
   publishers                 publishers       @relation(fields: [publisher_id], references: [id], map: "fk_newspapers_publishers")
@@ -434,6 +437,13 @@ model promo_ads {
   is_clickable   Boolean? @default(false)
   ad_public_id   Int?
   ad_public_id_2 String?
+}
+
+model admin_config {
+  id         Int       @id @default(autoincrement())
+  phone      String    @db.VarChar(20)
+  created_at DateTime? @default(now()) @db.Timestamp(6)
+  updated_at DateTime? @default(now()) @db.Timestamp(6)
 }
 
 enum role_enum {

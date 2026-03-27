@@ -54,6 +54,7 @@ export async function GET(req: Request) {
           take: 1, // 🔑 latest entry only
         },
         advertisers: true,
+        ad_types: true,
       },
     });
     console.log(ad);
@@ -86,18 +87,19 @@ export async function GET(req: Request) {
         price: ad.price,
         latest_price_change: latestPriceChange
           ? {
-              requested_price: latestPriceChange.requested_price,
-              old_price: latestPriceChange.old_price,
-              reason: latestPriceChange.reason,
-              status: latestPriceChange.status,
-              created_at: latestPriceChange.created_at,
-            }
+            requested_price: latestPriceChange.requested_price,
+            old_price: latestPriceChange.old_price,
+            reason: latestPriceChange.reason,
+            status: latestPriceChange.status,
+            created_at: latestPriceChange.created_at,
+          }
           : null,
         review_history: ad.ad_review_history,
         status_history: ad.ad_status_history,
         advertiser: ad.advertisers
           ? { name: ad.advertisers.name, email: ad.advertisers.email }
           : null,
+        ad_types: ad.ad_types
       },
     });
   } catch (err) {

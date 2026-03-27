@@ -30,6 +30,8 @@ export async function GET() {
       lm_image: true,
       lm_description: true,
       ad_time_limit: true,
+      day_before: true,
+      date_before: true,
       created_at: true,
     },
     orderBy: {
@@ -64,6 +66,7 @@ export async function GET() {
     lm_image: n.lm_image,
     lm_description: n.lm_description,
     ad_time_limit: n.ad_time_limit,
+    day_before: n.day_before,
   }));
 
   return NextResponse.json(formatted);
@@ -97,6 +100,7 @@ export async function POST(req: Request) {
       allowed_weekdays = [],
       publisher_email,
       lm_image, lm_description, ad_time_limit,
+      day_before, date_before,
       ad_types = [], // optional
     } = body;
 
@@ -149,6 +153,8 @@ export async function POST(req: Request) {
           publisher_email,
           lm_image,
           lm_description, ad_time_limit,
+          day_before,
+          date_before,
         },
       });
 

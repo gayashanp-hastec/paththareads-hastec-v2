@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import { hashToken } from "@/lib/token";
 
+
 const prisma = new PrismaClient();
 
 export async function POST(
@@ -13,6 +14,9 @@ export async function POST(
   const { reference } = await context.params;
 
   const { token } = await req.json();
+  const referenceNumber = reference
+  // let to = ""
+
 
   if (!token)
     return NextResponse.json(
@@ -68,7 +72,11 @@ export async function POST(
     prisma.ad_status_history.create({
       data: { reference_number: reference, status: "Approved" },
     }),
+
+
   ]);
+
+
 
   return NextResponse.json({ ok: true });
 }

@@ -15,6 +15,11 @@ export async function POST(req: Request) {
       old_price,
     } = body;
 
+    // Send SMS
+    const referenceNumber = reference_number
+    let to = ""
+    const adminNumber = "+94770400185"
+
     // Validate incoming data
     if (!reference_number || !status) {
       return NextResponse.json(
@@ -35,6 +40,7 @@ export async function POST(req: Request) {
     // Fetch the original ad to get the original text
     const originalAd = await prisma.advertisements.findUnique({
       where: { reference_number }, include: {
+        tracking_link: true,
         advertisers: true, // 👈 get phone number
       },
     });
@@ -45,6 +51,9 @@ export async function POST(req: Request) {
         { status: 404 },
       );
     }
+
+    let trackingLink = originalAd.tracking_link;
+
 
     // Update the advertisement
     const updatedAd = await prisma.advertisements.update({
@@ -92,6 +101,19 @@ export async function POST(req: Request) {
         where: { reference_number },
         data: { status: "PriceChange", price: price_change.new_price },
       });
+
+      to = "user";
+      let status = "priceChange"
+      const smsMessageUser = buildAdSubmitSMS({
+        referenceNumber,
+        trackingLink,
+        to, status,
+      });
+
+      await sendSMS({
+        to: originalAd.advertisers?.phone ?? "",
+        message: smsMessageUser ?? "",
+      });
     }
 
     if (status === "PaymentPending") {
@@ -99,25 +121,28 @@ export async function POST(req: Request) {
         where: { reference_number },
         data: { status: "PaymentPending" },
       });
+
+      to = "admin";
+      let status = "paymentPending"
+      const smsMessageUser = buildAdSubmitSMS({
+        referenceNumber,
+        trackingLink,
+        to, status,
+      });
+
+      await sendSMS({
+        to: adminNumber,
+        message: smsMessageUser ?? "",
+      });
     }
 
-    // Send SMS
-    const referenceNumber = reference_number
-    let trackingLink = "_"
-    let to = "user"
-    // let status = "pending"
-    const smsMessageUser = buildAdSubmitSMS({
-      referenceNumber,
-      trackingLink,
-      to, status,
-    });
-
-    const smsResUser = await sendSMS({
-      to: originalAd.advertisers?.phone ?? "",
-      message: smsMessageUser ?? "",
-    });
-
     if (status === "PaymentDone" || status === "Resubmit") {
+      if (status === "PaymentDone") {
+        await prisma.ad_price_change_history.updateMany({
+          where: { reference_number },
+          data: { status: "PaymentDone" },
+        });
+      }
       to = "admin"
       const smsMessageAdmin = buildAdSubmitSMS({
         referenceNumber,
@@ -126,17 +151,48 @@ export async function POST(req: Request) {
         status,
       });
 
-      const smsResAdmin = await sendSMS({
-        to: "+94770400185",
+      await sendSMS({
+        to: adminNumber,
         message: smsMessageAdmin ?? "",
       });
     }
 
-    if (!smsResUser.success) {
-      console.error("SMS failed:", smsResUser.error);
-    } else {
-      console.log("SMS sent successfully");
+    if (status === "UpdateImage") {
+      to = "user"
+      const smsMessageAdmin = buildAdSubmitSMS({
+        referenceNumber,
+        trackingLink,
+        to,
+        status,
+      });
+
+      await sendSMS({
+        to: originalAd.advertisers?.phone ?? "",
+        message: smsMessageAdmin ?? "",
+      });
     }
+
+    if (status === "Declined") {
+      to = "user"
+      const smsMessageAdmin = buildAdSubmitSMS({
+        referenceNumber,
+        trackingLink,
+        to,
+        status,
+      });
+
+      await sendSMS({
+        to: originalAd.advertisers?.phone ?? "",
+        message: smsMessageAdmin ?? "",
+      });
+    }
+
+    // if (!smsResUser.success) {
+    //   console.error("SMS failed:", smsResUser.error);
+    // } else {
+    //   console.log("SMS sent successfully");
+    // }
+
 
     return NextResponse.json({
       success: true,

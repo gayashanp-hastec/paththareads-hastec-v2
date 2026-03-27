@@ -42,6 +42,7 @@ const provincePositions: Record<string, number> = {
 };
 
 function drawProvinceTick(page: any, province: string) {
+  if (!province) { return; }
   const x = provincePositions[province.toLowerCase()];
 
   if (!x) {
@@ -699,7 +700,7 @@ export async function POST(req: Request) {
       }
 
       // Draw casual ad dimensions
-      if (casual_ad && casual_ad?.no_of_boxes === 0) {
+      if (ad_type === "casual" && casual_ad?.no_of_boxes === "0") {
         page.drawText(String(casual_ad?.ad_height ?? ""), {
           x: 358,
           y: 755,
@@ -734,7 +735,7 @@ export async function POST(req: Request) {
             : englishFont,
         });
       }
-      if (casual_ad?.no_of_boxes > 0) {
+      if (ad_type === "casual" && casual_ad?.no_of_boxes !== "0") {
         page.drawText("Box Ad", {
           x: 360,
           y: 755,
@@ -866,46 +867,49 @@ export async function POST(req: Request) {
         englishFont,
       });
 
-      // Normalize ad text
-      const normalizedText = normalizeAdText(
-        advertisement_text,
-        agency.ad_text_type,
-      );
-      const { COLUMN_X, ROW_Y } = getCoordinates(agency.publisher_name);
-      const wordsToPrint = Math.min(
-        normalizedText.length,
-        MAX_WORDS,
-        COLUMN_X.length * ROW_Y.length,
-      );
+      if (ad_type.key !== "casual") {
+        // Normalize ad text
+        const normalizedText = normalizeAdText(
+          advertisement_text,
+          agency.ad_text_type,
+        );
+        const { COLUMN_X, ROW_Y } = getCoordinates(agency.publisher_name);
+        const wordsToPrint = Math.min(
+          normalizedText.length,
+          MAX_WORDS,
+          COLUMN_X.length * ROW_Y.length,
+        );
 
-      // Draw ad text
-      for (let i = 0; i < wordsToPrint; i++) {
-        const col = i % COLUMN_X.length;
-        const row = Math.floor(i / COLUMN_X.length);
-        if (row >= ROW_Y.length) break;
+        // Draw ad text
+        for (let i = 0; i < wordsToPrint; i++) {
+          const col = i % COLUMN_X.length;
+          const row = Math.floor(i / COLUMN_X.length);
+          if (row >= ROW_Y.length) break;
 
-        const text = normalizedText[i];
+          const text = normalizedText[i];
 
-        if (SINHALA_REGEX.test(text)) {
-          const pngBuffer = renderSinhalaTextToImage(text, 18);
-          const pngImage = await pdfDoc.embedPng(pngBuffer);
-          const dims = pngImage.scale(0.5); // adjust scale to fit
+          if (SINHALA_REGEX.test(text)) {
+            const pngBuffer = renderSinhalaTextToImage(text, 18);
+            const pngImage = await pdfDoc.embedPng(pngBuffer);
+            const dims = pngImage.scale(0.5); // adjust scale to fit
 
-          page.drawImage(pngImage, {
-            x: COLUMN_X[col],
-            y: ROW_Y[row] - dims.height, // shift down by image height
-            width: dims.width,
-            height: dims.height,
-          });
-        } else {
-          page.drawText(text, {
-            x: COLUMN_X[col],
-            y: ROW_Y[row],
-            size: 9,
-            font: englishFont,
-          });
+            page.drawImage(pngImage, {
+              x: COLUMN_X[col],
+              y: ROW_Y[row] - dims.height, // shift down by image height
+              width: dims.width,
+              height: dims.height,
+            });
+          } else {
+            page.drawText(text, {
+              x: COLUMN_X[col],
+              y: ROW_Y[row],
+              size: 9,
+              font: englishFont,
+            });
+          }
         }
       }
+
     }
     if (publisherName === "associated_newspapers") {
       if (ad_type === "name_notice" || ad_type === "marriage") {
@@ -1498,45 +1502,46 @@ export async function POST(req: Request) {
             ? sinhalaFont
             : englishFont,
         });
+        if (ad_type.key !== "casual") {
+          // Normalize ad text
+          const normalizedText = normalizeAdText(
+            advertisement_text,
+            agency.ad_text_type,
+          );
+          const { COLUMN_X, ROW_Y } = getCoordinates(agency.publisher_name);
+          const wordsToPrint = Math.min(
+            normalizedText.length,
+            MAX_WORDS,
+            COLUMN_X.length * ROW_Y.length,
+          );
 
-        // Normalize ad text
-        const normalizedText = normalizeAdText(
-          advertisement_text,
-          agency.ad_text_type,
-        );
-        const { COLUMN_X, ROW_Y } = getCoordinates(agency.publisher_name);
-        const wordsToPrint = Math.min(
-          normalizedText.length,
-          MAX_WORDS,
-          COLUMN_X.length * ROW_Y.length,
-        );
+          // Draw ad text
+          for (let i = 0; i < wordsToPrint; i++) {
+            const col = i % COLUMN_X.length;
+            const row = Math.floor(i / COLUMN_X.length);
+            if (row >= ROW_Y.length) break;
 
-        // Draw ad text
-        for (let i = 0; i < wordsToPrint; i++) {
-          const col = i % COLUMN_X.length;
-          const row = Math.floor(i / COLUMN_X.length);
-          if (row >= ROW_Y.length) break;
+            const text = normalizedText[i];
 
-          const text = normalizedText[i];
+            if (SINHALA_REGEX.test(text)) {
+              const pngBuffer = renderSinhalaTextToImage(text, 18);
+              const pngImage = await pdfDoc.embedPng(pngBuffer);
+              const dims = pngImage.scale(0.5); // adjust scale to fit
 
-          if (SINHALA_REGEX.test(text)) {
-            const pngBuffer = renderSinhalaTextToImage(text, 18);
-            const pngImage = await pdfDoc.embedPng(pngBuffer);
-            const dims = pngImage.scale(0.5); // adjust scale to fit
-
-            page.drawImage(pngImage, {
-              x: COLUMN_X[col],
-              y: ROW_Y[row] - dims.height, // shift down by image height
-              width: dims.width,
-              height: dims.height,
-            });
-          } else {
-            page.drawText(text, {
-              x: COLUMN_X[col],
-              y: ROW_Y[row],
-              size: 9,
-              font: englishFont,
-            });
+              page.drawImage(pngImage, {
+                x: COLUMN_X[col],
+                y: ROW_Y[row] - dims.height, // shift down by image height
+                width: dims.width,
+                height: dims.height,
+              });
+            } else {
+              page.drawText(text, {
+                x: COLUMN_X[col],
+                y: ROW_Y[row],
+                size: 9,
+                font: englishFont,
+              });
+            }
           }
         }
 
@@ -1658,44 +1663,46 @@ export async function POST(req: Request) {
         thickness: 1,
       });
 
-      // Normalize ad text
-      const normalizedText = normalizeAdText(
-        advertisement_text,
-        agency.ad_text_type,
-      );
-      const { COLUMN_X, ROW_Y } = getCoordinates(agency.publisher_name);
-      const wordsToPrint = Math.min(
-        normalizedText.length,
-        MAX_WORDS,
-        COLUMN_X.length * ROW_Y.length,
-      );
+      if (ad_type.key !== "casual") {
+        // Normalize ad text
+        const normalizedText = normalizeAdText(
+          advertisement_text,
+          agency.ad_text_type,
+        );
+        const { COLUMN_X, ROW_Y } = getCoordinates(agency.publisher_name);
+        const wordsToPrint = Math.min(
+          normalizedText.length,
+          MAX_WORDS,
+          COLUMN_X.length * ROW_Y.length,
+        );
 
-      // Draw ad text
-      for (let i = 0; i < wordsToPrint; i++) {
-        const col = i % COLUMN_X.length;
-        const row = Math.floor(i / COLUMN_X.length);
-        if (row >= ROW_Y.length) break;
+        // Draw ad text
+        for (let i = 0; i < wordsToPrint; i++) {
+          const col = i % COLUMN_X.length;
+          const row = Math.floor(i / COLUMN_X.length);
+          if (row >= ROW_Y.length) break;
 
-        const text = normalizedText[i];
+          const text = normalizedText[i];
 
-        if (SINHALA_REGEX.test(text)) {
-          const pngBuffer = renderSinhalaTextToImage(text, 18);
-          const pngImage = await pdfDoc.embedPng(pngBuffer);
-          const dims = pngImage.scale(0.5); // adjust scale to fit
+          if (SINHALA_REGEX.test(text)) {
+            const pngBuffer = renderSinhalaTextToImage(text, 18);
+            const pngImage = await pdfDoc.embedPng(pngBuffer);
+            const dims = pngImage.scale(0.5); // adjust scale to fit
 
-          page.drawImage(pngImage, {
-            x: COLUMN_X[col],
-            y: ROW_Y[row] - dims.height, // shift down by image height
-            width: dims.width,
-            height: dims.height,
-          });
-        } else {
-          page.drawText(text, {
-            x: COLUMN_X[col],
-            y: ROW_Y[row],
-            size: 9,
-            font: englishFont,
-          });
+            page.drawImage(pngImage, {
+              x: COLUMN_X[col],
+              y: ROW_Y[row] - dims.height, // shift down by image height
+              width: dims.width,
+              height: dims.height,
+            });
+          } else {
+            page.drawText(text, {
+              x: COLUMN_X[col],
+              y: ROW_Y[row],
+              size: 9,
+              font: englishFont,
+            });
+          }
         }
       }
 
@@ -1877,7 +1884,7 @@ export async function POST(req: Request) {
           : englishFont,
       });
 
-      if (casual_ad?.no_of_boxes !== 0 && casual_ad?.ad_size === "custom") {
+      if (casual_ad?.no_of_boxes === "0" && casual_ad?.ad_size === "custom") {
         //h x w
         const height_form = casual_ad?.ad_height + " cm";
         const width_form = casual_ad?.no_of_columns + " col";
@@ -1905,7 +1912,7 @@ export async function POST(req: Request) {
             ? sinhalaFont
             : englishFont,
         });
-      } else if (casual_ad?.no_of_boxes > 0) {
+      } else if (casual_ad?.no_of_boxes !== "0") {
         page.drawText("box ad: ", {
           x: 480,
           y: 669,
@@ -1970,45 +1977,46 @@ export async function POST(req: Request) {
         },
         thickness: 1,
       });
+      if (ad_type.key !== "casual") {
+        // Normalize ad text
+        const normalizedText = normalizeAdText(
+          advertisement_text,
+          agency.ad_text_type,
+        );
+        const { COLUMN_X, ROW_Y } = getCoordinates(agency.publisher_name);
+        const wordsToPrint = Math.min(
+          normalizedText.length,
+          MAX_WORDS,
+          COLUMN_X.length * ROW_Y.length,
+        );
 
-      // Normalize ad text
-      const normalizedText = normalizeAdText(
-        advertisement_text,
-        agency.ad_text_type,
-      );
-      const { COLUMN_X, ROW_Y } = getCoordinates(agency.publisher_name);
-      const wordsToPrint = Math.min(
-        normalizedText.length,
-        MAX_WORDS,
-        COLUMN_X.length * ROW_Y.length,
-      );
+        // Draw ad text
+        for (let i = 0; i < wordsToPrint; i++) {
+          const col = i % COLUMN_X.length;
+          const row = Math.floor(i / COLUMN_X.length);
+          if (row >= ROW_Y.length) break;
 
-      // Draw ad text
-      for (let i = 0; i < wordsToPrint; i++) {
-        const col = i % COLUMN_X.length;
-        const row = Math.floor(i / COLUMN_X.length);
-        if (row >= ROW_Y.length) break;
+          const text = normalizedText[i];
 
-        const text = normalizedText[i];
+          if (SINHALA_REGEX.test(text)) {
+            const pngBuffer = renderSinhalaTextToImage(text, 18);
+            const pngImage = await pdfDoc.embedPng(pngBuffer);
+            const dims = pngImage.scale(0.5); // adjust scale to fit
 
-        if (SINHALA_REGEX.test(text)) {
-          const pngBuffer = renderSinhalaTextToImage(text, 18);
-          const pngImage = await pdfDoc.embedPng(pngBuffer);
-          const dims = pngImage.scale(0.5); // adjust scale to fit
-
-          page.drawImage(pngImage, {
-            x: COLUMN_X[col],
-            y: ROW_Y[row] - dims.height + 10, // shift down by image height
-            width: dims.width,
-            height: dims.height,
-          });
-        } else {
-          page.drawText(text, {
-            x: COLUMN_X[col],
-            y: ROW_Y[row],
-            size: 10,
-            font: englishFont,
-          });
+            page.drawImage(pngImage, {
+              x: COLUMN_X[col],
+              y: ROW_Y[row] - dims.height + 10, // shift down by image height
+              width: dims.width,
+              height: dims.height,
+            });
+          } else {
+            page.drawText(text, {
+              x: COLUMN_X[col],
+              y: ROW_Y[row],
+              size: 10,
+              font: englishFont,
+            });
+          }
         }
       }
 
@@ -2161,19 +2169,21 @@ export async function POST(req: Request) {
           : englishFont,
       });
 
-      await drawAdTextBlock(
-        page,
-        pdfDoc,
-        advertisement_text,
-        45, // x position
-        384, // starting Y
-        17, // line gap (adjust this to increase/decrease vertical spacing)
-        375, // column width in points (adjust to fit your PDF layout)
-        sinhalaFont,
-        englishFont,
-        11.5, // font size
-        15, // max lines
-      );
+      if (ad_type.key !== "casual") {
+        await drawAdTextBlock(
+          page,
+          pdfDoc,
+          advertisement_text,
+          45, // x position
+          384, // starting Y
+          17, // line gap (adjust this to increase/decrease vertical spacing)
+          375, // column width in points (adjust to fit your PDF layout)
+          sinhalaFont,
+          englishFont,
+          11.5, // font size
+          15, // max lines
+        );
+      }
 
 
       // Draw advertiser info

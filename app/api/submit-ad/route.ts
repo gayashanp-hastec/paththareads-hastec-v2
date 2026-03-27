@@ -102,7 +102,9 @@ export async function POST(req: Request) {
       }
     }
 
-    console.log(referenceNumber);
+    const rawToken = crypto.randomBytes(24).toString("hex");
+    const trackingLink = `${process.env.NEXT_PUBLIC_BASE_URL}/ads/track/${referenceNumber}?t=${rawToken}`;
+    const cleanedLink = trackingLink.replace(/^(https?:\/\/)?[^/]+\/?/, "");
 
     // ✅ Step 3: Create advertisement entry
     const adRecord = await prisma.advertisements.create({
@@ -125,6 +127,7 @@ export async function POST(req: Request) {
         status: "Pending",
         newspaper_serial_no: advertisement.newspaper_serial_no,
         ad_type_id: advertisement.ad_type_id ?? null,
+        tracking_link: cleanedLink,
       },
     });
 
@@ -186,7 +189,7 @@ export async function POST(req: Request) {
     });
 
     // Step 6: Create tracking token + send email
-    const rawToken = crypto.randomBytes(24).toString("hex");
+    // const rawToken = crypto.randomBytes(24).toString("hex");
     const tokenHash = crypto
       .createHash("sha256")
       .update(rawToken)
@@ -206,7 +209,7 @@ export async function POST(req: Request) {
     });
 
     // Construct tracking link
-    const trackingLink = `${process.env.NEXT_PUBLIC_BASE_URL}/ads/track/${referenceNumber}?t=${rawToken}`;
+    // const trackingLink = `${process.env.NEXT_PUBLIC_BASE_URL}/ads/track/${referenceNumber}?t=${rawToken}`;
 
     // Send email (test mode)
     //   const { data: emailData, error: emailError } = await resend.emails.send({
