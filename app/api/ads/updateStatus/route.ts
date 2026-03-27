@@ -40,7 +40,7 @@ export async function POST(req: Request) {
     // Fetch the original ad to get the original text
     const originalAd = await prisma.advertisements.findUnique({
       where: { reference_number }, include: {
-        tracking_link: true,
+
         advertisers: true, // 👈 get phone number
       },
     });
@@ -52,7 +52,7 @@ export async function POST(req: Request) {
       );
     }
 
-    let trackingLink = originalAd.tracking_link;
+    let trackingLink = originalAd?.tracking_link ?? "";
 
 
     // Update the advertisement
