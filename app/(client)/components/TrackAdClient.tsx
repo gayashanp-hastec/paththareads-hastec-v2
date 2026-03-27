@@ -39,6 +39,7 @@ export default function TrackAdClient({ reference }: { reference: string }) {
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
 
   const adminNumber = "+94770400185";
+  const referenceNumber = reference;
 
   useEffect(() => {
     if (!token) {
@@ -222,7 +223,7 @@ export default function TrackAdClient({ reference }: { reference: string }) {
       let status = "Cancelled";
       const trackingLink = "-";
       const smsMessageUser = buildAdSubmitSMS({
-        reference,
+        referenceNumber,
         trackingLink,
         to,
         status,
