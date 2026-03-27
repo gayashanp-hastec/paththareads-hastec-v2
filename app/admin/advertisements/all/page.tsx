@@ -696,6 +696,7 @@ Paththare Ads Team
                 <th className="px-4 py-3"></th>
                 <th className="px-4 py-3">Reference</th>
                 <th className="px-4 py-3">Advertiser Name</th>
+                <th className="px-4 py-3">Advertise Tel</th>
                 <th className="px-4 py-3">Newspaper</th>
                 {/* <th className="px-4 py-3">Advertiser ID</th> */}
                 <th className="px-4 py-3">Type</th>
@@ -743,6 +744,9 @@ Paththare Ads Team
                     </td>
                     <td className="px-4 py-2 font-mono">
                       {ad.advertiser_name}
+                    </td>
+                    <td className="px-4 py-2 font-mono">
+                      {ad.advertiser_phone}
                     </td>
                     <td className="px-4 py-2">{ad.newspaper_name}</td>
                     {/* <td className="px-4 py-2">{ad.advertiser_id}</td> */}

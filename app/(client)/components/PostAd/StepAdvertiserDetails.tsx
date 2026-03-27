@@ -208,8 +208,9 @@ export default function StepAdvertiserDetails({
                 className="text-sm"
                 style={{ fontFamily: "var(--font-sinhala), sans-serif" }}
               >
-                (දැන්වීම්කරුගේ ඊමේල් ලිපිනය) *
+                (දැන්වීම්කරුගේ ඊමේල් ලිපිනය)
               </span>
+              {" (Optional)"}
             </label>
             <input
               type="email"

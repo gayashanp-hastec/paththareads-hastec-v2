@@ -191,6 +191,15 @@ export default function StepSelectAdType({
 
   const [isExpanded, setIsExpanded] = useState(false);
 
+  useEffect(() => {
+    if (selectedMainAdType && secondaryTypesSection.current) {
+      secondaryTypesSection.current.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  }, [selectedMainAdType]);
+
   const MAX_FILES = 8;
   const MAX_SIZE = 3 * 1024 * 1024; // 3MB
 
@@ -215,13 +224,18 @@ export default function StepSelectAdType({
 
   const now = new Date();
 
-  const ad_time_limit = formData.selectedNewspaper?.ad_time_limit
-    ? formData.selectedNewspaper?.ad_time_limit
-    : 22;
-  const minDate =
-    now.getHours() >= ad_time_limit
-      ? new Date(now.getFullYear(), now.getMonth(), now.getDate() + 2)
-      : new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+  const ad_time_limit = formData.selectedNewspaper?.ad_time_limit ?? 22;
+  const day_before = Number(formData.selectedNewspaper?.day_before) ?? 1;
+
+  // if current time passed cutoff → add 1 extra day
+  const extraDay = now.getHours() >= ad_time_limit ? 1 : 0;
+
+  // final minDate
+  const minDate = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate() + day_before + extraDay,
+  );
 
   const formatDateLocal = (date: Date) => {
     const yyyy = date.getFullYear();
@@ -786,7 +800,7 @@ export default function StepSelectAdType({
             : formData.selectedNewspaper.name}
         </h5>
       </div>
-      <div className="flex justify-center mt-6 mb-12"></div>
+      {/* <div className="flex justify-center mt-6 mb-12"></div> */}
       <h2 className="text-2xl font-bold text-center mb-2">Select Ad Type</h2>
       <h2
         style={{
@@ -817,18 +831,14 @@ export default function StepSelectAdType({
             className={`border border-primary rounded-lg p-4 my-8 flex flex-col items-center cursor-pointer transition text-primary-dark
       ${
         selectedMainAdType === item.key
-          ? "ring-2 ring-primary-dark"
+          ? "ring-4 ring-primary-dark"
           : "hover:ring-2 hover:ring-primary-dark"
       }`}
             onClick={() => {
               setselectedMainAdType(item.key as "classified" | "casual");
               setSelectedAdType(null);
-              setShowScrollMessage(true);
-              setTimeout(() => setShowScrollMessage(false), 1);
-              secondaryTypesSection.current?.scrollIntoView({
-                behavior: "smooth",
-                block: "start",
-              });
+              // setShowScrollMessage(true);
+              // setTimeout(() => setShowScrollMessage(false), 5000);
             }}
           >
             <div className="w-[120px] h-[30px] flex items-center justify-center mb-2 rounded-md text-lg font-semibold">
@@ -841,12 +851,13 @@ export default function StepSelectAdType({
           </div>
         ))}
       </div>
+      <div ref={secondaryTypesSection} className="w-full h-[1]"></div>
+      {selectedMainAdType && (
+        <div ref={secondaryTypesSection} className="w-full h-[75]"></div>
+      )}
 
       {selectedMainAdType && (
-        <div
-          ref={secondaryTypesSection}
-          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"
-        >
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
           {loading
             ? Array.from({ length: 6 }).map((_, i) => (
                 <AdTypeSkeleton key={i} />
@@ -1368,31 +1379,32 @@ export default function StepSelectAdType({
               </div>
             )}
             {/* Priority checkbox */}
-            {formData.selectedNewspaper.type?.toLowerCase() === "sunday" && (
-              <div className="flex flex-col md:flex-row gap-4 md:mt-8">
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    checked={formData.priorityPrice}
-                    onChange={(e) =>
-                      updateFormData({ priorityPrice: e.target.checked })
-                    }
-                  />
-                  <span>
-                    Priority{" "}
-                    <span
-                      className="text-sm"
-                      style={{
-                        fontFamily: "var(--font-sinhala), sans-serif",
-                      }}
-                    >
-                      (ප්‍රමුඛ දැන්වීමකි)
-                    </span>{" "}
-                    {/* (LKR {selectedAdType.priority_price}) */}
-                  </span>
-                </label>
-              </div>
-            )}
+            {formData.selectedNewspaper.type?.toLowerCase() === "sunday" &&
+              selectedAdType.priority_price !== 0 && (
+                <div className="flex flex-col md:flex-row gap-4 md:mt-8">
+                  <label className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      checked={formData.priorityPrice}
+                      onChange={(e) =>
+                        updateFormData({ priorityPrice: e.target.checked })
+                      }
+                    />
+                    <span>
+                      Priority{" "}
+                      <span
+                        className="text-sm"
+                        style={{
+                          fontFamily: "var(--font-sinhala), sans-serif",
+                        }}
+                      >
+                        (ප්‍රමුඛ දැන්වීමකි)
+                      </span>{" "}
+                      {/* (LKR {selectedAdType.priority_price}) */}
+                    </span>
+                  </label>
+                </div>
+              )}
             {/* Placement & Digital Publications Options - CO Paper, INT BW, INT FC, INT HL */}
 
             {selectedMainAdType &&
@@ -1401,6 +1413,15 @@ export default function StepSelectAdType({
                 selectedAdType.internet_fc_price !== 0 ||
                 selectedAdType.internet_highlight_price !== 0) && (
                 <div className="mt-6 rounded-xl border border-gray-300 bg-white p-4 shadow-sm relative">
+                  <h3 className="mb-1 font-normal text-[var(--color-primary-dark)] text-center">
+                    Placement & Digital Publications Options
+                  </h3>
+                  <h3
+                    className="mb-2 font-normal text-[var(--color-primary-dark)] text-center text-sm"
+                    style={{ fontFamily: "var(--font-sinhala), sans-serif" }}
+                  >
+                    (ස්ථානගත කිරීම සහ ඩිජිටල් ප්‍රකාශන සටහන්)
+                  </h3>
                   {/* Header + Toggle */}
                   <div className="flex items-center justify-between">
                     {/* Enable / Disable Toggle */}
@@ -1435,16 +1456,6 @@ export default function StepSelectAdType({
                       </span>
                     </label>
                   </div>
-
-                  <h3 className="mb-1 font-normal text-[var(--color-primary-dark)] text-center">
-                    Placement & Digital Publications Options
-                  </h3>
-                  <h3
-                    className="mb-2 font-normal text-[var(--color-primary-dark)] text-center text-sm"
-                    style={{ fontFamily: "var(--font-sinhala), sans-serif" }}
-                  >
-                    (ස්ථානගත කිරීම සහ ඩිජිටල් ප්‍රකාශන සටහන්)
-                  </h3>
 
                   {/* Main Section: Disable if toggle is off */}
                   <div
@@ -1847,9 +1858,16 @@ export default function StepSelectAdType({
                         <button
                           type="button"
                           onClick={decreaseMonth}
-                          className="text-[var(--color-primary-dark)] font-bold"
+                          className="text-[var(--color-primary-dark)]"
                         >
-                          &#8592; {/* ← Left arrow */}
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            className="w-6 h-6"
+                            fill="#160f29"
+                          >
+                            <path d="M14.7 5.3a1 1 0 0 1 0 1.4L9.4 12l5.3 5.3a1 1 0 1 1-1.4 1.4l-6-6a1 1 0 0 1 0-1.4l6-6a1 1 0 0 1 1.4 0z" />
+                          </svg>
                         </button>
                         <span className="font-medium">
                           {date.toLocaleString("default", {
@@ -1860,9 +1878,16 @@ export default function StepSelectAdType({
                         <button
                           type="button"
                           onClick={increaseMonth}
-                          className="text-[var(--color-primary-dark)] font-bold"
+                          className="text-[var(--color-primary-dark)]"
                         >
-                          &#8594; {/* → Right arrow */}
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            className="w-6 h-6"
+                            fill="#160f29"
+                          >
+                            <path d="M9.3 18.7a1 1 0 0 1 0-1.4L14.6 12 9.3 6.7a1 1 0 1 1 1.4-1.4l6 6a1 1 0 0 1 0 1.4l-6 6a1 1 0 0 1-1.4 0z" />
+                          </svg>
                         </button>
                       </div>
                     )}

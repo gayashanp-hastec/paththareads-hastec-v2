@@ -74,7 +74,10 @@ export default function Sidebar() {
     {
       name: "Other Settings",
       href: "/admin/settings",
-      subItems: [{ name: "Ad Types Manager", href: "/admin/settings/AdTypes" }],
+      subItems: [
+        { name: "Ad Types Manager", href: "/admin/settings/AdTypes" },
+        { name: "Miscellaneous", href: "/admin/settings/Misc" },
+      ],
     },
   ];
 

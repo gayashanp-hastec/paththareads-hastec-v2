@@ -33,6 +33,8 @@ interface Newspaper {
   combine_eng_tam_price: number;
   allowed_weekdays: [];
   allowed_month_days: [];
+  ad_time_limit: number;
+  day_before: string;
 }
 
 interface AdType {
@@ -530,7 +532,7 @@ export default function PostAdPage() {
   // ---------------- Render ----------------
   return (
     <div className="font-raleway bg-white min-h-screen flex flex-col">
-      <main className="flex-1 flex flex-col mx-auto w-full md:w-3/4 px-6 py-12 space-y-12">
+      <main className="flex-1 flex flex-col mx-auto w-full md:w-3/4 px-6 py-4 md:py-12 space-y-12">
         <BreadcrumbSteps steps={steps} currentStep={currentStep} />
         <div className="mt-1">{renderStep()}</div>
 

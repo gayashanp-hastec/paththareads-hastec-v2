@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface StepSelectNewspaperProps {
   formData: any;
@@ -20,14 +20,28 @@ export default function StepSelectNewspaper({
     "daily" | "sunday" | "weekly" | "monthly"
   >("daily");
   const tabs = [
-    { key: "daily", en: "Daily Newspapers", si: "දිනපතා පුවත්පත්" },
-    { key: "sunday", en: "Sunday Newspapers", si: "ඉරිදා පුවත්පත්" },
-    { key: "weekly", en: "Weekly Newspapers", si: "සතිපතා පුවත්පත්" },
-    { key: "monthly", en: "Monthly Newspapers", si: "මාසික පුවත්පත්" },
+    { key: "daily", en: "Daily", si: "දිනපතා පුවත්පත්" },
+    { key: "sunday", en: "Sunday", si: "ඉරිදා පුවත්පත්" },
+    { key: "weekly", en: "Weekly", si: "සතිපතා පුවත්පත්" },
+    { key: "monthly", en: "Monthly", si: "මාසික පුවත්පත්" },
   ] as const;
 
   const [newspapers, setNewspapers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const [showLeft, setShowLeft] = useState(false);
+  const [showRight, setShowRight] = useState(true);
+
+  const handleScroll = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+
+    const { scrollLeft, scrollWidth, clientWidth } = el;
+
+    setShowLeft(scrollLeft > 5);
+    setShowRight(scrollLeft + clientWidth < scrollWidth - 5);
+  };
 
   // ✅ Fetch newspapers from DB via API
   useEffect(() => {
@@ -84,6 +98,8 @@ export default function StepSelectNewspaper({
         lm_image: paper.lm_image,
         lm_description: paper.lm_description,
         ad_time_limit: paper.ad_time_limit,
+        day_before: paper.day_before,
+        date_before: paper.date_before,
       },
     });
     console.log("select newspaper form data output", formData);
@@ -104,6 +120,10 @@ export default function StepSelectNewspaper({
       nextStep();
     }
   }, [formData.selectedNewspaper]);
+
+  useEffect(() => {
+    handleScroll();
+  }, []);
 
   return (
     <section className="flex flex-col gap-6">
@@ -128,51 +148,65 @@ export default function StepSelectNewspaper({
       {/* <div className="my-4 flex flex-wrap justify-center gap-3"> */}
 
       {/* scrolling tabs */}
-      <div
-        className="
-    my-4
-    flex gap-3
-    overflow-x-auto
-    scroll-smooth
-    snap-x snap-mandatory
-    px-3
-    md:justify-center
-    md:overflow-visible
-  "
-      >
-        {tabs.map((tab) => (
-          <button
-            key={tab.key}
-            onClick={() => setActiveTab(tab.key)}
-            className={`
-        snap-center
-        min-w-[110px]
-        sm:min-w-[140px]
-        px-4 py-3
-        rounded-xl
-        font-medium
-        text-center
-        transition
-        whitespace-nowrap
-        ${
-          activeTab === tab.key
-            ? "bg-primary-accent text-white shadow-md scale-[1.02]"
-            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-        }
-      `}
-          >
-            <div className="text-sm sm:text-base">{tab.en}</div>
-
-            <div
-              style={{ fontFamily: "var(--font-sinhala), sans-serif" }}
-              className={`mt-1 text-xs sm:text-sm ${
-                activeTab === tab.key ? "text-white/90" : "text-gray-600"
-              }`}
+      <div className="relative my-4">
+        {showLeft && (
+          <div className="pointer-events-none absolute left-0 top-0 h-full w-20 flex items-center justify-start bg-gradient-to-r from-white to-transparent z-10">
+            <span className="text-primary text-2xl ml-1">‹</span>
+          </div>
+        )}
+        <div
+          ref={scrollRef}
+          onScroll={handleScroll}
+          className="
+            flex gap-3
+            overflow-x-auto
+            scroll-smooth
+            snap-x snap-mandatory
+            px-3
+            md:justify-center
+            md:overflow-visible
+          "
+        >
+          {tabs.map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`
+              snap-center
+              min-w-[110px]
+              sm:min-w-[140px]
+              px-4 py-3
+              rounded-xl
+              font-medium
+              text-center
+              transition
+              break-words
+              leading-tight
+              ${
+                activeTab === tab.key
+                  ? "bg-primary-accent text-white shadow-md scale-[1.02]"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }
+            `}
             >
-              {tab.si}
-            </div>
-          </button>
-        ))}
+              <div className="text-sm truncate">{tab.en}</div>
+
+              <div
+                style={{ fontFamily: "var(--font-sinhala), sans-serif" }}
+                className={`mt-1 text-xs sm:text-sm break-words ${
+                  activeTab === tab.key ? "text-white/90" : "text-gray-600"
+                }`}
+              >
+                {tab.si}
+              </div>
+            </button>
+          ))}
+        </div>
+        {showRight && (
+          <div className="pointer-events-none absolute right-0 top-0 h-full w-20 flex items-center justify-end bg-gradient-to-l from-white to-transparent z-10">
+            <span className="text-primary text-2xl mr-1">›</span>
+          </div>
+        )}
       </div>
 
       {/* ================= GRID ================= */}

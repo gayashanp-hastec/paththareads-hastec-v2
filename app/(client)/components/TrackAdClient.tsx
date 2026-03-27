@@ -2,6 +2,8 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import newspaperData from "../../../data/newspaper_data.json"; // adjust path
+import { sendSMS } from "@/lib/sendSms";
+import { buildAdSubmitSMS } from "@/lib/buildSmsMessage";
 
 type AdData = {
   reference_number: string;
@@ -35,6 +37,8 @@ export default function TrackAdClient({ reference }: { reference: string }) {
   const [maxWords, setMaxWords] = useState<number | null>(null);
   const [expiry, setExpiry] = useState<string | null>(null);
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
+
+  const adminNumber = "+94770400185";
 
   useEffect(() => {
     if (!token) {
@@ -76,30 +80,22 @@ export default function TrackAdClient({ reference }: { reference: string }) {
       exp.setDate(exp.getDate() + 7);
       setExpiry(exp.toISOString().slice(0, 10));
 
-      // get newspaper config to obtain maxWords
-      // we expect review_history to contain which newspaper code and typeofAd; fallback example keys:
-      let maybeNewspaper = addata.review_history?.[0]?.newspaper_code ?? null;
-      let maybeType = addata.review_history?.[0]?.typeofAd ?? null;
+      console.log("Ad max words here ", addata.ad_types.max_words);
 
-      // Try to read from ad (if you stored newspaper_name/key and ad_type)
-      // If you keep mapping differently, adapt here:
-      try {
-        // sample attempt: newspaper key == ad.ad_type or ad.newspaper_name lowercased key
-        // you might store the newspaper code in ad somewhere; adapt if needed
-        const keys = Object.keys(newspaperData as any);
-        // naive fallback: pick first config and typeofAd from ad.ad_type
-        if (addata.ad_type && keys.includes(addata.ad_type)) {
-          const conf = (newspaperData as any)[addata.ad_type];
-          const t = (conf?.typeofAd && Object.keys(conf.typeofAd)[0]) || null;
-          setMaxWords(t ? conf.typeofAd[t].maxWords : null);
-        } else {
-          // fallback: use first entry classified maxWords
-          const first = (newspaperData as any)[keys[0]];
-          setMaxWords(first.typeofAd?.classified?.maxWords ?? null);
-        }
-      } catch (e) {
-        setMaxWords(null);
-      }
+      setMaxWords(addata.ad_types.max_words);
+      // try {
+      //   const keys = Object.keys(newspaperData as any);
+      //   if (addata.ad_type && keys.includes(addata.ad_type)) {
+      //     const conf = (newspaperData as any)[addata.ad_type];
+      //     const t = (conf?.typeofAd && Object.keys(conf.typeofAd)[0]) || null;
+      //     setMaxWords(t ? conf.typeofAd[t].maxWords : null);
+      //   } else {
+      //     const first = (newspaperData as any)[keys[0]];
+      //     setMaxWords(first.typeofAd?.classified?.maxWords ?? null);
+      //   }
+      // } catch (e) {
+      //   setMaxWords(null);
+      // }
     } catch (err) {
       setError("Network error");
     }
@@ -222,6 +218,20 @@ export default function TrackAdClient({ reference }: { reference: string }) {
     const data = await res.json();
     if (data.ok) {
       alert("Ad cancelled successfully.");
+      let to = "admin";
+      let status = "Cancelled";
+      const trackingLink = "-";
+      const smsMessageUser = buildAdSubmitSMS({
+        reference,
+        trackingLink,
+        to,
+        status,
+      });
+
+      await sendSMS({
+        to: adminNumber,
+        message: smsMessageUser ?? "",
+      });
       fetchAd();
     } else {
       alert(data.error || "Failed to cancel ad.");

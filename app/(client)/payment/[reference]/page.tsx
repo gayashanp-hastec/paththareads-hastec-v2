@@ -214,19 +214,16 @@ export default function PaymentPage({ params }: Props) {
             <div className="space-y-6 text-left">
               <div className="space-y-1">
                 <p>
-                  <strong>Account Number:</strong> 1234567890
+                  <strong>Account Number:</strong> 0086504963
                 </p>
                 <p>
-                  <strong>Beneficiary:</strong> Link Media (Pvt) Ltd
+                  <strong>Beneficiary:</strong> S.B. Weerasekara
                 </p>
                 <p>
-                  <strong>Bank:</strong> Sampath Bank
+                  <strong>Bank:</strong> Bank Of Ceylon
                 </p>
                 <p>
-                  <strong>Branch:</strong> Colombo Main Branch
-                </p>
-                <p>
-                  <strong>SWIFT:</strong> BSAMLKLXXXX
+                  <strong>Branch:</strong> Panadura - Bazaar
                 </p>
               </div>
 
@@ -318,22 +315,24 @@ export default function PaymentPage({ params }: Props) {
           )}
 
           {loadingPrice && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-          <div className="bg-[var(--color-primary-dark)] text-white rounded-xl p-6 w-80 shadow-xl text-center">
-            <div className="mb-4 flex justify-center">
-              <div className="h-8 w-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
-            </div>
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+              <div className="bg-[var(--color-primary-dark)] text-white rounded-xl p-6 w-80 shadow-xl text-center">
+                <div className="mb-4 flex justify-center">
+                  <div className="h-8 w-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+                </div>
 
-            <h2 className="text-lg font-semibold mb-2">Loading payment amount...</h2>
+                <h2 className="text-lg font-semibold mb-2">
+                  Loading payment amount...
+                </h2>
 
-            {/* <p className="text-sm opacity-90">
+                {/* <p className="text-sm opacity-90">
               {currentStep === 1 && "Loading ad types..."}
               {currentStep === 2 && "Preparing advertiser form..."}
               {currentStep === 3 && "Submitting advertisement..."}
             </p> */}
-          </div>
-        </div>
-      )}
+              </div>
+            </div>
+          )}
         </div>
       </section>
     </main>

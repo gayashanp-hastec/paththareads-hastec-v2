@@ -101,6 +101,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
       lm_image: "",
       lm_description: "",
       ad_time_limit: 0,
+      day_before: "1",
     },
   );
 
@@ -356,6 +357,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
       lm_image: form.lm_image,
       lm_description: form.lm_description,
       ad_time_limit: form.ad_time_limit,
+      day_before: form.day_before,
       ad_types: adTypes.map((t) => ({
         key: t.typeKey,
         name: t.name,
@@ -475,6 +477,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
           lm_image: data.lm_image,
           lm_description: data.lm_description,
           ad_time_limit: data.ad_time_limit,
+          day_before: data.day_before,
         });
 
         // 2️⃣ Populate ad types with sections + sizes
@@ -552,7 +555,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
   }, [item?.id]);
 
   useEffect(() => {
-    if (item) return; // ⛔ do NOT override on edit
+    if (item) return; // do NOT override on edit
 
     setForm((prev: { type: string }) => {
       if (prev.type === "Daily")
@@ -1015,8 +1018,8 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                 </div>
               )}
 
-              <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-                <div className="mt-8">
+              <div className="mt-8 grid grid-cols-1 md:grid-cols-4 gap-6 items-start">
+                <div className="mt-8 col-span-2">
                   <label className="block text-sm font-medium text-[var(--color-text)]">
                     Publisher Email
                   </label>
@@ -1029,13 +1032,51 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                     }}
                   />
                 </div>
-                <div className="mt-8">
+                <div className="mt-8 col-span-1">
+                  <label className="block text-sm font-medium text-[var(--color-text)]">
+                    Days Before
+                  </label>
+                  <select
+                    value={form.day_before || ""}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        day_before: String(e.target.value),
+                      })
+                    }
+                    className="mt-1 w-full rounded-lg border px-3 py-2 text-sm focus:border-primary focus:outline-none border-gray-300"
+                  >
+                    <option value="">Select days</option>
+                    {Array.from({ length: 15 }, (_, i) => i + 1).map((num) => (
+                      <option key={num} value={num}>
+                        {num}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {/* {form.type === "Weekly" && (
+                  <div className="mt-8 col-span-1">
+                    <label className="block text-sm font-medium text-[var(--color-text)]">
+                      Day Before
+                    </label>
+                    <select className="mt-1 w-full rounded-lg border px-3 py-2 text-sm focus:border-primary focus:outline-none border-gray-300"></select>
+                  </div>
+                )}
+                {form.type === "Monthly" && (
+                  <div className="mt-8 col-span-1">
+                    <label className="block text-sm font-medium text-[var(--color-text)]">
+                      Date Before
+                    </label>
+                    <select className="mt-1 w-full rounded-lg border px-3 py-2 text-sm focus:border-primary focus:outline-none border-gray-300"></select>
+                  </div>
+                )} */}
+                <div className="mt-8 col-span-1">
                   <label className="block text-sm font-medium text-[var(--color-text)]">
                     Ad Publish Time Limit
                   </label>
 
                   <select
-                    className="mt-1 w-1/2 rounded-lg border px-3 py-2 text-sm focus:border-primary focus:outline-none border-gray-300"
+                    className="mt-1 w-full rounded-lg border px-3 py-2 text-sm focus:border-primary focus:outline-none border-gray-300"
                     value={form.ad_time_limit || 22}
                     onChange={(e) =>
                       setForm({
