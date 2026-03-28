@@ -1072,7 +1072,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                 )} */}
                 <div className="mt-8 col-span-1">
                   <label className="block text-sm font-medium text-[var(--color-text)]">
-                    Ad Publish Time Limit
+                    Time Before
                   </label>
 
                   <select
