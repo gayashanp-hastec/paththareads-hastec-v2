@@ -456,25 +456,25 @@ export default function AdminAdvertisements() {
       const printUrl = ad.print_url ?? "URL not available yet";
 
       return `
-Dear Publisher,
+              Dear Publisher,
 
-The following advertisement has been processed in Paththare Ads:
+              The following advertisement has been processed in Paththare Ads:
 
-Reference Number: ${ad.reference_number}
-Advertiser Name: ${ad.advertiser_name}
-Ad Type / Category: ${ad.ad_type} / ${category}
-Newspaper: ${ad.newspaper_name}
-Publish Date: ${publicationDate}
-Price: ${ad.price ?? "N/A"}
+              Reference Number: ${ad.reference_number}
+              Advertiser Name: ${ad.advertiser_name}
+              Ad Type / Category: ${ad.ad_type} / ${category}
+              Newspaper: ${ad.newspaper_name}
+              Publish Date: ${publicationDate}
+              Price: ${ad.price ?? "N/A"}
 
-The advertisement has been printed and can be accessed at the following URL:
-${printUrl}
+              The advertisement has been printed and can be accessed at the following URL:
+              ${printUrl}
 
-Please review and proceed accordingly.
+              Please review and proceed accordingly.
 
-Best regards,
-Paththare Ads Team
-`;
+              Best regards,
+              Paththare Ads Team
+              `;
     }
 
     const blob = await res.blob();
@@ -579,6 +579,7 @@ Paththare Ads Team
         body: JSON.stringify({
           to: publisherEmail, // must match backend
           subject,
+          cc: "themedialink@gmail.com",
           body,
         }),
       });
