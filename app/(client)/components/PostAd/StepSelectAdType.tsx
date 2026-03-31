@@ -188,6 +188,7 @@ export default function StepSelectAdType({
     formData.selectedNewspaper?.allowed_month_days ?? [];
   // console.log("days here: ", allowed_weekdays);
   // console.log("days here: ", allowed_month_days);
+  const [langVisible, setlangVisible] = useState(false);
 
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -712,28 +713,55 @@ export default function StepSelectAdType({
   const languageOptions =
     formData.selectedNewspaper.language === "SI"
       ? [
-          ["userLangCombineSelected_Eng", "Place Ad in English Paper"],
-          ["userLangCombineSelected_Tam", "Place Ad in Tamil Paper"],
+          [
+            "userLangCombineSelected_Eng",
+            "Place Ad in English Paper",
+            formData.selectedNewspaper.combine_eng_price,
+          ],
+          [
+            "userLangCombineSelected_Tam",
+            "Place Ad in Tamil Paper",
+            formData.selectedNewspaper.combine_tam_price,
+          ],
           [
             "userLangCombineSelected_Eng_Tam",
             "Place Ad in English & Tamil Papers",
+            formData.selectedNewspaper.combine_eng_tam_price,
           ],
         ]
       : formData.selectedNewspaper.language === "EN"
         ? [
-            ["userLangCombineSelected_Tam", "Place Ad in Tamil Paper"],
-            ["userLangCombineSelected_Sin", "Place Ad in Sinhala Paper"],
+            [
+              "userLangCombineSelected_Tam",
+              "Place Ad in Tamil Paper",
+              formData.selectedNewspaper.combine_tam_price,
+            ],
+            [
+              "userLangCombineSelected_Sin",
+              "Place Ad in Sinhala Paper",
+              formData.selectedNewspaper.combine_sin_price,
+            ],
             [
               "userLangCombineSelected_Sin_Tam",
               "Place Ad in Sinhala & Tamil Papers",
+              formData.selectedNewspaper.combine_sin_tam_price,
             ],
           ]
         : [
-            ["userLangCombineSelected_Eng", "Place Ad in English Paper"],
-            ["userLangCombineSelected_Sin", "Place Ad in Sinhala Paper"],
+            [
+              "userLangCombineSelected_Eng",
+              "Place Ad in English Paper",
+              formData.selectedNewspaper.combine_eng_price,
+            ],
+            [
+              "userLangCombineSelected_Sin",
+              "Place Ad in Sinhala Paper",
+              formData.selectedNewspaper.combine_sin_price,
+            ],
             [
               "userLangCombineSelected_Sin_Eng",
               "Place Ad in Sinhala & English Papers",
+              formData.selectedNewspaper.combine_sin_eng_price,
             ],
           ];
   function parseStyledText(text: string) {
@@ -1625,9 +1653,16 @@ export default function StepSelectAdType({
                 </label>
               </div>
             )}
+
             {/* Language Combination Checkbox */}
             {selectedMainAdType === "classified" &&
-              formData.selectedNewspaper?.is_lang_combine_allowed && (
+              formData.selectedNewspaper?.is_lang_combine_allowed &&
+              (formData.selectedNewspaper.combine_sin_price !== 0 ||
+                formData.selectedNewspaper.combine_eng_price !== 0 ||
+                formData.selectedNewspaper.combine_tam_price !== 0 ||
+                formData.selectedNewspaper.combine_sin_eng_price !== 0 ||
+                formData.selectedNewspaper.combine_sin_tam_price !== 0 ||
+                formData.selectedNewspaper.combine_eng_tam_price !== 0) && (
                 <div className="my-4 mt-8">
                   <label className="flex items-center space-x-2">
                     <input
@@ -1657,35 +1692,37 @@ export default function StepSelectAdType({
             {selectedMainAdType === "classified" &&
               formData.userLangCombineSelected && (
                 <div className="my-8 grid md:grid-cols-3 lg:grid-cols-3 grid-cols-1">
-                  {languageOptions.map(([key, label]) => (
-                    <label key={key} className="flex items-center space-x-2">
-                      <input
-                        type="radio"
-                        name="language-combination"
-                        checked={(formData as any)[key]}
-                        onChange={() =>
-                          updateFormData({
-                            userLangCombineSelected_Eng: false,
-                            userLangCombineSelected_Tam: false,
-                            userLangCombineSelected_Sin: false,
-                            userLangCombineSelected_Sin_Tam: false,
-                            userLangCombineSelected_Sin_Eng: false,
-                            userLangCombineSelected_Eng_Tam: false,
-                            [key]: true,
-                          })
-                        }
-                      />
-                      <span>
-                        {label}
-                        <span
-                          className="text-sm"
-                          style={{
-                            fontFamily: "var(--font-sinhala), sans-serif",
-                          }}
-                        ></span>{" "}
-                      </span>
-                    </label>
-                  ))}
+                  {languageOptions
+                    .filter(([, , price]) => price !== 0)
+                    .map(([key, label]) => (
+                      <label key={key} className="flex items-center space-x-2">
+                        <input
+                          type="radio"
+                          name="language-combination"
+                          checked={(formData as any)[key]}
+                          onChange={() =>
+                            updateFormData({
+                              userLangCombineSelected_Eng: false,
+                              userLangCombineSelected_Tam: false,
+                              userLangCombineSelected_Sin: false,
+                              userLangCombineSelected_Sin_Tam: false,
+                              userLangCombineSelected_Sin_Eng: false,
+                              userLangCombineSelected_Eng_Tam: false,
+                              [key]: true,
+                            })
+                          }
+                        />
+                        <span>
+                          {label}
+                          <span
+                            className="text-sm"
+                            style={{
+                              fontFamily: "var(--font-sinhala), sans-serif",
+                            }}
+                          ></span>{" "}
+                        </span>
+                      </label>
+                    ))}
                 </div>
               )}
             {/* Post in website? checkbox */}
