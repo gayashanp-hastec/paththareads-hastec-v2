@@ -711,6 +711,7 @@ export default function AdminAdvertisements() {
                   <tr
                     key={ad.reference_number}
                     onClick={(e) => {
+                      // console.log("all info here", ad);
                       // Prevent row click from interfering with checkbox
                       if ((e.target as HTMLElement).closest("input")) return;
                       openModal(ad);
@@ -724,10 +725,11 @@ export default function AdminAdvertisements() {
                     }`}
                   >
                     <td className="px-4 py-2">
-                      {ad.status?.toLowerCase() === "print" ||
-                      ad.status?.toLowerCase() === "sent to print" ||
-                      ad.status?.toLowerCase() === "adprocessed" ||
-                      ad.status?.toLowerCase() === "AdProcessed" ? (
+                      {(ad.status?.toLowerCase() === "print" ||
+                        ad.status?.toLowerCase() === "sent to print" ||
+                        ad.status?.toLowerCase() === "adprocessed" ||
+                        ad.status?.toLowerCase() === "AdProcessed") &&
+                      ad.publisher_email !== null ? (
                         <input
                           className="h-4 w-4"
                           type="checkbox"
