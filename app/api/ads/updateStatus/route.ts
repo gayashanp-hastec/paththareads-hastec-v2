@@ -113,6 +113,8 @@ export async function POST(req: Request) {
         data: { status: "PriceChange", price: price_change.new_price },
       });
 
+      // Sending user sms
+
       to = "user";
       let status = "priceChange"
       const smsMessageUser = buildAdSubmitSMS({
@@ -124,6 +126,21 @@ export async function POST(req: Request) {
       await sendSMS({
         to: originalAd.advertisers?.phone ?? "",
         message: smsMessageUser ?? "",
+      });
+    }
+
+    if (status === "Approve" || status === "Approved" || status === "approve" || status === "approved") {
+      to = "user"
+      const smsMessageAdmin = buildAdSubmitSMS({
+        referenceNumber,
+        trackingLink,
+        to,
+        status,
+      });
+
+      await sendSMS({
+        to: originalAd.advertisers?.phone ?? "",
+        message: smsMessageAdmin ?? "",
       });
     }
 
