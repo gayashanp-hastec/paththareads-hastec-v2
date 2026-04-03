@@ -18,12 +18,21 @@ export default function Footer() {
         >
           Terms & Conditions
         </button>
-        {/* <Link href="#" className="hover:text-gray-700 transition">
+        <Link
+          href="/pdf/others/privacy.pdf"
+          target="_blank"
+          className="hover:text-gray-700 transition"
+        >
           Privacy Policy
-        </Link> */}
-        {/* <Link href="#" className="hover:text-gray-700 transition">
-          Cookies
-        </Link> */}
+        </Link>
+
+        <Link
+          href="/pdf/others/return.pdf"
+          target="_blank"
+          className="hover:text-gray-700 transition"
+        >
+          Return Policy
+        </Link>
         <Link href="/about-us" className="hover:text-gray-700 transition">
           About Us
         </Link>

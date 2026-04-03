@@ -725,7 +725,9 @@ export default function AdminAdvertisements() {
                   >
                     <td className="px-4 py-2">
                       {ad.status?.toLowerCase() === "print" ||
-                      ad.status?.toLowerCase() === "sent to print" ? (
+                      ad.status?.toLowerCase() === "sent to print" ||
+                      ad.status?.toLowerCase() === "adprocessed" ||
+                      ad.status?.toLowerCase() === "AdProcessed" ? (
                         <input
                           className="h-4 w-4"
                           type="checkbox"

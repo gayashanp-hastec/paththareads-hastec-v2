@@ -319,10 +319,10 @@ export default function PostAdPage() {
           setAlertMessage("NIC must only be 10 or 12 characters long!");
           return false;
         }
-        if (!formData.advertiserEmail.trim()) {
-          setAlertMessage("Email address is required!");
-          return false;
-        }
+        // if (!formData.advertiserEmail.trim()) {
+        //   setAlertMessage("Email address is required!");
+        //   return false;
+        // }
         if (
           !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.advertiserEmail.trim())
         ) {
@@ -353,7 +353,7 @@ export default function PostAdPage() {
         setCurrentStep((prev) => prev + 1);
       }
       setIsProcessing(false);
-    }, 8000); // adjust duration if needed
+    }, 3000);
   };
 
   const prevStep = () => {
@@ -372,7 +372,7 @@ export default function PostAdPage() {
     const isValid = await validateStep();
     if (!isValid) return;
 
-    setIsSubmitting(true);
+    setIsProcessing(true);
 
     try {
       const payload = {
@@ -443,7 +443,7 @@ export default function PostAdPage() {
       console.error(err);
       setAlertMessage("Server error while submitting.");
     } finally {
-      setIsSubmitting(false);
+      setIsProcessing(false);
     }
   };
 
@@ -647,7 +647,11 @@ export default function PostAdPage() {
               <div className="h-8 w-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
             </div>
 
-            <h2 className="text-lg font-semibold mb-2">Loading...</h2>
+            <h2 className="text-lg font-semibold mb-2">
+              {currentStep === 1 && "Loading ad types..."}
+              {currentStep === 2 && "Preparing advertiser form..."}
+              {currentStep === 3 && "Your advertisement is saving..."}
+            </h2>
 
             {/* <p className="text-sm opacity-90">
               {currentStep === 1 && "Loading ad types..."}

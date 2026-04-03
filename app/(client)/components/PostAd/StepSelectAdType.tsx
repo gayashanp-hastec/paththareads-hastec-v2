@@ -488,53 +488,54 @@ export default function StepSelectAdType({
       });
       total += selectedAdType.priority_price;
     }
+    if (formData.userLangCombineSelected) {
+      if (formData.userLangCombineSelected_Eng) {
+        breakdown.push({
+          label: "Include in English paper",
+          amount: formData.selectedNewspaper.combine_eng_price,
+        });
+        total += formData.selectedNewspaper.combine_eng_price;
+      }
 
-    if (formData.userLangCombineSelected_Eng) {
-      breakdown.push({
-        label: "Include in English paper",
-        amount: formData.selectedNewspaper.combine_eng_price,
-      });
-      total += formData.selectedNewspaper.combine_eng_price;
-    }
+      if (formData.userLangCombineSelected_Tam) {
+        breakdown.push({
+          label: "Include in Tamil paper",
+          amount: formData.selectedNewspaper.combine_tam_price,
+        });
+        total += formData.selectedNewspaper.combine_tam_price;
+      }
 
-    if (formData.userLangCombineSelected_Tam) {
-      breakdown.push({
-        label: "Include in Tamil paper",
-        amount: formData.selectedNewspaper.combine_tam_price,
-      });
-      total += formData.selectedNewspaper.combine_tam_price;
-    }
+      if (formData.userLangCombineSelected_Sin) {
+        breakdown.push({
+          label: "Include in Sinhala paper",
+          amount: formData.selectedNewspaper.combine_sin_price,
+        });
+        total += formData.selectedNewspaper.combine_sin_price;
+      }
 
-    if (formData.userLangCombineSelected_Sin) {
-      breakdown.push({
-        label: "Include in Sinhala paper",
-        amount: formData.selectedNewspaper.combine_sin_price,
-      });
-      total += formData.selectedNewspaper.combine_sin_price;
-    }
+      if (formData.userLangCombineSelected_Sin_Tam) {
+        breakdown.push({
+          label: "Include in Both Sinhala & Tamil papers",
+          amount: formData.selectedNewspaper.combine_sin_tam_price,
+        });
+        total += formData.selectedNewspaper.combine_sin_tam_price;
+      }
 
-    if (formData.userLangCombineSelected_Sin_Tam) {
-      breakdown.push({
-        label: "Include in Both Sinhala & Tamil papers",
-        amount: formData.selectedNewspaper.combine_sin_tam_price,
-      });
-      total += formData.selectedNewspaper.combine_sin_tam_price;
-    }
+      if (formData.userLangCombineSelected_Eng_Tam) {
+        breakdown.push({
+          label: "Include in both English & Tamil papers",
+          amount: formData.selectedNewspaper.combine_eng_tam_price,
+        });
+        total += formData.selectedNewspaper.combine_eng_tam_price;
+      }
 
-    if (formData.userLangCombineSelected_Eng_Tam) {
-      breakdown.push({
-        label: "Include in both English & Tamil papers",
-        amount: formData.selectedNewspaper.combine_eng_tam_price,
-      });
-      total += formData.selectedNewspaper.combine_eng_tam_price;
-    }
-
-    if (formData.userLangCombineSelected_Sin_Eng) {
-      breakdown.push({
-        label: "Include in both Sinhala & English papers",
-        amount: formData.selectedNewspaper.combine_sin_eng_price,
-      });
-      total += formData.selectedNewspaper.combine_sin_eng_price;
+      if (formData.userLangCombineSelected_Sin_Eng) {
+        breakdown.push({
+          label: "Include in both Sinhala & English papers",
+          amount: formData.selectedNewspaper.combine_sin_eng_price,
+        });
+        total += formData.selectedNewspaper.combine_sin_eng_price;
+      }
     }
 
     if (formData.userCOPaper) {
@@ -606,6 +607,7 @@ export default function StepSelectAdType({
     formData.backgroundColor,
     formData.combinedAd,
     formData.priorityPrice,
+    formData.userLangCombineSelected,
     formData.userLangCombineSelected_Eng,
     formData.userLangCombineSelected_Tam,
     formData.userLangCombineSelected_Sin,
@@ -618,6 +620,19 @@ export default function StepSelectAdType({
     formData.userIntHighlight,
     selectedAdType,
   ]);
+
+  useEffect(() => {
+    if (!formData.userLangCombineSelected) {
+      updateFormData({
+        userLangCombineSelected_Eng: false,
+        userLangCombineSelected_Tam: false,
+        userLangCombineSelected_Sin: false,
+        userLangCombineSelected_Sin_Tam: false,
+        userLangCombineSelected_Sin_Eng: false,
+        userLangCombineSelected_Eng_Tam: false,
+      });
+    }
+  }, [formData.userLangCombineSelected]);
 
   useEffect(() => {
     if (!selectedCategory) {
@@ -1655,7 +1670,7 @@ export default function StepSelectAdType({
             )}
 
             {/* Language Combination Checkbox */}
-            {selectedMainAdType === "classified" &&
+            {selectedAdType.key === "classified" &&
               formData.selectedNewspaper?.is_lang_combine_allowed &&
               (formData.selectedNewspaper.combine_sin_price !== 0 ||
                 formData.selectedNewspaper.combine_eng_price !== 0 ||
@@ -1669,8 +1684,22 @@ export default function StepSelectAdType({
                       type="checkbox"
                       checked={formData.userLangCombineSelected}
                       onChange={(e) => {
+                        const checked = e.target.checked;
+
                         updateFormData({
-                          userLangCombineSelected: e.target.checked,
+                          userLangCombineSelected: checked,
+
+                          // 🔥 reset all if turned OFF
+                          ...(checked
+                            ? {}
+                            : {
+                                userLangCombineSelected_Eng: false,
+                                userLangCombineSelected_Tam: false,
+                                userLangCombineSelected_Sin: false,
+                                userLangCombineSelected_Sin_Tam: false,
+                                userLangCombineSelected_Sin_Eng: false,
+                                userLangCombineSelected_Eng_Tam: false,
+                              }),
                         });
                       }}
                     />
@@ -1689,7 +1718,7 @@ export default function StepSelectAdType({
                 </div>
               )}
             {/* English and Tamil Language checkboxes */}
-            {selectedMainAdType === "classified" &&
+            {selectedAdType.key === "classified" &&
               formData.userLangCombineSelected && (
                 <div className="my-8 grid md:grid-cols-3 lg:grid-cols-3 grid-cols-1">
                   {languageOptions

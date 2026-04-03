@@ -16,9 +16,20 @@ export async function POST(req: Request) {
     } = body;
 
     // Send SMS
-    const referenceNumber = reference_number
-    let to = ""
-    const adminNumber = "+94770400185"
+    // Send SMS
+    const referenceNumber = reference_number;
+    let to = "";
+
+    // 🔽 Fetch admin number dynamically
+    const config = await prisma.admin_config.findFirst();
+    const adminNumber = config?.phone || "";
+
+    if (!adminNumber) {
+      return NextResponse.json(
+        { error: "Admin phone number not configured" },
+        { status: 500 }
+      );
+    }
 
     // Validate incoming data
     if (!reference_number || !status) {
