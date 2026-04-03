@@ -252,6 +252,7 @@ export async function POST(req: Request) {
     });
     const config = await prisma.admin_config.findFirst();
     const adminNumber = config?.phone || "";
+
     const smsResAdmin = await sendSMS({
       to: adminNumber,
       message: smsMessageAdmin ?? "",
@@ -261,6 +262,12 @@ export async function POST(req: Request) {
       console.error("SMS failed:", smsResUser.error);
     } else {
       console.log("SMS sent successfully");
+    }
+
+    if (!smsResAdmin.success) {
+      console.error("SMS failed:", smsResUser.error);
+    } else {
+      console.log("Admin SMS sent successfully");
     }
 
     return NextResponse.json({

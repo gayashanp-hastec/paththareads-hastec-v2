@@ -323,12 +323,15 @@ export default function PostAdPage() {
         //   setAlertMessage("Email address is required!");
         //   return false;
         // }
-        if (
-          !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.advertiserEmail.trim())
-        ) {
-          setAlertMessage("Invalid email format!");
-          return false;
+        if (formData.advertiserEmail.trim()) {
+          if (
+            !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.advertiserEmail.trim())
+          ) {
+            setAlertMessage("Invalid email format!");
+            return false;
+          }
         }
+
         if (!formData.tmagree) {
           setAlertMessage("Please accept the Terms & Conditions to continue.");
           return false;
