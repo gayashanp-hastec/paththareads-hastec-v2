@@ -250,9 +250,10 @@ export async function POST(req: Request) {
       to,
       status,
     });
-
+    const config = await prisma.admin_config.findFirst();
+    const adminNumber = config?.phone || "";
     const smsResAdmin = await sendSMS({
-      to: "+94770400185",
+      to: adminNumber,
       message: smsMessageAdmin ?? "",
     });
 
