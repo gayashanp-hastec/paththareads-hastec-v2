@@ -517,6 +517,7 @@ export default function PostAdPage() {
       case 4:
         return (
           <StepSubmittedForReview
+            formData={formData}
             referenceNumber={referenceNumber}
             trackingLink={trackingLink}
           />

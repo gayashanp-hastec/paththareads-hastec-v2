@@ -57,7 +57,7 @@ interface Advertisement {
   } | null;
 
   classified_ad?: {
-    is_publish_eng: boolean;
+    is_publish_eng: boolean | false;
     is_publish_tam: boolean;
     is_priority: boolean;
     is_publish_sin: boolean;
@@ -139,6 +139,14 @@ export default function AdminAdvertisements() {
   const [printing, setPrinting] = useState(false);
 
   const [statusFilter, setStatusFilter] = useState<string>("all");
+
+  const [editableAd, setEditableAd] = useState<Advertisement | null>(null);
+  const [editMode, setEditMode] = useState(false);
+
+  const isChanged = JSON.stringify(selectedAd) !== JSON.stringify(editableAd);
+
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [alertMessage, setAlertMessage] = useState<string | null>(null);
 
   const ACTION_BTN_CLASS =
     "flex items-center justify-center gap-2 w-50 px-4 py-2.5 rounded-lg shadow text-sm font-medium transition";
@@ -285,6 +293,22 @@ export default function AdminAdvertisements() {
     );
   }
 
+  const EditableInfoRow = ({ label, value, onChange, editable }: any) => (
+    <div className="space-y-1">
+      <p className="text-xs text-gray-500">{label}</p>
+
+      {editable ? (
+        <input
+          value={value ?? ""}
+          onChange={(e) => onChange(e.target.value)}
+          className="w-full rounded-lg border px-3 py-2 text-sm"
+        />
+      ) : (
+        <p className="font-medium">{value || "-"}</p>
+      )}
+    </div>
+  );
+
   const formatDateYMD = (dateStr: string) => {
     const [year, month, day] = dateStr.split("T")[0].split("-");
     return `${year}-${month}-${day}`;
@@ -349,12 +373,17 @@ export default function AdminAdvertisements() {
   };
 
   const handlePrint = async () => {
-    console.log(selectedAd);
-    if (!selectedAd) return;
+    // console.log(selectedAd);
+    // if (!selectedAd) return;
+    // setPrinting(true);
+
+    console.log(editableAd);
+    if (!editableAd) return;
     setPrinting(true);
+    setIsProcessing(true);
 
     // Trim + split by ONE OR MORE SPACES
-    const words = selectedAd.advertisement_text.trim().split(/\s+/); // space-separated words
+    const words = editableAd.advertisement_text.trim().split(/\s+/); // space-separated words
 
     const wordCount = words.length;
 
@@ -363,81 +392,81 @@ export default function AdminAdvertisements() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         /* ---------------- Core identifiers ---------------- */
-        reference_number: selectedAd.reference_number,
-        newspaper_name: selectedAd.newspaper_name,
-        language: selectedAd.language,
+        reference_number: editableAd.reference_number,
+        newspaper_name: editableAd.newspaper_name,
+        language: editableAd.language,
 
-        newspaper_id: selectedAd.newspaper_name
+        newspaper_id: editableAd.newspaper_name
           ?.trim()
           .toUpperCase()
           .replace(/\s+/g, "_"),
 
         /* ---------------- Advertiser details ---------------- */
-        advertiser_name: selectedAd.advertiser_name,
-        advertiser_nic: selectedAd.advertiser_nic ?? null,
-        advertiser_phone: selectedAd.advertiser_phone ?? null,
-        advertiser_address: selectedAd.advertiser_address ?? null,
+        advertiser_name: editableAd.advertiser_name,
+        advertiser_nic: editableAd.advertiser_nic ?? null,
+        advertiser_phone: editableAd.advertiser_phone ?? null,
+        advertiser_address: editableAd.advertiser_address ?? null,
 
         /* ---------------- Ad classification ---------------- */
-        ad_type: selectedAd.ad_type,
-        category: selectedAd.classified_category ?? null,
-        subcategory: selectedAd.subcategory ?? null,
-        count_first_words: selectedAd.count_first_words ?? null,
+        ad_type: editableAd.ad_type,
+        category: editableAd.classified_category ?? null,
+        subcategory: editableAd.subcategory ?? null,
+        count_first_words: editableAd.count_first_words ?? null,
 
         /* ---------------- Dates ---------------- */
         publish_date: formatDateYMD(
-          selectedAd.publish_date ? selectedAd.publish_date : "",
+          editableAd.publish_date ? editableAd.publish_date : "",
         ),
-        created_at: selectedAd.created_at,
-        updated_at: selectedAd.updated_at ?? null,
+        created_at: editableAd.created_at,
+        updated_at: editableAd.updated_at ?? null,
 
         /* ---------------- Text & content ---------------- */
-        advertisement_text: selectedAd.advertisement_text,
+        advertisement_text: editableAd.advertisement_text,
         advertisement_words: words,
         word_count: wordCount,
-        special_notes: selectedAd.special_notes ?? null,
+        special_notes: editableAd.special_notes ?? null,
 
         /* ---------------- Flags ---------------- */
-        background_color: selectedAd.background_color ?? null,
-        post_in_web: selectedAd.post_in_web ?? null,
+        background_color: editableAd.background_color ?? null,
+        post_in_web: editableAd.post_in_web ?? null,
 
         /* ---------------- Media ---------------- */
-        upload_image: selectedAd.upload_image ?? null,
+        upload_image: editableAd.upload_image ?? null,
 
         /* ---------------- Pricing & status ---------------- */
-        price: selectedAd.price ?? null,
-        status: selectedAd.status,
+        price: editableAd.price ?? null,
+        status: editableAd.status,
 
         /* ---------------- Casual Ad ---------------- */
-        casual_ad: selectedAd.casual_ad
+        casual_ad: editableAd.casual_ad
           ? {
-              ad_size: selectedAd.casual_ad.ad_size,
-              no_of_columns: selectedAd.casual_ad.no_of_columns,
-              ad_height: selectedAd.casual_ad.ad_height,
-              color_option: selectedAd.casual_ad.color_option,
-              has_artwork: selectedAd.casual_ad.has_artwork,
-              need_artwork: selectedAd.casual_ad.need_artwork,
-              no_of_boxes: selectedAd.casual_ad.no_of_boxes,
+              ad_size: editableAd.casual_ad.ad_size,
+              no_of_columns: editableAd.casual_ad.no_of_columns,
+              ad_height: editableAd.casual_ad.ad_height,
+              color_option: editableAd.casual_ad.color_option,
+              has_artwork: editableAd.casual_ad.has_artwork,
+              need_artwork: editableAd.casual_ad.need_artwork,
+              no_of_boxes: editableAd.casual_ad.no_of_boxes,
             }
           : null,
 
         /* ---------------- Classified Ad ---------------- */
-        classified_ad: selectedAd.classified_ad
+        classified_ad: editableAd.classified_ad
           ? {
-              is_publish_eng: selectedAd.classified_ad.is_publish_eng,
-              is_publish_tam: selectedAd.classified_ad.is_publish_tam,
-              is_priority: selectedAd.classified_ad.is_priority,
-              is_publish_sin: selectedAd.classified_ad.is_publish_sin,
-              is_publish_sin_eng: selectedAd.classified_ad.is_publish_sin_eng,
-              is_publish_sin_tam: selectedAd.classified_ad.is_publish_sin_tam,
-              is_publish_eng_tam: selectedAd.classified_ad.is_publish_eng_tam,
-              is_co_paper: selectedAd.classified_ad.is_co_paper,
-              is_int_bw: selectedAd.classified_ad.is_int_bw,
-              is_int_fc: selectedAd.classified_ad.is_int_fc,
-              is_int_highlight: selectedAd.classified_ad.is_int_highlight,
-              district: selectedAd.classified_ad.district,
-              province: selectedAd.classified_ad.province,
-              vehicle_brand: selectedAd.classified_ad.vehicle_brand,
+              is_publish_eng: editableAd.classified_ad.is_publish_eng,
+              is_publish_tam: editableAd.classified_ad.is_publish_tam,
+              is_priority: editableAd.classified_ad.is_priority,
+              is_publish_sin: editableAd.classified_ad.is_publish_sin,
+              is_publish_sin_eng: editableAd.classified_ad.is_publish_sin_eng,
+              is_publish_sin_tam: editableAd.classified_ad.is_publish_sin_tam,
+              is_publish_eng_tam: editableAd.classified_ad.is_publish_eng_tam,
+              is_co_paper: editableAd.classified_ad.is_co_paper,
+              is_int_bw: editableAd.classified_ad.is_int_bw,
+              is_int_fc: editableAd.classified_ad.is_int_fc,
+              is_int_highlight: editableAd.classified_ad.is_int_highlight,
+              district: editableAd.classified_ad.district,
+              province: editableAd.classified_ad.province,
+              vehicle_brand: editableAd.classified_ad.vehicle_brand,
             }
           : null,
       }),
@@ -482,14 +511,14 @@ export default function AdminAdvertisements() {
       updateStatus("AdProcessed");
 
       // 1. upload blob to cloudinary
-      const file = new File([blob], `${selectedAd.reference_number}.pdf`, {
+      const file = new File([blob], `${editableAd.reference_number}.pdf`, {
         type: "application/pdf",
       });
 
       const cloudUrl = await uploadPrintedBlobToCloudinary(file);
 
       // 2. save URL to DB
-      await fetch(`/api/ads/${selectedAd.reference_number}`, {
+      await fetch(`/api/ads/${editableAd.reference_number}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ print_url: cloudUrl }),
@@ -499,16 +528,18 @@ export default function AdminAdvertisements() {
 
       setAds((prev) =>
         prev.map((ad) =>
-          ad.reference_number === selectedAd.reference_number
+          ad.reference_number === editableAd.reference_number
             ? { ...ad, print_url: cloudUrl }
             : ad,
         ),
       );
 
-      setSelectedAd((prev) => prev && { ...prev, print_url: cloudUrl });
+      setEditableAd((prev) => prev && { ...prev, print_url: cloudUrl });
     }
     const url = URL.createObjectURL(blob);
     window.open(url, "_blank");
+    setIsProcessing(false);
+    setAlertMessage("PDF Printed");
   };
 
   const formatPublishDate = (dateStr: string) => {
@@ -600,6 +631,12 @@ export default function AdminAdvertisements() {
       alert("Something went wrong while sending email");
     }
   };
+
+  useEffect(() => {
+    if (selectedAd) {
+      setEditableAd(JSON.parse(JSON.stringify(selectedAd)));
+    }
+  }, [selectedAd]);
 
   return (
     <div className="flex min-h-screen text-violet-950 bg-gray-50">
@@ -803,7 +840,7 @@ export default function AdminAdvertisements() {
         </div>
 
         {/* Modal */}
-        {isModalOpen && selectedAd && (
+        {isModalOpen && selectedAd && editableAd && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
             <div className="relative w-full max-w-5xl overflow-hidden rounded-2xl bg-white shadow-2xl border border-gray-100 animate-fadeIn">
               {/* Header */}
@@ -818,7 +855,22 @@ export default function AdminAdvertisements() {
                   <p className="mt-1 opacity-80">
                     Advertiser:{" "}
                     <span className="font-bold">
-                      {selectedAd.advertiser_name}
+                      {editMode ? (
+                        <input
+                          value={editableAd.advertiser_name}
+                          onChange={(e) =>
+                            setEditableAd({
+                              ...editableAd,
+                              advertiser_name: e.target.value,
+                            })
+                          }
+                          className="bg-white text-black px-2 rounded"
+                        />
+                      ) : (
+                        <span className="font-bold">
+                          {editableAd.advertiser_name}
+                        </span>
+                      )}
                     </span>
                   </p>
                   <p className="mt-1 opacity-80">
@@ -829,25 +881,42 @@ export default function AdminAdvertisements() {
                   </p>
                 </div>
 
-                <div className="flex items-center gap-4">
-                  <span
-                    className={`rounded-full px-3 py-1 text-xm font-medium ${
-                      selectedAd.status === "Approved"
-                        ? "bg-green-500/20 text-green-300"
-                        : selectedAd.status === "Declined"
-                          ? "bg-red-500/20 text-red-300"
-                          : "bg-yellow-500/20 text-yellow-300"
-                    }`}
-                  >
-                    {selectedAd.status}
-                  </span>
+                <div className="flex flex-col gap-2">
+                  {/* Top row */}
+                  <div className="flex items-center gap-4">
+                    <span
+                      className={`rounded-full px-3 py-1 text-xm font-medium ${
+                        selectedAd.status === "Approved"
+                          ? "bg-green-500/20 text-green-300"
+                          : selectedAd.status === "Declined"
+                            ? "bg-red-500/20 text-red-300"
+                            : "bg-yellow-500/20 text-yellow-300"
+                      }`}
+                    >
+                      {selectedAd.status}
+                    </span>
 
-                  <button
-                    onClick={closeModal}
-                    className="text-white/70 hover:text-white transition"
-                  >
-                    <X className="w-6 h-6" />
-                  </button>
+                    <button
+                      onClick={() => setEditMode(!editMode)}
+                      className="px-3 py-1 rounded-lg bg-white/20 hover:bg-white/30 text-sm"
+                    >
+                      {editMode ? "View Mode" : "Edit"}
+                    </button>
+
+                    <button
+                      onClick={closeModal}
+                      className="text-white/70 hover:text-white transition"
+                    >
+                      <X className="w-6 h-6" />
+                    </button>
+                  </div>
+
+                  {/* Bottom row */}
+                  {isChanged && (
+                    <span className="text-xs text-yellow-300 text-right">
+                      You have unsaved changes
+                    </span>
+                  )}
                 </div>
               </div>
               <div className="flex max-h-[60vh] flex-col bg-white rounded-2xl shadow-xl">
@@ -1377,6 +1446,48 @@ export default function AdminAdvertisements() {
                   onClick={() => setdifferentPublisher(false)}
                   className="rounded-lg border border-gray-300 px-4 py-2 text-sm
              transition hover:bg-gray-100"
+                >
+                  OK
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {isProcessing && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+            <div className="bg-[var(--color-primary-dark)] text-white rounded-xl p-6 w-80 shadow-xl text-center">
+              <div className="mb-4 flex justify-center">
+                <div className="h-8 w-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+              </div>
+
+              <h2 className="text-lg font-semibold mb-2">
+                <h4>Processing...</h4>
+                {editableAd?.status === "Print" && "Printing Ad..."}
+                {/* {currentStep === 2 && "Preparing advertiser form..."}
+              {currentStep === 3 && "Your advertisement is saving..."} */}
+              </h2>
+
+              {/* <p className="text-sm opacity-90">
+              {currentStep === 1 && "Loading ad types..."}
+              {currentStep === 2 && "Preparing advertiser form..."}
+              {currentStep === 3 && "Submitting advertisement..."}
+            </p> */}
+            </div>
+          </div>
+        )}
+
+        {alertMessage && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <div className="rounded-xl bg-[var(--color-primary-dark)] p-6 w-80 text-white shadow-lg">
+              <h2 className="text-lg font-semibold mb-4">Notice</h2>
+
+              <p className="mb-6 text-sm">{alertMessage}</p>
+
+              <div className="flex justify-end">
+                <button
+                  onClick={() => setAlertMessage(null)}
+                  className="rounded-full bg-[var(--color-orange-accent)] px-4 py-1.5 text-sm font-medium text-[var(--color-primary-dark)] transition hover:brightness-110"
                 >
                   OK
                 </button>

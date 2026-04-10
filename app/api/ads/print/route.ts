@@ -802,7 +802,7 @@ export async function POST(req: Request) {
         pdfDoc,
         text: formatAdvertiserName(advertiser_name),
         x: 220,
-        y: 120,
+        y: 110,
         fontSize: 10,
         englishFont,
       });
@@ -812,7 +812,7 @@ export async function POST(req: Request) {
         pdfDoc,
         text: advertiser_address ?? "",
         x: 115,
-        y: 103,
+        y: 95,
         fontSize: 10,
         englishFont,
       });
