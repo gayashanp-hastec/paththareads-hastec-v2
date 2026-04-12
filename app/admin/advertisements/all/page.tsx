@@ -10,6 +10,7 @@ import {
   Printer,
   Image as ImageIcon,
 } from "lucide-react";
+import prisma from "@/lib/prisma";
 
 interface Advertisement {
   reference_number: string;
@@ -148,6 +149,82 @@ export default function AdminAdvertisements() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
 
+  const [showAttachmentPrompt, setShowAttachmentPrompt] = useState(false);
+  const [showAttachmentView, setShowAttachmentView] = useState(false);
+
+  const [publisherName, setPublisherName] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchPublisher = async () => {
+      if (!editableAd?.newspaper_name) return;
+
+      const newspaper_id = editableAd.newspaper_name
+        .trim()
+        .toUpperCase()
+        .replace(/\s+/g, "_");
+
+      try {
+        const res = await fetch(
+          `/api/ads/agency/getByNewspaper?newspaper_id=${newspaper_id}`,
+        );
+
+        const data = await res.json();
+
+        setPublisherName(data.publisher_name);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchPublisher();
+  }, [editableAd]);
+
+  type AttachmentData = {
+    customizeType: boolean;
+    customizeColor: boolean;
+    customizeSize: boolean;
+    noInsertions: string;
+    size: string;
+    color: string;
+    isPhotoClassified: boolean;
+    classifiedType: "normal" | "photo" | null;
+    colorType: "full" | "bw" | "bw1" | "bw2" | null;
+    adminNotes: string;
+
+    //wijeya
+    classification: string;
+    isCarsOthers: "c" | "o" | null;
+    specialPosition: string;
+
+    //associated
+    isCO: boolean;
+    classification2: string;
+    page: string;
+    position: string;
+  };
+
+  const [attachments, setAttachments] = useState<AttachmentData>({
+    customizeType: false,
+    customizeColor: false,
+    customizeSize: false,
+    noInsertions: "1",
+    size: "",
+    color: "",
+    isPhotoClassified: false,
+    classifiedType: null,
+    colorType: null,
+    adminNotes: "",
+
+    classification: "",
+    isCarsOthers: null,
+    specialPosition: "",
+
+    isCO: false,
+    classification2: "",
+    page: "",
+    position: "",
+  });
+
   const ACTION_BTN_CLASS =
     "flex items-center justify-center gap-2 w-50 px-4 py-2.5 rounded-lg shadow text-sm font-medium transition";
 
@@ -209,8 +286,10 @@ export default function AdminAdvertisements() {
     currentPage * ITEMS_PER_PAGE,
   );
 
-  const openModal = (ad: Advertisement) => {
+  const openModal = async (ad: Advertisement) => {
     setSelectedAd(ad);
+    console.log(ad);
+
     setEditedText(ad.advertisement_text);
     setOriginalText(ad.advertisement_text);
     setIsModalOpen(true);
@@ -372,7 +451,7 @@ export default function AdminAdvertisements() {
     }
   };
 
-  const handlePrint = async () => {
+  const handlePrint = async (extraData?: AttachmentData) => {
     // console.log(selectedAd);
     // if (!selectedAd) return;
     // setPrinting(true);
@@ -469,6 +548,7 @@ export default function AdminAdvertisements() {
               vehicle_brand: editableAd.classified_ad.vehicle_brand,
             }
           : null,
+        attachments: extraData ?? null,
       }),
     });
 
@@ -1371,7 +1451,7 @@ export default function AdminAdvertisements() {
                     selectedAd.status,
                   ) && (
                     <button
-                      onClick={handlePrint}
+                      onClick={() => setShowAttachmentPrompt(true)}
                       disabled={printing}
                       className={`${ACTION_BTN_CLASS} bg-[var(--color-primary-dark)] text-white hover:bg-[var(--color-primary)] ${
                         printing ? "opacity-70 cursor-not-allowed" : ""
@@ -1490,6 +1570,522 @@ export default function AdminAdvertisements() {
                   className="rounded-full bg-[var(--color-orange-accent)] px-4 py-1.5 text-sm font-medium text-[var(--color-primary-dark)] transition hover:brightness-110"
                 >
                   OK
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showAttachmentPrompt && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <div className="rounded-xl bg-[var(--color-primary-dark)] p-6 w-96 text-white shadow-lg">
+              <h2 className="text-lg font-semibold mb-4">
+                Additional Attachments
+              </h2>
+
+              <p className="mb-6 text-sm">
+                Do you want to add additional attachments before printing?
+              </p>
+
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => {
+                    setShowAttachmentPrompt(false);
+                    handlePrint(attachments); // NO → continue directly
+                  }}
+                  className="rounded-full bg-gray-300 px-4 py-1.5 text-sm font-medium text-black"
+                >
+                  No
+                </button>
+
+                <button
+                  onClick={() => {
+                    setShowAttachmentPrompt(false);
+                    setShowAttachmentView(true); // YES → open form
+                  }}
+                  className="rounded-full bg-[var(--color-orange-accent)] px-4 py-1.5 text-sm font-medium text-[var(--color-primary-dark)]"
+                >
+                  Yes
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showAttachmentView && editableAd && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+            <div className="w-full max-w-lg bg-white rounded-2xl shadow-xl flex flex-col max-h-[80vh]">
+              {/* HEADER (fixed) */}
+              <div className="p-6 border-b">
+                <h2 className="text-lg font-semibold">
+                  Additional Attachments
+                </h2>
+              </div>
+
+              {/* SCROLLABLE CONTENT */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                {/* Dynamic content based on publisher */}
+                {publisherName === "wijeya_newspapers" && (
+                  <>
+                    <label className="font-semibold mb-2">Classification</label>
+                    <input
+                      type="text"
+                      placeholder="Classification"
+                      value={attachments.classification}
+                      onChange={(e) =>
+                        setAttachments({
+                          ...attachments,
+                          classification: e.target.value,
+                        })
+                      }
+                      className="w-full border rounded-lg p-2 text-sm"
+                    />
+
+                    <label className="flex items-center gap-2 text-sm font-semibold">
+                      <input
+                        type="checkbox"
+                        checked={attachments.customizeType}
+                        onChange={(e) =>
+                          setAttachments({
+                            ...attachments,
+                            customizeType: e.target.checked,
+                            isCarsOthers: e.target.checked
+                              ? attachments.isCarsOthers
+                              : null,
+                          })
+                        }
+                      />
+                      Cars or Other Vehicle Type?
+                    </label>
+
+                    {attachments.customizeType && (
+                      <div className="space-y-2">
+                        <label className="flex items-center gap-2 text-sm">
+                          <input
+                            type="radio"
+                            name="isCarsOthers"
+                            checked={attachments.isCarsOthers === "c"}
+                            onChange={() =>
+                              setAttachments({
+                                ...attachments,
+                                isCarsOthers: "c",
+                              })
+                            }
+                          />
+                          Cars
+                        </label>
+
+                        <label className="flex items-center gap-2 text-sm">
+                          <input
+                            type="radio"
+                            name="isCarsOthers"
+                            checked={attachments.isCarsOthers === "o"}
+                            onChange={() =>
+                              setAttachments({
+                                ...attachments,
+                                isCarsOthers: "o",
+                              })
+                            }
+                          />
+                          Other
+                        </label>
+                      </div>
+                    )}
+
+                    <label className="font-semibold mb-2">Size (Casual)</label>
+                    <input
+                      type="text"
+                      placeholder="Size (Casual)"
+                      value={attachments.size}
+                      onChange={(e) =>
+                        setAttachments({
+                          ...attachments,
+                          size: e.target.value,
+                        })
+                      }
+                      className="w-full border rounded-lg p-2 text-sm"
+                    />
+
+                    <label className="font-semibold mb-2">
+                      Special Position
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Special Position"
+                      value={attachments.specialPosition}
+                      onChange={(e) =>
+                        setAttachments({
+                          ...attachments,
+                          specialPosition: e.target.value,
+                        })
+                      }
+                      className="w-full border rounded-lg p-2 text-sm"
+                    />
+
+                    <label className="font-semibold mb-2">Colour</label>
+                    <input
+                      type="text"
+                      placeholder="Color"
+                      value={attachments.color}
+                      onChange={(e) =>
+                        setAttachments({
+                          ...attachments,
+                          color: e.target.value,
+                        })
+                      }
+                      className="w-full border rounded-lg p-2 text-sm"
+                    />
+
+                    <label className="font-semibold mb-2">Foot Notes</label>
+                    <textarea
+                      placeholder="Enter notes..."
+                      value={attachments.adminNotes}
+                      onChange={(e) =>
+                        setAttachments({
+                          ...attachments,
+                          adminNotes: e.target.value,
+                        })
+                      }
+                      className="w-full border rounded-lg p-2 text-sm"
+                    />
+                  </>
+                )}
+                {publisherName === "ceylon_newspapers" && (
+                  <>
+                    <label className="flex items-center gap-2 text-sm font-semibold">
+                      <input
+                        type="checkbox"
+                        checked={attachments.customizeType}
+                        onChange={(e) =>
+                          setAttachments({
+                            ...attachments,
+                            customizeType: e.target.checked,
+                            classifiedType: e.target.checked
+                              ? attachments.classifiedType
+                              : null,
+                          })
+                        }
+                      />
+                      Customize Type?
+                    </label>
+
+                    {attachments.customizeType && (
+                      <div className="space-y-2">
+                        <label className="flex items-center gap-2 text-sm">
+                          <input
+                            type="radio"
+                            name="classifiedType"
+                            checked={attachments.classifiedType === "photo"}
+                            onChange={() =>
+                              setAttachments({
+                                ...attachments,
+                                classifiedType: "photo",
+                              })
+                            }
+                          />
+                          Photo Classified
+                        </label>
+
+                        <label className="flex items-center gap-2 text-sm">
+                          <input
+                            type="radio"
+                            name="classifiedType"
+                            checked={attachments.classifiedType === "normal"}
+                            onChange={() =>
+                              setAttachments({
+                                ...attachments,
+                                classifiedType: "normal",
+                              })
+                            }
+                          />
+                          Normal Classified
+                        </label>
+                      </div>
+                    )}
+
+                    <label className="flex items-center gap-2 text-sm font-semibold">
+                      <input
+                        type="checkbox"
+                        checked={attachments.customizeColor}
+                        onChange={(e) =>
+                          setAttachments({
+                            ...attachments,
+                            customizeColor: e.target.checked,
+                            colorType: e.target.checked
+                              ? attachments.colorType
+                              : null, // 👈 reset when unchecked
+                          })
+                        }
+                      />
+                      Customize Color?
+                    </label>
+
+                    {attachments.customizeColor && (
+                      <div className="space-y-2">
+                        <label className="flex items-center gap-2 text-sm">
+                          <input
+                            type="radio"
+                            name="colorType"
+                            checked={attachments.colorType === "full"}
+                            onChange={() =>
+                              setAttachments({
+                                ...attachments,
+                                colorType: "full",
+                              })
+                            }
+                          />
+                          Full Color
+                        </label>
+
+                        <label className="flex items-center gap-2 text-sm">
+                          <input
+                            type="radio"
+                            name="colorType"
+                            checked={attachments.colorType === "bw"}
+                            onChange={() =>
+                              setAttachments({
+                                ...attachments,
+                                colorType: "bw",
+                              })
+                            }
+                          />
+                          Black & White
+                        </label>
+
+                        <label className="flex items-center gap-2 text-sm">
+                          <input
+                            type="radio"
+                            name="colorType"
+                            checked={attachments.colorType === "bw1"}
+                            onChange={() =>
+                              setAttachments({
+                                ...attachments,
+                                colorType: "bw1",
+                              })
+                            }
+                          />
+                          Black & White + 1 Color
+                        </label>
+
+                        <label className="flex items-center gap-2 text-sm">
+                          <input
+                            type="radio"
+                            name="colorType"
+                            checked={attachments.colorType === "bw2"}
+                            onChange={() =>
+                              setAttachments({
+                                ...attachments,
+                                colorType: "bw2",
+                              })
+                            }
+                          />
+                          Black & White + 2 Colors
+                        </label>
+                      </div>
+                    )}
+
+                    <label className="font-semibold mb-2">
+                      No of Insertions
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Number of Insertions"
+                      value={attachments.noInsertions}
+                      onChange={(e) =>
+                        setAttachments({
+                          ...attachments,
+                          noInsertions: e.target.value,
+                        })
+                      }
+                      className="w-full border rounded-lg p-2 text-sm"
+                    />
+                    <label className="font-semibold mb-2">Footer Notes</label>
+                    <input
+                      type="text"
+                      placeholder="Footer Notes"
+                      value={attachments.adminNotes}
+                      onChange={(e) =>
+                        setAttachments({
+                          ...attachments,
+                          adminNotes: e.target.value,
+                        })
+                      }
+                      className="w-full border rounded-lg p-2 text-sm"
+                    />
+                  </>
+                )}
+                {publisherName === "upali_newspapers" && (
+                  <>
+                    <label className="font-semibold mb-2">
+                      COLUMN C.M. (සෙ.මී. ප්‍රමාණය)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Number of Insertions"
+                      value={attachments.size}
+                      onChange={(e) =>
+                        setAttachments({
+                          ...attachments,
+                          size: e.target.value,
+                        })
+                      }
+                      className="w-full border rounded-lg p-2 text-sm"
+                    />
+                    <label className="font-semibold mb-2">COLOUR (වර්ණය)</label>
+                    <input
+                      type="text"
+                      placeholder="Number of Insertions"
+                      value={attachments.color}
+                      onChange={(e) =>
+                        setAttachments({
+                          ...attachments,
+                          color: e.target.value,
+                        })
+                      }
+                      className="w-full border rounded-lg p-2 text-sm"
+                    />
+
+                    <label className="font-semibold mb-2">Footer notes</label>
+                    <textarea
+                      placeholder="Enter footer notes"
+                      value={attachments.adminNotes}
+                      onChange={(e) =>
+                        setAttachments({
+                          ...attachments,
+                          adminNotes: e.target.value,
+                        })
+                      }
+                      className="w-full border rounded-lg p-2 text-sm"
+                    />
+
+                    {/* <label className="flex items-center gap-2 text-sm font-semibold">
+                      <input
+                        type="checkbox"
+                        checked={attachments.customizeSize}
+                        onChange={(e) =>
+                          setAttachments({
+                            ...attachments,
+                            customizeSize: e.target.checked,
+                            classifiedType: e.target.checked
+                              ? attachments.classifiedType
+                              : null, // 👈 reset when unchecked
+                          })
+                        }
+                      />
+                      Customize Type?
+                    </label> */}
+                  </>
+                )}
+                {publisherName === "associated_newspapers" && (
+                  <>
+                    {editableAd.ad_type !== "marriage" &&
+                      editableAd.ad_type !== "name_notice" && (
+                        <>
+                          <label className="font-semibold mb-2">
+                            Classification
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="Classification"
+                            value={attachments.classification}
+                            onChange={(e) =>
+                              setAttachments({
+                                ...attachments,
+                                classification: e.target.value,
+                              })
+                            }
+                            className="w-full border rounded-lg p-2 text-sm"
+                          />
+                        </>
+                      )}
+
+                    {(editableAd.ad_type === "name_notice" ||
+                      editableAd.ad_type === "marriage") && (
+                      <>
+                        <label className="flex items-center gap-2 text-sm font-semibold">
+                          <input
+                            type="checkbox"
+                            checked={attachments.isCO}
+                            onChange={(e) =>
+                              setAttachments({
+                                ...attachments,
+                                isCO: e.target.checked,
+                              })
+                            }
+                          />
+                          is CO Paper?
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Classification"
+                          value={attachments.classification2}
+                          onChange={(e) =>
+                            setAttachments({
+                              ...attachments,
+                              classification2: e.target.value,
+                            })
+                          }
+                          className="w-full border rounded-lg p-2 text-sm"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Page"
+                          value={attachments.page}
+                          onChange={(e) =>
+                            setAttachments({
+                              ...attachments,
+                              page: e.target.value,
+                            })
+                          }
+                          className="w-full border rounded-lg p-2 text-sm"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Position"
+                          value={attachments.position}
+                          onChange={(e) =>
+                            setAttachments({
+                              ...attachments,
+                              position: e.target.value,
+                            })
+                          }
+                          className="w-full border rounded-lg p-2 text-sm"
+                        />
+                      </>
+                    )}
+                    <label className="font-semibold mb-2">Footer notes</label>
+                    <textarea
+                      placeholder="Enter footer notes"
+                      value={attachments.adminNotes}
+                      onChange={(e) =>
+                        setAttachments({
+                          ...attachments,
+                          adminNotes: e.target.value,
+                        })
+                      }
+                      className="w-full border rounded-lg p-2 text-sm"
+                    />
+                  </>
+                )}
+              </div>
+
+              {/* FOOTER (fixed) */}
+              <div className="border-t flex justify-end gap-3 p-4 bg-white">
+                <button
+                  onClick={() => setShowAttachmentView(false)}
+                  className="px-4 py-2 text-sm bg-gray-200 rounded-lg"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  onClick={() => {
+                    setShowAttachmentView(false);
+                    handlePrint(attachments);
+                  }}
+                  className="px-4 py-2 text-sm bg-[var(--color-primary-dark)] text-white rounded-lg"
+                >
+                  Continue to Print
                 </button>
               </div>
             </div>
