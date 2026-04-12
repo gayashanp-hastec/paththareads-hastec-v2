@@ -1452,25 +1452,28 @@ export default function AdminAdvertisements() {
                   {["PaymentDone", "Print", "AdProcessed"].includes(
                     selectedAd.status,
                   ) && (
-                    <button
-                      onClick={() => setShowAttachmentPrompt(true)}
-                      disabled={printing}
-                      className={`${ACTION_BTN_CLASS} bg-[var(--color-primary-dark)] text-white hover:bg-[var(--color-primary)] ${
-                        printing ? "opacity-70 cursor-not-allowed" : ""
-                      }`}
-                    >
-                      {printing ? (
-                        <>
-                          <RefreshCw className="w-4 h-4 animate-spin" />
-                          Printing...
-                        </>
-                      ) : (
-                        <>
-                          <Printer className="w-4 h-4" />
-                          Print
-                        </>
-                      )}
-                    </button>
+                    <>
+                      <button
+                        onClick={() => setShowAttachmentPrompt(true)}
+                        disabled={printing}
+                        className={`${ACTION_BTN_CLASS} bg-[var(--color-primary-dark)] text-white hover:bg-[var(--color-primary)] ${
+                          printing ? "opacity-70 cursor-not-allowed" : ""
+                        }`}
+                      >
+                        {printing ? (
+                          <>
+                            <RefreshCw className="w-4 h-4 animate-spin" />
+                            Printing...
+                          </>
+                        ) : (
+                          <>
+                            <Printer className="w-4 h-4" />
+                            Print
+                          </>
+                        )}
+                      </button>
+                      <p className="text-xs">(Click to Add Additional Data)</p>
+                    </>
                   )}
                 </div>
               </div>
