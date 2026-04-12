@@ -1452,7 +1452,7 @@ export default function AdminAdvertisements() {
                   {["PaymentDone", "Print", "AdProcessed"].includes(
                     selectedAd.status,
                   ) && (
-                    <>
+                    <div className="flex flex-col justify-center">
                       <button
                         onClick={() => setShowAttachmentPrompt(true)}
                         disabled={printing}
@@ -1472,8 +1472,10 @@ export default function AdminAdvertisements() {
                           </>
                         )}
                       </button>
-                      <p className="text-xs">(Click to Add Additional Data)</p>
-                    </>
+                      <p className="text-xs text-center">
+                        (Click to Add Additional Data)
+                      </p>
+                    </div>
                   )}
                 </div>
               </div>
