@@ -201,6 +201,7 @@ export default function AdminAdvertisements() {
     classification2: string;
     page: string;
     position: string;
+    hasPhoto: boolean;
   };
 
   const [attachments, setAttachments] = useState<AttachmentData>({
@@ -223,6 +224,7 @@ export default function AdminAdvertisements() {
     classification2: "",
     page: "",
     position: "",
+    hasPhoto: false,
   });
 
   const ACTION_BTN_CLASS =
@@ -2056,6 +2058,117 @@ export default function AdminAdvertisements() {
                     <label className="font-semibold mb-2">Footer notes</label>
                     <textarea
                       placeholder="Enter footer notes"
+                      value={attachments.adminNotes}
+                      onChange={(e) =>
+                        setAttachments({
+                          ...attachments,
+                          adminNotes: e.target.value,
+                        })
+                      }
+                      className="w-full border rounded-lg p-2 text-sm"
+                    />
+                  </>
+                )}
+                {publisherName === "liberty_publishers" && (
+                  <>
+                    <label className="flex items-center gap-2 text-sm font-semibold">
+                      <input
+                        type="checkbox"
+                        checked={attachments.customizeType}
+                        onChange={(e) =>
+                          setAttachments({
+                            ...attachments,
+                            customizeType: e.target.checked,
+                            isCarsOthers: e.target.checked
+                              ? attachments.isCarsOthers
+                              : null,
+                          })
+                        }
+                      />
+                      Cars or Other Vehicle Type?
+                    </label>
+
+                    {attachments.customizeType && (
+                      <div className="space-y-2">
+                        <label className="flex items-center gap-2 text-sm">
+                          <input
+                            type="radio"
+                            name="isCarsOthers"
+                            checked={attachments.isCarsOthers === "c"}
+                            onChange={() =>
+                              setAttachments({
+                                ...attachments,
+                                isCarsOthers: "c",
+                              })
+                            }
+                          />
+                          Cars
+                        </label>
+
+                        <label className="flex items-center gap-2 text-sm">
+                          <input
+                            type="radio"
+                            name="isCarsOthers"
+                            checked={attachments.isCarsOthers === "o"}
+                            onChange={() =>
+                              setAttachments({
+                                ...attachments,
+                                isCarsOthers: "o",
+                              })
+                            }
+                          />
+                          Other
+                        </label>
+                      </div>
+                    )}
+
+                    <label className="flex items-center gap-2 text-sm font-semibold">
+                      <input
+                        type="checkbox"
+                        checked={attachments.hasPhoto}
+                        onChange={(e) =>
+                          setAttachments({
+                            ...attachments,
+                            hasPhoto: e.target.checked,
+                          })
+                        }
+                      />
+                      Has Photos
+                    </label>
+
+                    <label className="font-semibold mb-2">
+                      Special Position
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Special Position"
+                      value={attachments.specialPosition}
+                      onChange={(e) =>
+                        setAttachments({
+                          ...attachments,
+                          specialPosition: e.target.value,
+                        })
+                      }
+                      className="w-full border rounded-lg p-2 text-sm"
+                    />
+
+                    <label className="font-semibold mb-2">Colour</label>
+                    <input
+                      type="text"
+                      placeholder="Color"
+                      value={attachments.color}
+                      onChange={(e) =>
+                        setAttachments({
+                          ...attachments,
+                          color: e.target.value,
+                        })
+                      }
+                      className="w-full border rounded-lg p-2 text-sm"
+                    />
+
+                    <label className="font-semibold mb-2">Foot Notes</label>
+                    <textarea
+                      placeholder="Enter notes..."
                       value={attachments.adminNotes}
                       onChange={(e) =>
                         setAttachments({

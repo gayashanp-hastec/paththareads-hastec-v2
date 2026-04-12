@@ -1775,6 +1775,78 @@ export async function POST(req: Request) {
       }
     }
     if (publisherName === "liberty_publishers") {
+      if (attachments.isCarsOthers !== null) {
+        if (attachments.isCarsOthers === "c") {
+          page.drawLine({
+            start: { x: 378 - CROSS_SIZE_SMALL_XS, y: 564 - CROSS_SIZE_SMALL_XS },
+            end: { x: 378 + CROSS_SIZE_SMALL_XS, y: 564 + CROSS_SIZE_SMALL_XS },
+            thickness: 1,
+            color: rgb(0, 0.5, 0.9),
+          });
+
+          page.drawLine({
+            start: { x: 378 - CROSS_SIZE_SMALL_XS, y: 564 + CROSS_SIZE_SMALL_XS },
+            end: { x: 378 + CROSS_SIZE_SMALL_XS, y: 564 - CROSS_SIZE_SMALL_XS },
+            thickness: 1,
+            color: rgb(0, 0.5, 0.9),
+          });
+        }
+        if (attachments.isCarsOthers === "o") {
+          page.drawLine({
+            start: { x: 437 - CROSS_SIZE_SMALL_XS, y: 564 - CROSS_SIZE_SMALL_XS },
+            end: { x: 437 + CROSS_SIZE_SMALL_XS, y: 564 + CROSS_SIZE_SMALL_XS },
+            thickness: 1,
+            color: rgb(0, 0.5, 0.9),
+          });
+
+          page.drawLine({
+            start: { x: 437 - CROSS_SIZE_SMALL_XS, y: 564 + CROSS_SIZE_SMALL_XS },
+            end: { x: 437 + CROSS_SIZE_SMALL_XS, y: 564 - CROSS_SIZE_SMALL_XS },
+            thickness: 1,
+            color: rgb(0, 0.5, 0.9),
+          });
+        }
+      }
+      if (attachments.hasPhoto) {
+        page.drawLine({
+          start: { x: 421 - CROSS_SIZE_SMALL_XS, y: 546 - CROSS_SIZE_SMALL_XS },
+          end: { x: 421 + CROSS_SIZE_SMALL_XS, y: 546 + CROSS_SIZE_SMALL_XS },
+          thickness: 1,
+          color: rgb(0, 0.5, 0.9),
+        });
+
+        page.drawLine({
+          start: { x: 421 - CROSS_SIZE_SMALL_XS, y: 546 + CROSS_SIZE_SMALL_XS },
+          end: { x: 421 + CROSS_SIZE_SMALL_XS, y: 546 - CROSS_SIZE_SMALL_XS },
+          thickness: 1,
+          color: rgb(0, 0.5, 0.9),
+        });
+      }
+      page.drawText(String(attachments.specialPosition ?? ""), {
+        x: 465,
+        y: 630,
+        size: 9,
+        font: SINHALA_REGEX.test(String(attachments.specialPosition))
+          ? sinhalaFont
+          : englishFont, color: rgb(0, 0.5, 0.9),
+      });
+      page.drawText(String(attachments.color ?? ""), {
+        x: 528,
+        y: 563,
+        size: 9,
+        font: SINHALA_REGEX.test(String(attachments.color))
+          ? sinhalaFont
+          : englishFont, color: rgb(0, 0.5, 0.9),
+      });
+      page.drawText(String(attachments.adminNotes ?? ""), {
+        x: 31,
+        y: 244,
+        size: 9,
+        font: SINHALA_REGEX.test(String(attachments.adminNotes))
+          ? sinhalaFont
+          : englishFont, color: rgb(0, 0.5, 0.9),
+      });
+
       //receipt
       page.drawText(String(reference_number ?? ""), {
         x: 52,
