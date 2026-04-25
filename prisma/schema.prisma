@@ -325,7 +325,7 @@ model casual_ads {
   section_id       Int?
   no_of_boxes      Decimal?       @default(0) @db.Decimal(5, 2)
   advertisements   advertisements @relation(fields: [reference_number], references: [reference_number], onDelete: Cascade, onUpdate: NoAction, map: "fk_casual_ads_advertisement")
-  ad_sections      ad_sections?   @relation(fields: [section_id], references: [id], onDelete: NoAction, map: "fk_section_casual")
+  ad_sections      ad_sections?   @relation(fields: [section_id], references: [id], onDelete: Cascade, map: "fk_section_casual")
 }
 
 model classified_ads {
