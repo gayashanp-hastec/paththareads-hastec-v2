@@ -60,6 +60,15 @@ export async function GET() {
           has_artwork: true,
           need_artwork: true,
           no_of_boxes: true,
+          ad_sections: {
+            select: {
+              id: true,
+              name: true,
+              extra_notes: true,
+              supports_box_ads: true,
+              max_boxes: true,
+            },
+          },
         },
       },
 
@@ -137,48 +146,49 @@ export async function GET() {
 
     casual_ad: ad.casual_ads
       ? {
-        ad_size: ad.casual_ads.ad_size,
-        no_of_columns: ad.casual_ads.no_of_columns,
-        ad_height: ad.casual_ads.ad_height,
-        color_option: ad.casual_ads.color_option,
-        has_artwork: ad.casual_ads.has_artwork,
-        need_artwork: ad.casual_ads.need_artwork,
-        no_of_boxes: ad.casual_ads.no_of_boxes,
-      }
+          ad_size: ad.casual_ads.ad_size,
+          no_of_columns: ad.casual_ads.no_of_columns,
+          ad_height: ad.casual_ads.ad_height,
+          color_option: ad.casual_ads.color_option,
+          has_artwork: ad.casual_ads.has_artwork,
+          need_artwork: ad.casual_ads.need_artwork,
+          no_of_boxes: ad.casual_ads.no_of_boxes,
+          section: ad.casual_ads.ad_sections ?? null,
+        }
       : null,
 
     classified_ad:
       ad.classified_ads.length > 0
         ? {
-          is_publish_eng: ad.classified_ads[0].is_publish_eng,
-          is_publish_tam: ad.classified_ads[0].is_publish_tam,
-          is_publish_sin: ad.classified_ads[0].is_publish_sin,
-          is_publish_sin_eng: ad.classified_ads[0].is_publish_sin_eng,
-          is_publish_sin_tam: ad.classified_ads[0].is_publish_sin_tam,
-          is_publish_eng_tam: ad.classified_ads[0].is_publish_eng_tam,
-          is_co_paper: ad.classified_ads[0].is_co_paper,
-          is_int_bw: ad.classified_ads[0].is_int_bw,
-          is_int_fc: ad.classified_ads[0].is_int_fc,
-          is_int_highlight: ad.classified_ads[0].is_int_highlight,
-          is_priority: ad.classified_ads[0].is_priority,
-          district: ad.classified_ads[0].district,
-          province: ad.classified_ads[0].province,
-          vehicle_brand: ad.classified_ads[0].vehicle_brand,
-        }
+            is_publish_eng: ad.classified_ads[0].is_publish_eng,
+            is_publish_tam: ad.classified_ads[0].is_publish_tam,
+            is_publish_sin: ad.classified_ads[0].is_publish_sin,
+            is_publish_sin_eng: ad.classified_ads[0].is_publish_sin_eng,
+            is_publish_sin_tam: ad.classified_ads[0].is_publish_sin_tam,
+            is_publish_eng_tam: ad.classified_ads[0].is_publish_eng_tam,
+            is_co_paper: ad.classified_ads[0].is_co_paper,
+            is_int_bw: ad.classified_ads[0].is_int_bw,
+            is_int_fc: ad.classified_ads[0].is_int_fc,
+            is_int_highlight: ad.classified_ads[0].is_int_highlight,
+            is_priority: ad.classified_ads[0].is_priority,
+            district: ad.classified_ads[0].district,
+            province: ad.classified_ads[0].province,
+            vehicle_brand: ad.classified_ads[0].vehicle_brand,
+          }
         : null,
 
     payment:
       ad.payment_ads.length > 0
         ? {
-          amount: ad.payment_ads[0].amount,
-          status: ad.payment_ads[0].status,
-          payment_date: ad.payment_ads[0].payment_date,
-          verified_by: ad.payment_ads[0].verified_by,
-          remarks: ad.payment_ads[0].remarks,
-          file_path: ad.payment_ads[0].file_path,
-          original_filename: ad.payment_ads[0].original_filename,
-          created_at: ad.payment_ads[0].created_at,
-        }
+            amount: ad.payment_ads[0].amount,
+            status: ad.payment_ads[0].status,
+            payment_date: ad.payment_ads[0].payment_date,
+            verified_by: ad.payment_ads[0].verified_by,
+            remarks: ad.payment_ads[0].remarks,
+            file_path: ad.payment_ads[0].file_path,
+            original_filename: ad.payment_ads[0].original_filename,
+            created_at: ad.payment_ads[0].created_at,
+          }
         : null,
   }));
 

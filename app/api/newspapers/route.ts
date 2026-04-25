@@ -99,8 +99,11 @@ export async function POST(req: Request) {
       allowed_month_days = [],
       allowed_weekdays = [],
       publisher_email,
-      lm_image, lm_description, ad_time_limit,
-      day_before, date_before,
+      lm_image,
+      lm_description,
+      ad_time_limit,
+      day_before,
+      date_before,
       ad_types = [], // optional
     } = body;
 
@@ -152,7 +155,8 @@ export async function POST(req: Request) {
           allowed_month_days,
           publisher_email,
           lm_image,
-          lm_description, ad_time_limit,
+          lm_description,
+          ad_time_limit,
           day_before,
           date_before,
         },
@@ -202,6 +206,7 @@ export async function POST(req: Request) {
                 name: section.name,
                 extra_notes: section.extra_notes ?? null,
                 is_available: section.is_available,
+                is_single_column: section.is_single_column,
                 supports_box_ads: section.supports_box_ads ?? false,
                 max_boxes: section.max_boxes ?? null,
               },

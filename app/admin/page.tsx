@@ -80,7 +80,7 @@ export default function AdminDashboard() {
       redlink: "admin/advertisements/all/",
     },
     {
-      name: "Manage Newspapers",
+      name: "Newspapers",
       icon: <Newspaper size={26} />,
       redlink: "admin/newspapers/",
     },

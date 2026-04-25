@@ -42,7 +42,9 @@ const provincePositions: Record<string, number> = {
 };
 
 function drawProvinceTick(page: any, province: string) {
-  if (!province) { return; }
+  if (!province) {
+    return;
+  }
   const x = provincePositions[province.toLowerCase()];
 
   if (!x) {
@@ -477,8 +479,8 @@ export async function POST(req: Request) {
     // Find agency for newspaper
     const agency = newspaper_id
       ? await prisma.agency.findFirst({
-        where: { papers: { has: newspaper_id } },
-      })
+          where: { papers: { has: newspaper_id } },
+        })
       : null;
 
     if (!agency?.publisher_name)
@@ -490,7 +492,7 @@ export async function POST(req: Request) {
     // Load PDF template
     const pdfFileName =
       agency.publisher_name === "associated_newspapers" &&
-        (ad_type === "marriage" || ad_type === "name_notice")
+      (ad_type === "marriage" || ad_type === "name_notice")
         ? `${agency.publisher_name}_classified_2.pdf`
         : ad_type === "classified"
           ? `${agency.publisher_name}_classified.pdf`
@@ -687,45 +689,78 @@ export async function POST(req: Request) {
 
       if (background_color) {
         // Draw a cross
-        page.drawLine({
-          start: { x: 573 - CROSS_SIZE, y: 685 - CROSS_SIZE },
-          end: { x: 573 + CROSS_SIZE, y: 685 + CROSS_SIZE },
-          thickness: 1,
-        });
+        if (newspaper_id === "SUNDAY_TIMES") {
+          page.drawLine({
+            start: { x: 573 - CROSS_SIZE, y: 685 - CROSS_SIZE },
+            end: { x: 573 + CROSS_SIZE, y: 685 + CROSS_SIZE },
+            thickness: 1,
+          });
 
-        page.drawLine({
-          start: { x: 573 - CROSS_SIZE, y: 685 + CROSS_SIZE },
-          end: { x: 573 + CROSS_SIZE, y: 685 - CROSS_SIZE },
-          thickness: 1,
-        });
+          page.drawLine({
+            start: { x: 573 - CROSS_SIZE, y: 685 + CROSS_SIZE },
+            end: { x: 573 + CROSS_SIZE, y: 685 - CROSS_SIZE },
+            thickness: 1,
+          });
+        }
+        if (newspaper_id === "SUNDAY_LANKADEEPA") {
+          page.drawLine({
+            start: {
+              x: 572 - CROSS_SIZE_SMALL_XS,
+              y: 772 - CROSS_SIZE_SMALL_XS,
+            },
+            end: { x: 572 + CROSS_SIZE_SMALL_XS, y: 772 + CROSS_SIZE_SMALL_XS },
+            thickness: 1,
+          });
+
+          page.drawLine({
+            start: {
+              x: 572 - CROSS_SIZE_SMALL_XS,
+              y: 772 + CROSS_SIZE_SMALL_XS,
+            },
+            end: { x: 572 + CROSS_SIZE_SMALL_XS, y: 772 - CROSS_SIZE_SMALL_XS },
+            thickness: 1,
+          });
+        }
       }
 
       // Draw casual ad dimensions
       if (ad_type === "casual" && casual_ad?.no_of_boxes === "0") {
-        page.drawText(String(casual_ad?.ad_height ?? ""), {
-          x: 358,
-          y: 755,
-          size: 10,
-          font: SINHALA_REGEX.test(String(casual_ad?.ad_height))
-            ? sinhalaFont
-            : englishFont,
-        });
+        if (casual_ad?.ad_size === "custom") {
+          page.drawText(String(casual_ad?.ad_height ?? ""), {
+            x: 358,
+            y: 755,
+            size: 10,
+            font: SINHALA_REGEX.test(String(casual_ad?.ad_height))
+              ? sinhalaFont
+              : englishFont,
+          });
 
-        page.drawText(" x ", {
-          x: 377,
-          y: 755,
-          size: 10,
-          font: SINHALA_REGEX.test(" x ") ? sinhalaFont : englishFont,
-        });
+          page.drawText(" x ", {
+            x: 377,
+            y: 755,
+            size: 10,
+            font: SINHALA_REGEX.test(" x ") ? sinhalaFont : englishFont,
+          });
 
-        page.drawText(String(casual_ad?.no_of_columns ?? ""), {
-          x: 395,
-          y: 755,
-          size: 10,
-          font: SINHALA_REGEX.test(String(casual_ad?.no_of_columns))
-            ? sinhalaFont
-            : englishFont,
-        });
+          page.drawText(String(casual_ad?.no_of_columns ?? ""), {
+            x: 395,
+            y: 755,
+            size: 10,
+            font: SINHALA_REGEX.test(String(casual_ad?.no_of_columns))
+              ? sinhalaFont
+              : englishFont,
+          });
+        } else {
+          page.drawText(String(casual_ad?.ad_size ?? ""), {
+            x: 358,
+            y: 755,
+            size: 10,
+            font: SINHALA_REGEX.test(String(casual_ad?.ad_size))
+              ? sinhalaFont
+              : englishFont,
+          });
+        }
+
         const color_opt = formatColorType(casual_ad?.color_option);
         page.drawText(String(color_opt ?? ""), {
           x: 356,
@@ -768,15 +803,18 @@ export async function POST(req: Request) {
 
       // admin extra notes
       if (attachments.noInsertions !== "0") {
-        page.drawText("Insert " + String(attachments.noInsertions ?? "") + " days", {
-          x: 503,
-          y: 755,
-          size: 10,
-          font: SINHALA_REGEX.test(String(attachments.noInsertions))
-            ? sinhalaFont
-            : englishFont,
-          color: rgb(0, 0.5, 0.9),
-        });
+        page.drawText(
+          "Insert " + String(attachments.noInsertions ?? "") + " days",
+          {
+            x: 503,
+            y: 755,
+            size: 10,
+            font: SINHALA_REGEX.test(String(attachments.noInsertions))
+              ? sinhalaFont
+              : englishFont,
+            color: rgb(0, 0.5, 0.9),
+          },
+        );
       }
       page.drawText(String(attachments.classification ?? ""), {
         x: 94,
@@ -1029,7 +1067,6 @@ export async function POST(req: Request) {
           }
         }
       }
-
     }
     if (publisherName === "associated_newspapers") {
       if (ad_type === "name_notice" || ad_type === "marriage") {
@@ -1041,7 +1078,7 @@ export async function POST(req: Request) {
           font: SINHALA_REGEX.test(String(attachments.classification2 ?? ""))
             ? sinhalaFont
             : englishFont,
-          color: rgb(0, 0.5, 0.9)
+          color: rgb(0, 0.5, 0.9),
         });
         page.drawText(String(attachments.page ?? ""), {
           x: 290,
@@ -1050,7 +1087,7 @@ export async function POST(req: Request) {
           font: SINHALA_REGEX.test(String(attachments.page ?? ""))
             ? sinhalaFont
             : englishFont,
-          color: rgb(0, 0.5, 0.9)
+          color: rgb(0, 0.5, 0.9),
         });
         page.drawText(String(attachments.position ?? ""), {
           x: 290,
@@ -1059,7 +1096,7 @@ export async function POST(req: Request) {
           font: SINHALA_REGEX.test(String(attachments.position ?? ""))
             ? sinhalaFont
             : englishFont,
-          color: rgb(0, 0.5, 0.9)
+          color: rgb(0, 0.5, 0.9),
         });
         if (!classified_ad?.is_co_paper) {
           if (attachments.isCO) {
@@ -1067,14 +1104,14 @@ export async function POST(req: Request) {
               start: { x: 333 - CROSS_SIZE_SMALL, y: 624 - CROSS_SIZE_SMALL },
               end: { x: 333 + CROSS_SIZE_SMALL, y: 624 + CROSS_SIZE_SMALL },
               thickness: 1,
-              color: rgb(0, 0.5, 0.9)
+              color: rgb(0, 0.5, 0.9),
             });
 
             page.drawLine({
               start: { x: 333 - CROSS_SIZE_SMALL, y: 624 + CROSS_SIZE_SMALL },
               end: { x: 333 + CROSS_SIZE_SMALL, y: 624 - CROSS_SIZE_SMALL },
               thickness: 1,
-              color: rgb(0, 0.5, 0.9)
+              color: rgb(0, 0.5, 0.9),
             });
           }
         }
@@ -1204,7 +1241,7 @@ export async function POST(req: Request) {
           10,
         );
 
-        const PHONE_X = [95, 113, 129, 146, 163, 180, 196, 213, 230, 247]
+        const PHONE_X = [95, 113, 129, 146, 163, 180, 196, 213, 230, 247];
         const PHONE_Y = 35;
 
         // Normalize phone: 94xxxxxxxxx → 0xxxxxxxxx
@@ -1288,7 +1325,7 @@ export async function POST(req: Request) {
           font: SINHALA_REGEX.test(String(attachments.classfication ?? ""))
             ? sinhalaFont
             : englishFont,
-          color: rgb(0, 0.5, 0.9)
+          color: rgb(0, 0.5, 0.9),
         });
 
         page.drawText(String(attachments.adminNotes ?? ""), {
@@ -1298,7 +1335,7 @@ export async function POST(req: Request) {
           font: SINHALA_REGEX.test(String(attachments.adminNotes ?? ""))
             ? sinhalaFont
             : englishFont,
-          color: rgb(0, 0.5, 0.9)
+          color: rgb(0, 0.5, 0.9),
         });
 
         // Drawing Advertiser Details
@@ -1712,10 +1749,6 @@ export async function POST(req: Request) {
             : englishFont,
         });
 
-
-
-
-
         if (ad_type.key !== "casual") {
           // Normalize ad text
           const normalizedText = normalizeAdText(
@@ -1778,14 +1811,20 @@ export async function POST(req: Request) {
       if (attachments.isCarsOthers !== null) {
         if (attachments.isCarsOthers === "c") {
           page.drawLine({
-            start: { x: 378 - CROSS_SIZE_SMALL_XS, y: 564 - CROSS_SIZE_SMALL_XS },
+            start: {
+              x: 378 - CROSS_SIZE_SMALL_XS,
+              y: 564 - CROSS_SIZE_SMALL_XS,
+            },
             end: { x: 378 + CROSS_SIZE_SMALL_XS, y: 564 + CROSS_SIZE_SMALL_XS },
             thickness: 1,
             color: rgb(0, 0.5, 0.9),
           });
 
           page.drawLine({
-            start: { x: 378 - CROSS_SIZE_SMALL_XS, y: 564 + CROSS_SIZE_SMALL_XS },
+            start: {
+              x: 378 - CROSS_SIZE_SMALL_XS,
+              y: 564 + CROSS_SIZE_SMALL_XS,
+            },
             end: { x: 378 + CROSS_SIZE_SMALL_XS, y: 564 - CROSS_SIZE_SMALL_XS },
             thickness: 1,
             color: rgb(0, 0.5, 0.9),
@@ -1793,14 +1832,20 @@ export async function POST(req: Request) {
         }
         if (attachments.isCarsOthers === "o") {
           page.drawLine({
-            start: { x: 437 - CROSS_SIZE_SMALL_XS, y: 564 - CROSS_SIZE_SMALL_XS },
+            start: {
+              x: 437 - CROSS_SIZE_SMALL_XS,
+              y: 564 - CROSS_SIZE_SMALL_XS,
+            },
             end: { x: 437 + CROSS_SIZE_SMALL_XS, y: 564 + CROSS_SIZE_SMALL_XS },
             thickness: 1,
             color: rgb(0, 0.5, 0.9),
           });
 
           page.drawLine({
-            start: { x: 437 - CROSS_SIZE_SMALL_XS, y: 564 + CROSS_SIZE_SMALL_XS },
+            start: {
+              x: 437 - CROSS_SIZE_SMALL_XS,
+              y: 564 + CROSS_SIZE_SMALL_XS,
+            },
             end: { x: 437 + CROSS_SIZE_SMALL_XS, y: 564 - CROSS_SIZE_SMALL_XS },
             thickness: 1,
             color: rgb(0, 0.5, 0.9),
@@ -1828,7 +1873,8 @@ export async function POST(req: Request) {
         size: 9,
         font: SINHALA_REGEX.test(String(attachments.specialPosition))
           ? sinhalaFont
-          : englishFont, color: rgb(0, 0.5, 0.9),
+          : englishFont,
+        color: rgb(0, 0.5, 0.9),
       });
       page.drawText(String(attachments.color ?? ""), {
         x: 528,
@@ -1836,7 +1882,8 @@ export async function POST(req: Request) {
         size: 9,
         font: SINHALA_REGEX.test(String(attachments.color))
           ? sinhalaFont
-          : englishFont, color: rgb(0, 0.5, 0.9),
+          : englishFont,
+        color: rgb(0, 0.5, 0.9),
       });
       page.drawText(String(attachments.adminNotes ?? ""), {
         x: 31,
@@ -1844,7 +1891,8 @@ export async function POST(req: Request) {
         size: 9,
         font: SINHALA_REGEX.test(String(attachments.adminNotes))
           ? sinhalaFont
-          : englishFont, color: rgb(0, 0.5, 0.9),
+          : englishFont,
+        color: rgb(0, 0.5, 0.9),
       });
 
       //receipt
@@ -2125,7 +2173,6 @@ export async function POST(req: Request) {
           : englishFont,
         color: rgb(0, 0.5, 0.9),
       });
-
 
       //word count
       page.drawText(String(effective_word_count ?? ""), {
@@ -2586,9 +2633,7 @@ export async function POST(req: Request) {
         x: 253,
         y: 20,
         size: 10,
-        font: SINHALA_REGEX.test(String(todayDate))
-          ? sinhalaFont
-          : englishFont,
+        font: SINHALA_REGEX.test(String(todayDate)) ? sinhalaFont : englishFont,
       });
     }
     const pdfBytes = await pdfDoc.save();

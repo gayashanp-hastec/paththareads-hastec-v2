@@ -4,6 +4,7 @@ import { useSearchParams } from "next/navigation";
 import newspaperData from "../../../data/newspaper_data.json"; // adjust path
 import { sendSMS } from "@/lib/sendSms";
 import { buildAdSubmitSMS } from "@/lib/buildSmsMessage";
+import prisma from "@/lib/prisma";
 
 type AdData = {
   reference_number: string;
@@ -37,8 +38,22 @@ export default function TrackAdClient({ reference }: { reference: string }) {
   const [maxWords, setMaxWords] = useState<number | null>(null);
   const [expiry, setExpiry] = useState<string | null>(null);
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
+  const [adminNumber, setAdminNumber] = useState("");
 
-  const adminNumber = "+94770400185";
+  // const adminNumber = "+94770400185";
+  useEffect(() => {
+    const fetchAdminPhone = async () => {
+      try {
+        const res = await fetch("/api/admin/phone");
+        const data = await res.json();
+        setAdminNumber(data.phone || "");
+      } catch (err) {
+        console.error("Failed to fetch admin phone:", err);
+      }
+    };
+
+    fetchAdminPhone();
+  }, []);
   const referenceNumber = reference;
 
   useEffect(() => {
@@ -361,101 +376,123 @@ export default function TrackAdClient({ reference }: { reference: string }) {
         </p>
       </div>
       {/* Textarea */}
-      <div className="mb-6">
-        <div className="flex justify-between">
-          <label className="font-semibold text-gray-800 block mb-2">
-            Revised Text
-          </label>
-          {maxWords && (
-            <div
-              className={`text-sm mt-1 ${
-                countWords(editableText) > maxWords
-                  ? "text-red-600"
-                  : "text-gray-500"
-              }`}
-            >
-              {countWords(editableText)} / {maxWords} words
+      {["Pending", "Revision", "Resubmitted", "UpdateImage"].includes(
+        ad.status,
+      ) && (
+        <>
+          <div className="mb-6">
+            <div className="flex justify-between">
+              <label className="font-semibold text-gray-800 block mb-2">
+                Revised Text
+              </label>
+              {maxWords && (
+                <div
+                  className={`text-sm mt-1 ${
+                    countWords(editableText) > maxWords
+                      ? "text-red-600"
+                      : "text-gray-500"
+                  }`}
+                >
+                  {countWords(editableText)} / {maxWords} words
+                </div>
+              )}
             </div>
-          )}
-        </div>
-        <textarea
-          className="w-full border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 rounded-xl p-3 text-gray-800 transition-all resize-y min-h-[180px]"
-          value={editableText}
-          disabled={
-            !["Pending", "Revision", "Resubmitted", "UpdateImage"].includes(
-              ad.status,
-            )
-          }
-          onChange={(e) => onTextChange(e.target.value)}
-          rows={8}
-          placeholder="Edit your advertisement text here..."
-        />
-
-        {ad.status === "UpdateImage" && (
-          <div>
-            <label className="block font-medium mb-1">
-              Upload Image <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="file"
-              accept="image/*"
-              required
-              onChange={async (e) => {
-                const file = e.target.files?.[0];
-                if (!file) return;
-
-                try {
-                  const data = await uploadImageToCloudinary(file);
-
-                  setNewImage(data.secure_url);
-                  setIsEdited(true); // 🔑 allow resubmit even if text unchanged
-                } catch (error) {
-                  console.error(error);
-                  alert("Image upload failed. Please try again.");
-                }
-              }}
-              className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-primary-accent"
+            <textarea
+              className="w-full border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 rounded-xl p-3 text-gray-800 transition-all resize-y min-h-[180px]"
+              value={editableText}
+              disabled={
+                !["Pending", "Revision", "Resubmitted", "UpdateImage"].includes(
+                  ad.status,
+                )
+              }
+              onChange={(e) => onTextChange(e.target.value)}
+              rows={8}
+              placeholder="Edit your advertisement text here..."
             />
-          </div>
-        )}
 
-        <div>
-          <p id="placeholder_" className="text-sm text-center">
-            (You can edit your advertisement here. Note that if you edit the
-            advertisement, then it must be resubmitted to get approved)
-          </p>
-        </div>
-      </div>
-      {/* Admin Revision */}
-      {ad.review_history?.[0]?.requested_revision_text && (
-        <div className="mb-6 border-l-4 border-blue-500 bg-blue-50 p-4 rounded-lg">
-          <p className="font-semibold text-blue-900 mb-2">
-            Requested revision from admin:
-          </p>
-          <p className="text-gray-800 whitespace-pre-wrap mb-3">
-            {ad.review_history[0].requested_revision_text}
-          </p>
-          <button
-            onClick={() => {
-              setEditableText(ad.review_history[0].requested_revision_text);
-              setIsEdited(true);
-            }}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
-          >
-            Apply Admin Suggestion
-          </button>
-        </div>
+            {ad.status === "UpdateImage" && (
+              <div>
+                <label className="block font-medium mb-1">
+                  Upload Image <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  required
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+
+                    try {
+                      const data = await uploadImageToCloudinary(file);
+
+                      setNewImage(data.secure_url);
+                      setIsEdited(true); // 🔑 allow resubmit even if text unchanged
+                    } catch (error) {
+                      console.error(error);
+                      alert("Image upload failed. Please try again.");
+                    }
+                  }}
+                  className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-primary-accent"
+                />
+              </div>
+            )}
+
+            <div>
+              <p id="placeholder_" className="text-sm text-center">
+                (You can edit your advertisement here. Note that if you edit the
+                advertisement, then it must be resubmitted to get approved)
+              </p>
+            </div>
+          </div>
+          {/* Admin Revision */}
+          {ad.review_history?.[0]?.requested_revision_text && (
+            <div className="mb-6 border-l-4 border-blue-500 bg-blue-50 p-4 rounded-lg">
+              <p className="font-semibold text-blue-900 mb-2">
+                Requested revision from admin:
+              </p>
+              <p className="text-gray-800 whitespace-pre-wrap mb-3">
+                {ad.review_history[0].requested_revision_text}
+              </p>
+              <button
+                onClick={() => {
+                  setEditableText(ad.review_history[0].requested_revision_text);
+                  setIsEdited(true);
+                }}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+              >
+                Apply Admin Suggestion
+              </button>
+            </div>
+          )}{" "}
+        </>
       )}
 
       {ad.status === "Approved" && ad.price != null && (
         <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg text-center">
-          <p className="text-sm text-green-700">Advertisement Price</p>
-          <p className="text-2xl font-bold text-green-800">
-            LKR{" "}
+          <p className="text-baseline text-green-700">
+            Your advertisement has been approved. Kindly Proceed with Payment.
+          </p>
+          <p className="text-xl font-bold text-green-800">
+            Total Amount: LKR{" "}
             {ad.latest_price_change
               ? ad.latest_price_change.requested_price.toLocaleString()
               : ad.price}
           </p>
+        </div>
+      )}
+      {ad.status === "PaymentDone" && (
+        <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg text-center">
+          <p className="text-baseline text-green-700">
+            Your payment information has been received. Kindly wait until we
+            verify the payment.
+          </p>
+          {/* <p className="text-xl font-bold text-green-800">
+            Total Amount: LKR{" "}
+            {ad.latest_price_change
+              ? ad.latest_price_change.requested_price.toLocaleString()
+              : ad.price}
+          </p> */}
         </div>
       )}
       {ad.latest_price_change && (

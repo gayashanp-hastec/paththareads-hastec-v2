@@ -48,6 +48,7 @@ const createEmptySection = () => ({
   name: "",
   extraNotes: "",
   isAvailable: true,
+  isSingleColumn: false,
   sizes: [],
 
   supportsBoxAds: false,
@@ -390,6 +391,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
           name: s.name,
           extra_notes: s.extraNotes,
           is_available: s.isAvailable,
+          is_single_column: s.isSingleColumn,
           supports_box_ads: Boolean(s.supportsBoxAds),
           max_boxes: s.maxBoxes ? Number(s.maxBoxes) : null,
 
@@ -518,6 +520,7 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                     name: sec.name,
                     extraNotes: sec.extra_notes || "",
                     isAvailable: sec.is_available,
+                    isSingleColumn: sec.is_single_column,
                     supportsBoxAds: Boolean(sec.supports_box_ads),
                     maxBoxes: sec.max_boxes ?? null,
 
@@ -1435,7 +1438,8 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                           "number",
                           "Maximum words allowed",
                         ],
-                        ...(form.type === "Sunday" && t.typeKey === "classified"
+                        ...(form.type === "Sunday" &&
+                        (t.typeKey === "classified" || t.typeKey === "marriage")
                           ? [
                               [
                                 "Priority Price",
@@ -1630,11 +1634,11 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                           {t.sections?.map((section: any, sIndex: number) => (
                             <div key={sIndex} className="rounded-lg border p-4">
                               {/* SECTION HEADER */}
-                              <div className="grid grid-cols-1 gap-4 md:grid-cols-4 mt-4 mb-8">
+                              <div className="grid grid-cols-1 gap-4 md:grid-cols-5 mt-4 mb-8">
                                 <input
                                   type="text"
                                   placeholder="Section name (Main, Thaksalawa...)"
-                                  className="mt-1 ml-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none text-center"
+                                  className="md:col-span-1 mt-1 ml-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none text-center"
                                   value={section.name}
                                   onChange={(e) => {
                                     const updated = [...adTypes];
@@ -1657,7 +1661,25 @@ export default function AddEditModal({ item, onClose, onSaved }: any) {
                                   }}
                                 />
 
-                                <div className="flex justify-end items-center gap-2">
+                                <div className="md:col-span-1 flex justify-end items-center gap-2">
+                                  <label className=" text-right">
+                                    Single Column
+                                  </label>
+                                  <input
+                                    type="checkbox"
+                                    checked={section.isSingleColumn ?? false}
+                                    onChange={(e) => {
+                                      const updated = [...adTypes];
+                                      updated[index].sections[
+                                        sIndex
+                                      ].isSingleColumn = e.target.checked;
+                                      setAdTypes(updated);
+                                    }}
+                                    className="h-5 w-5 accent-[var(--color-primary)]"
+                                  />
+                                </div>
+
+                                <div className="md:col-span-1 flex justify-end items-center gap-2">
                                   <label className=" text-right">Active</label>
                                   <input
                                     type="checkbox"

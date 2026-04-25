@@ -149,7 +149,7 @@ export async function PUT(
       select: { id: true, key: true },
     });
 
-    const existingMap = new Map(existingAdTypes.map(a => [a.key, a]));
+    const existingMap = new Map(existingAdTypes.map((a) => [a.key, a]));
     const incomingKeys = ad_types.map((a: any) => a.key);
 
     /* ----------------------------------------
@@ -157,7 +157,7 @@ export async function PUT(
     ---------------------------------------- */
 
     const toDelete = existingAdTypes.filter(
-      (a) => !incomingKeys.includes(a.key)
+      (a) => !incomingKeys.includes(a.key),
     );
 
     const deleteIds = toDelete.map((a) => a.id);
@@ -172,7 +172,7 @@ export async function PUT(
           data: {
             ad_type_id: null,
           },
-        })
+        }),
       );
 
       ops.push(
@@ -182,7 +182,7 @@ export async function PUT(
               ad_type_id: { in: deleteIds },
             },
           },
-        })
+        }),
       );
 
       ops.push(
@@ -192,7 +192,7 @@ export async function PUT(
               ad_type_id: { in: deleteIds },
             },
           },
-        })
+        }),
       );
 
       ops.push(
@@ -200,13 +200,13 @@ export async function PUT(
           where: {
             ad_type_id: { in: deleteIds },
           },
-        })
+        }),
       );
 
       ops.push(
         prisma.ad_types.deleteMany({
           where: { id: { in: deleteIds } },
-        })
+        }),
       );
     }
 
@@ -231,7 +231,8 @@ export async function PUT(
               co_paper_price: Number(ad.co_paper_price) || 0,
               internet_bw_price: Number(ad.internet_bw_price) || 0,
               internet_fc_price: Number(ad.internet_fc_price) || 0,
-              internet_highlight_price: Number(ad.internet_highlight_price) || 0,
+              internet_highlight_price:
+                Number(ad.internet_highlight_price) || 0,
               is_allow_combined: Boolean(ad.is_allow_combined),
               max_words: Number.isFinite(ad.max_words) ? ad.max_words : 0,
               img_url: ad.img_url ?? null,
@@ -250,14 +251,14 @@ export async function PUT(
               cs_page_bw_two_color_price: ad.cs_page_bw_two_color_price ?? 0,
               cs_page_full_color_price: ad.cs_page_full_color_price ?? 0,
             },
-          })
+          }),
         );
 
         // ✅ DELETE old sections (safe reset)
         ops.push(
           prisma.ad_sections.deleteMany({
             where: { ad_type_id: existing.id },
-          })
+          }),
         );
 
         // ✅ RECREATE sections (FULL structure preserved)
@@ -270,6 +271,7 @@ export async function PUT(
                   name: section.name,
                   extra_notes: section.extra_notes ?? null,
                   is_available: section.is_available ?? true,
+                  is_single_column: section.is_single_column ?? false,
                   supports_box_ads: Boolean(section.supports_box_ads),
                   max_boxes: section.max_boxes ?? null,
 
@@ -288,25 +290,25 @@ export async function PUT(
 
                   ad_section_box_pricing:
                     section.supports_box_ads &&
-                      section.ad_section_box_pricing?.length
+                    section.ad_section_box_pricing?.length
                       ? {
-                        createMany: {
-                          data: section.ad_section_box_pricing.map(
-                            (bp: any) => ({
-                              box_number_dec: bp.box_number,
-                              box_number: 1,
-                              price: bp.price,
-                              extra_note_1: bp.extra_note_1 ?? null,
-                              extra_note_2: bp.extra_note_2 ?? null,
-                            })
-                          ),
-                        },
-                      }
+                          createMany: {
+                            data: section.ad_section_box_pricing.map(
+                              (bp: any) => ({
+                                box_number_dec: bp.box_number,
+                                box_number: 1,
+                                price: bp.price,
+                                extra_note_1: bp.extra_note_1 ?? null,
+                                extra_note_2: bp.extra_note_2 ?? null,
+                              }),
+                            ),
+                          },
+                        }
                       : undefined,
                 })),
               },
             },
-          })
+          }),
         );
       } else {
         // ✅ CREATE (FULL original structure — unchanged)
@@ -324,7 +326,8 @@ export async function PUT(
               co_paper_price: Number(ad.co_paper_price) || 0,
               internet_bw_price: Number(ad.internet_bw_price) || 0,
               internet_fc_price: Number(ad.internet_fc_price) || 0,
-              internet_highlight_price: Number(ad.internet_highlight_price) || 0,
+              internet_highlight_price:
+                Number(ad.internet_highlight_price) || 0,
               is_allow_combined: Boolean(ad.is_allow_combined),
               max_words: Number.isFinite(ad.max_words) ? ad.max_words : 0,
               img_url: ad.img_url ?? null,
@@ -348,6 +351,7 @@ export async function PUT(
                   name: section.name,
                   extra_notes: section.extra_notes ?? null,
                   is_available: section.is_available ?? true,
+                  is_single_column: section.is_single_column ?? false,
                   supports_box_ads: Boolean(section.supports_box_ads),
                   max_boxes: section.max_boxes ?? null,
 
@@ -366,25 +370,25 @@ export async function PUT(
 
                   ad_section_box_pricing:
                     section.supports_box_ads &&
-                      section.ad_section_box_pricing?.length
+                    section.ad_section_box_pricing?.length
                       ? {
-                        createMany: {
-                          data: section.ad_section_box_pricing.map(
-                            (bp: any) => ({
-                              box_number_dec: bp.box_number,
-                              box_number: 1,
-                              price: bp.price,
-                              extra_note_1: bp.extra_note_1 ?? null,
-                              extra_note_2: bp.extra_note_2 ?? null,
-                            })
-                          ),
-                        },
-                      }
+                          createMany: {
+                            data: section.ad_section_box_pricing.map(
+                              (bp: any) => ({
+                                box_number_dec: bp.box_number,
+                                box_number: 1,
+                                price: bp.price,
+                                extra_note_1: bp.extra_note_1 ?? null,
+                                extra_note_2: bp.extra_note_2 ?? null,
+                              }),
+                            ),
+                          },
+                        }
                       : undefined,
                 })),
               },
             },
-          })
+          }),
         );
       }
 
@@ -493,8 +497,6 @@ export async function PUT(
     //     where: { newspaper_id: id },
     //   }),
     // );
-
-
 
     /* ----------------------------------------
        3️⃣ Re-create ad types + sections + sizes

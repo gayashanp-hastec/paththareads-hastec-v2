@@ -57,6 +57,7 @@ export async function GET(
             name: sec.name,
             extraNotes: sec.extra_notes,
             isAvailable: sec.is_available,
+            isSingleColumn: sec.is_single_column,
             sizes: sec.ad_section_sizes.map((sz) => ({
               id: sz.id,
               sizeType: sz.size_type,

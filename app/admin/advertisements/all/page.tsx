@@ -54,7 +54,14 @@ interface Advertisement {
     color_option: string;
     has_artwork: boolean;
     need_artwork: boolean;
-    no_of_boxes: number; // only exists in set 1
+    no_of_boxes: number;
+    section?: {
+      id: number;
+      name: string;
+      extra_notes?: string | null;
+      supports_box_ads: boolean;
+      max_boxes?: number | null;
+    } | null;
   } | null;
 
   classified_ad?: {
@@ -150,6 +157,7 @@ export default function AdminAdvertisements() {
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
 
   const [showAttachmentPrompt, setShowAttachmentPrompt] = useState(false);
+  const [showPDFViewPrompt, setshowPDFViewPrompt] = useState(false);
   const [showAttachmentView, setShowAttachmentView] = useState(false);
 
   const [publisherName, setPublisherName] = useState<string | null>(null);
@@ -624,6 +632,121 @@ export default function AdminAdvertisements() {
     setAlertMessage("PDF Printed");
   };
 
+  const handlePrint2 = async (extraData?: AttachmentData) => {
+    // console.log(selectedAd);
+    // if (!selectedAd) return;
+    // setPrinting(true);
+
+    console.log(editableAd);
+    if (!editableAd) return;
+    setPrinting(true);
+    setIsProcessing(true);
+
+    // Trim + split by ONE OR MORE SPACES
+    const words = editableAd.advertisement_text.trim().split(/\s+/); // space-separated words
+
+    const wordCount = words.length;
+
+    const res = await fetch("/api/ads/print", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        /* ---------------- Core identifiers ---------------- */
+        reference_number: editableAd.reference_number,
+        newspaper_name: editableAd.newspaper_name,
+        language: editableAd.language,
+
+        newspaper_id: editableAd.newspaper_name
+          ?.trim()
+          .toUpperCase()
+          .replace(/\s+/g, "_"),
+
+        /* ---------------- Advertiser details ---------------- */
+        advertiser_name: editableAd.advertiser_name,
+        advertiser_nic: editableAd.advertiser_nic ?? null,
+        advertiser_phone: editableAd.advertiser_phone ?? null,
+        advertiser_address: editableAd.advertiser_address ?? null,
+
+        /* ---------------- Ad classification ---------------- */
+        ad_type: editableAd.ad_type,
+        category: editableAd.classified_category ?? null,
+        subcategory: editableAd.subcategory ?? null,
+        count_first_words: editableAd.count_first_words ?? null,
+
+        /* ---------------- Dates ---------------- */
+        publish_date: formatDateYMD(
+          editableAd.publish_date ? editableAd.publish_date : "",
+        ),
+        created_at: editableAd.created_at,
+        updated_at: editableAd.updated_at ?? null,
+
+        /* ---------------- Text & content ---------------- */
+        advertisement_text: editableAd.advertisement_text,
+        advertisement_words: words,
+        word_count: wordCount,
+        special_notes: editableAd.special_notes ?? null,
+
+        /* ---------------- Flags ---------------- */
+        background_color: editableAd.background_color ?? null,
+        post_in_web: editableAd.post_in_web ?? null,
+
+        /* ---------------- Media ---------------- */
+        upload_image: editableAd.upload_image ?? null,
+
+        /* ---------------- Pricing & status ---------------- */
+        price: editableAd.price ?? null,
+        status: editableAd.status,
+
+        /* ---------------- Casual Ad ---------------- */
+        casual_ad: editableAd.casual_ad
+          ? {
+              ad_size: editableAd.casual_ad.ad_size,
+              no_of_columns: editableAd.casual_ad.no_of_columns,
+              ad_height: editableAd.casual_ad.ad_height,
+              color_option: editableAd.casual_ad.color_option,
+              has_artwork: editableAd.casual_ad.has_artwork,
+              need_artwork: editableAd.casual_ad.need_artwork,
+              no_of_boxes: editableAd.casual_ad.no_of_boxes,
+            }
+          : null,
+
+        /* ---------------- Classified Ad ---------------- */
+        classified_ad: editableAd.classified_ad
+          ? {
+              is_publish_eng: editableAd.classified_ad.is_publish_eng,
+              is_publish_tam: editableAd.classified_ad.is_publish_tam,
+              is_priority: editableAd.classified_ad.is_priority,
+              is_publish_sin: editableAd.classified_ad.is_publish_sin,
+              is_publish_sin_eng: editableAd.classified_ad.is_publish_sin_eng,
+              is_publish_sin_tam: editableAd.classified_ad.is_publish_sin_tam,
+              is_publish_eng_tam: editableAd.classified_ad.is_publish_eng_tam,
+              is_co_paper: editableAd.classified_ad.is_co_paper,
+              is_int_bw: editableAd.classified_ad.is_int_bw,
+              is_int_fc: editableAd.classified_ad.is_int_fc,
+              is_int_highlight: editableAd.classified_ad.is_int_highlight,
+              district: editableAd.classified_ad.district,
+              province: editableAd.classified_ad.province,
+              vehicle_brand: editableAd.classified_ad.vehicle_brand,
+            }
+          : null,
+        attachments: extraData ?? null,
+      }),
+    });
+
+    const blob = await res.blob();
+    if (res.status !== 400) {
+      setPrinting(false);
+      const url = URL.createObjectURL(blob);
+      window.open(url, "_blank");
+      setIsProcessing(false);
+      setAlertMessage("PDF is ready");
+    } else {
+      setPrinting(false);
+      setIsProcessing(false);
+      setAlertMessage("An error occured!");
+    }
+  };
+
   const formatPublishDate = (dateStr: string) => {
     const date = new Date(dateStr);
 
@@ -640,6 +763,8 @@ export default function AdminAdvertisements() {
 
   const handleSendSelected = async () => {
     if (selectedAds.length === 0) return;
+    setIsProcessing(true);
+    const referenceNumbers = selectedAds.map((ad) => ad.reference_number);
 
     try {
       // Publisher email (assumes same publisher for all selected ads)
@@ -682,8 +807,25 @@ export default function AdminAdvertisements() {
       `;
       });
       body += `</ul>`;
+      // updateStatus("Submitted");
 
       // Send request to API
+
+      const mainres = await Promise.all(
+        referenceNumbers.map((ref) =>
+          fetch("/api/ads/updateStatus", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              reference_number: ref,
+              status: "Submitted",
+            }),
+          }),
+        ),
+      );
+      console.log(mainres);
       const res = await fetch("/api/ads/send-bulk-email", {
         method: "POST",
         headers: {
@@ -694,6 +836,7 @@ export default function AdminAdvertisements() {
           subject,
           cc: "themedialink@gmail.com",
           body,
+          references: referenceNumbers,
         }),
       });
 
@@ -712,6 +855,8 @@ export default function AdminAdvertisements() {
       console.error(err);
       alert("Something went wrong while sending email");
     }
+
+    setIsProcessing(false);
   };
 
   useEffect(() => {
@@ -1063,6 +1208,12 @@ export default function AdminAdvertisements() {
                           )}
 
                           <InfoRow label="Ad Type" value={selectedAd.ad_type} />
+                          {selectedAd.ad_type === "casual" && (
+                            <InfoRow
+                              label="Section"
+                              value={selectedAd.casual_ad?.section?.name}
+                            />
+                          )}
                           <InfoRow
                             label="Category"
                             value={selectedAd.classified_category}
@@ -1454,6 +1605,24 @@ export default function AdminAdvertisements() {
                   ) && (
                     <div className="flex flex-col justify-center">
                       <button
+                        onClick={() => setshowPDFViewPrompt(true)}
+                        className={`${ACTION_BTN_CLASS} bg-white border-1 border-b-black text-black hover:bg-[var(--color-primary)] ${
+                          printing ? "opacity-70 cursor-not-allowed" : ""
+                        }`}
+                      >
+                        Preview
+                      </button>
+                      <p className="text-xs text-center mt-1">
+                        (Click to View PDF Preview)
+                      </p>
+                    </div>
+                  )}
+
+                  {["PaymentDone", "Print", "AdProcessed"].includes(
+                    selectedAd.status,
+                  ) && (
+                    <div className="flex flex-col justify-center">
+                      <button
                         onClick={() => setShowAttachmentPrompt(true)}
                         disabled={printing}
                         className={`${ACTION_BTN_CLASS} bg-[var(--color-primary-dark)] text-white hover:bg-[var(--color-primary)] ${
@@ -1472,7 +1641,7 @@ export default function AdminAdvertisements() {
                           </>
                         )}
                       </button>
-                      <p className="text-xs text-center">
+                      <p className="text-xs text-center mt-1">
                         (Click to Add Additional Data)
                       </p>
                     </div>
@@ -1551,6 +1720,8 @@ export default function AdminAdvertisements() {
               <h2 className="text-lg font-semibold mb-2">
                 <h4>Processing...</h4>
                 {editableAd?.status === "Print" && "Printing Ad..."}
+                {editableAd?.status === "AdProcessed" &&
+                  "Sending Email to Publisher..."}
                 {/* {currentStep === 2 && "Preparing advertiser form..."}
               {currentStep === 3 && "Your advertisement is saving..."} */}
               </h2>
@@ -1609,6 +1780,37 @@ export default function AdminAdvertisements() {
                   onClick={() => {
                     setShowAttachmentPrompt(false);
                     setShowAttachmentView(true); // YES → open form
+                  }}
+                  className="rounded-full bg-[var(--color-orange-accent)] px-4 py-1.5 text-sm font-medium text-[var(--color-primary-dark)]"
+                >
+                  Yes
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showPDFViewPrompt && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <div className="rounded-xl bg-[var(--color-primary-dark)] p-6 w-96 text-white shadow-lg">
+              <h2 className="text-lg font-semibold mb-4">Preview PDF</h2>
+
+              <p className="mb-6 text-sm">Preview PDF?</p>
+
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => {
+                    setshowPDFViewPrompt(false);
+                  }}
+                  className="rounded-full bg-gray-300 px-4 py-1.5 text-sm font-medium text-black"
+                >
+                  No
+                </button>
+
+                <button
+                  onClick={() => {
+                    setshowPDFViewPrompt(false);
+                    handlePrint2(attachments);
                   }}
                   className="rounded-full bg-[var(--color-orange-accent)] px-4 py-1.5 text-sm font-medium text-[var(--color-primary-dark)]"
                 >

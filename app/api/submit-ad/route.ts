@@ -142,7 +142,7 @@ export async function POST(req: Request) {
           color_option: advertisement.color_option,
           has_artwork: advertisement.has_artwork,
           need_artwork: advertisement.need_artwork,
-          section_id: advertisement.sectionId,
+          section_id: advertisement.section_id,
           no_of_boxes: advertisement.no_boxes,
         },
       });
@@ -230,12 +230,13 @@ export async function POST(req: Request) {
     //   }
 
     // Send SMS
-    let to = "user"
-    let status = "pending"
+    let to = "user";
+    let status = "pending";
     const smsMessageUser = buildAdSubmitSMS({
       referenceNumber,
       trackingLink,
-      to, status,
+      to,
+      status,
     });
 
     const smsResUser = await sendSMS({
@@ -243,14 +244,12 @@ export async function POST(req: Request) {
       message: smsMessageUser ?? "",
     });
 
-
-
     if (!smsResUser.success) {
       console.error("User SMS failed:", smsResUser.error);
     } else {
       console.log("User SMS sent successfully");
 
-      to = "admin"
+      to = "admin";
       const smsMessageAdmin = buildAdSubmitSMS({
         referenceNumber,
         trackingLink,
@@ -269,10 +268,7 @@ export async function POST(req: Request) {
       } else {
         console.log("Admin SMS sent successfully");
       }
-
     }
-
-
 
     return NextResponse.json({
       success: true,

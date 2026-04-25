@@ -38,6 +38,7 @@ interface AdSection {
   name: string;
   extraNotes?: string;
   isAvailable: boolean;
+  isSingleColumn: boolean;
   sizes: SectionSize[];
   boxPricing?: AdSectionBoxPricing[];
 }
@@ -125,6 +126,9 @@ const vehicleBrands = [
 
   "Micro",
   "DFSK",
+
+  "Chinese",
+  "Other",
 ];
 
 export default function StepSelectAdType({
@@ -388,13 +392,15 @@ export default function StepSelectAdType({
     // If priority ad, enforce leading 0
     if (formData.priorityPrice) {
       if (!inputText.startsWith("0")) {
-        inputText = "0" + inputText.replace(/^0+/, "");
+        inputText = "0 " + inputText.replace(/^0+/, "");
       }
     }
 
     if (words.length > selectedAdType.max_words) {
       // Limit the text to max_words
-      const limitedWords = words.slice(0, selectedAdType.max_words);
+      const limitedWords = formData.priorityPrice
+        ? words.slice(0, selectedAdType.max_words + 1)
+        : words.slice(0, selectedAdType.max_words);
       const newText = limitedWords.join(" ");
 
       setWordCount(limitedWords.length);
@@ -1026,6 +1032,7 @@ export default function StepSelectAdType({
             {(selectedAdType.key === "classified" ||
               selectedAdType.key === "photo_classified" ||
               selectedAdType.key === "marriage") && (
+              //Category
               <div className="w-full md:w-1/2">
                 <label className="block font-medium mb-1 md:mt-8">
                   Category{" "}
@@ -1042,9 +1049,38 @@ export default function StepSelectAdType({
                 <select
                   value={selectedCategory}
                   onChange={(e) => {
-                    setSelectedCategory(e.target.value);
-                    updateFormData({ classifiedCategory: e.target.value });
+                    const value = e.target.value;
+
+                    setSelectedCategory(value);
                     setSelectedSubCategory("");
+
+                    let mappedCategory = value;
+                    let mappedSubCategory: string | null = null;
+
+                    if (selectedAdType.key === "marriage") {
+                      switch (value) {
+                        case "Brides":
+                          mappedCategory = "500";
+                          mappedSubCategory = "500";
+                          break;
+                        case "Bridegrooms":
+                          mappedCategory = "501";
+                          mappedSubCategory = "501";
+                          break;
+                        case "Brides and Grooms":
+                          mappedCategory = "502";
+                          mappedSubCategory = "502";
+                          break;
+                        default:
+                          mappedCategory = "";
+                          mappedSubCategory = null;
+                      }
+                    }
+
+                    updateFormData({
+                      classifiedCategory: mappedCategory,
+                      subCategory: mappedSubCategory,
+                    });
                   }}
                   className="border border-gray-300 rounded-lg p-2 w-full focus:ring-2 focus:ring-primary-accent"
                 >
@@ -1095,7 +1131,7 @@ export default function StepSelectAdType({
                   onChange={(e) => {
                     const value = e.target.value || null;
                     updateFormData({ vehicle_brand: value });
-                    console.log(formData);
+                    // console.log(formData);
                   }}
                   className="border border-gray-300 rounded-lg p-2 w-full focus:ring-2 focus:ring-primary-accent"
                 >
@@ -1149,59 +1185,62 @@ export default function StepSelectAdType({
                 </div>
               )}
             {/* district for classified */}
-            {selectedAdType.key !== "marriage" && (
-              <div className="w-full md:w-1/2">
-                <label className="block font-medium mb-1 md:mt-8">
-                  District{" "}
-                  <span
-                    className="text-sm"
-                    style={{
-                      fontFamily: "var(--font-sinhala), sans-serif",
+            {selectedAdType.key !== "marriage" &&
+              selectedAdType.key !== "photo_classified" &&
+              selectedAdType.key !== "death_notice" &&
+              selectedCategory === "Real Estate" && (
+                <div className="w-full md:w-1/2">
+                  <label className="block font-medium mb-1 md:mt-8">
+                    District{" "}
+                    <span
+                      className="text-sm"
+                      style={{
+                        fontFamily: "var(--font-sinhala), sans-serif",
+                      }}
+                    >
+                      (දිස්ත්‍රික්කය)
+                    </span>{" "}
+                    {/* <span className="text-red-500">*</span> */}
+                  </label>
+                  <select
+                    value={selectedDistrict}
+                    onChange={(e) => {
+                      setselectedDistrict(e.target.value);
+                      updateFormData({ district: e.target.value });
+                      // setSelectedSubCategory("");
                     }}
+                    className="border border-gray-300 rounded-lg p-2 w-full focus:ring-2 focus:ring-primary-accent"
                   >
-                    (දිස්ත්‍රික්කය)
-                  </span>{" "}
-                  {/* <span className="text-red-500">*</span> */}
-                </label>
-                <select
-                  value={selectedDistrict}
-                  onChange={(e) => {
-                    setselectedDistrict(e.target.value);
-                    updateFormData({ district: e.target.value });
-                    // setSelectedSubCategory("");
-                  }}
-                  className="border border-gray-300 rounded-lg p-2 w-full focus:ring-2 focus:ring-primary-accent"
-                >
-                  <option value="">Select District</option>
+                    <option value="">Select District</option>
 
-                  <option value="Ampara">Ampara</option>
-                  <option value="Anuradhapura">Anuradhapura</option>
-                  <option value="Badulla">Badulla</option>
-                  <option value="Batticaloa">Batticaloa</option>
-                  <option value="Colombo">Colombo</option>
-                  <option value="Galle">Galle</option>
-                  <option value="Gampaha">Gampaha</option>
-                  <option value="Hambantota">Hambantota</option>
-                  <option value="Jaffna">Jaffna</option>
-                  <option value="Kalutara">Kalutara</option>
-                  <option value="Kandy">Kandy</option>
-                  <option value="Kegalle">Kegalle</option>
-                  <option value="Kilinochchi">Kilinochchi</option>
-                  <option value="Kurunegala">Kurunegala</option>
-                  <option value="Mannar">Mannar</option>
-                  <option value="Matale">Matale</option>
-                  <option value="Matara">Matara</option>
-                  <option value="Monaragala">Monaragala</option>
-                  <option value="Mullaitivu">Mullaitivu</option>
-                  <option value="Nuwara Eliya">Nuwara Eliya</option>
-                  <option value="Polonnaruwa">Polonnaruwa</option>
-                  <option value="Puttalam">Puttalam</option>
-                  <option value="Ratnapura">Ratnapura</option>
-                  <option value="Trincomalee">Trincomalee</option>
-                  <option value="Vavuniya">Vavuniya</option>
-                </select>
-              </div>
-            )}
+                    <option value="Ampara">Ampara</option>
+                    <option value="Anuradhapura">Anuradhapura</option>
+                    <option value="Badulla">Badulla</option>
+                    <option value="Batticaloa">Batticaloa</option>
+                    <option value="Colombo">Colombo</option>
+                    <option value="Galle">Galle</option>
+                    <option value="Gampaha">Gampaha</option>
+                    <option value="Hambantota">Hambantota</option>
+                    <option value="Jaffna">Jaffna</option>
+                    <option value="Kalutara">Kalutara</option>
+                    <option value="Kandy">Kandy</option>
+                    <option value="Kegalle">Kegalle</option>
+                    <option value="Kilinochchi">Kilinochchi</option>
+                    <option value="Kurunegala">Kurunegala</option>
+                    <option value="Mannar">Mannar</option>
+                    <option value="Matale">Matale</option>
+                    <option value="Matara">Matara</option>
+                    <option value="Monaragala">Monaragala</option>
+                    <option value="Mullaitivu">Mullaitivu</option>
+                    <option value="Nuwara Eliya">Nuwara Eliya</option>
+                    <option value="Polonnaruwa">Polonnaruwa</option>
+                    <option value="Puttalam">Puttalam</option>
+                    <option value="Ratnapura">Ratnapura</option>
+                    <option value="Trincomalee">Trincomalee</option>
+                    <option value="Vavuniya">Vavuniya</option>
+                  </select>
+                </div>
+              )}
             {/* district for classified */}
             {selectedAdType.key === "marriage" && (
               <div className="w-full md:w-1/2">
@@ -1233,6 +1272,8 @@ export default function StepSelectAdType({
                   <option value="north_central">North Central</option>
                   <option value="northern">Northern</option>
                   <option value="north_western">North Western</option>
+                  <option value="other">Other</option>
+                  <option value="overseas">Overseas</option>
                   <option value="sabaragamuwa">Sabaragamuwa</option>
                   <option value="southern">Southern</option>
                   <option value="uva">Uva</option>
@@ -1670,7 +1711,8 @@ export default function StepSelectAdType({
             )}
 
             {/* Language Combination Checkbox */}
-            {selectedAdType.key === "classified" &&
+            {(selectedAdType.key === "classified" ||
+              selectedAdType.key === "marriage") &&
               formData.selectedNewspaper?.is_lang_combine_allowed &&
               (formData.selectedNewspaper.combine_sin_price !== 0 ||
                 formData.selectedNewspaper.combine_eng_price !== 0 ||
@@ -1835,7 +1877,6 @@ export default function StepSelectAdType({
                         onClick={() => {
                           setSelectedSection(section.id);
                           updateFormData({ sectionId: section.id });
-                          console.log("check section id: ", formData.sectionId);
                         }}
                         className={` min-w-[45%] sm:min-w-[45%] md:min-w-[23%] lg:min-w-[23%] h-[110px]  rounded-xl border px-4 py-6 flex flex-col items-center justify-center text-center transition-colors transition-shadow duration-200 focus:outline-none ${
                           !section.isAvailable
@@ -1867,6 +1908,20 @@ export default function StepSelectAdType({
                               }}
                             >
                               {section.extraNotes}
+                            </span>
+                          </p>
+                        )}
+
+                        {section.isSingleColumn && (
+                          <p className="mt-1 text-xs text-[var(--color-text-highlight)] text-center">
+                            <span
+                              className="text-sm ml-1"
+                              style={{
+                                fontFamily: "var(--font-sinhala), sans-serif",
+                                fontSize: "10px",
+                              }}
+                            >
+                              it is single column
                             </span>
                           </p>
                         )}
@@ -2019,14 +2074,15 @@ export default function StepSelectAdType({
                         </span>{" "}
                         <span className="text-red-500">*</span>
                       </label>
-                      <div className="absolute top-0 right-0 text-sm text-gray-500">
-                        {wordCount}/{selectedAdType.max_words} words
-                      </div>
+
                       <textarea
                         rows={5}
                         placeholder="Type your advertisement here"
                         value={formData.adText || ""}
-                        onChange={handleTextChange}
+                        onChange={(e) => {
+                          const itsa = e.target.value;
+                          updateFormData({ adText: itsa });
+                        }}
                         required
                         className="border border-gray-300 rounded-lg p-3 w-full focus:ring-2 focus:ring-primary-accent resize-none"
                       />
@@ -2484,35 +2540,66 @@ export default function StepSelectAdType({
                           <span className="text-red-500">*</span>
                         </label>
 
-                        <div className="flex flex-wrap gap-2 my-2">
-                          {Array.from(
-                            { length: noOfColumnsPerPage },
-                            (_, i) => i + 1,
-                          ).map((num) => (
-                            <label key={num} className="cursor-pointer">
-                              <input
-                                type="radio"
-                                name="noOfColumns"
-                                value={num}
-                                checked={formData.noOfColumns === num}
-                                onChange={() => {
-                                  updateFormData({ noOfColumns: num });
-                                  setselectedColumns(num);
-                                }}
-                                className="hidden"
-                              />
-                              <div
-                                className={`flex h-10 w-10 items-center justify-center rounded-md border text-sm font-semibold transition ${
-                                  formData.noOfColumns === num
-                                    ? "border-[var(--color-primary)] bg-[var(--color-primary)] text-white"
-                                    : "border-gray-300 bg-white text-gray-700 hover:border-[var(--color-primary)]"
-                                }`}
-                              >
-                                {num}
-                              </div>
-                            </label>
-                          ))}
-                        </div>
+                        {!selectedSectionData.isSingleColumn && (
+                          <div className="flex flex-wrap gap-2 my-2">
+                            {Array.from(
+                              { length: noOfColumnsPerPage },
+                              (_, i) => i + 1,
+                            ).map((num) => (
+                              <label key={num} className="cursor-pointer">
+                                <input
+                                  type="radio"
+                                  name="noOfColumns"
+                                  value={num}
+                                  checked={formData.noOfColumns === num}
+                                  onChange={() => {
+                                    updateFormData({ noOfColumns: num });
+                                    setselectedColumns(num);
+                                  }}
+                                  className="hidden"
+                                />
+                                <div
+                                  className={`flex h-10 w-10 items-center justify-center rounded-md border text-sm font-semibold transition ${
+                                    formData.noOfColumns === num
+                                      ? "border-[var(--color-primary)] bg-[var(--color-primary)] text-white"
+                                      : "border-gray-300 bg-white text-gray-700 hover:border-[var(--color-primary)]"
+                                  }`}
+                                >
+                                  {num}
+                                </div>
+                              </label>
+                            ))}
+                          </div>
+                        )}
+
+                        {selectedSectionData.isSingleColumn && (
+                          <>
+                            <div className="flex flex-wrap gap-2 my-2">
+                              <label className="cursor-pointer">
+                                <input
+                                  type="radio"
+                                  name="noOfColumns"
+                                  value={1}
+                                  checked={formData.noOfColumns === 1}
+                                  onChange={() => {
+                                    updateFormData({ noOfColumns: 1 });
+                                    setselectedColumns(1);
+                                  }}
+                                  className="hidden"
+                                />
+                                <div
+                                  className={`flex h-10 w-10 items-center justify-center rounded-md border text-sm font-semibold transition ${
+                                    formData.noOfColumns === 1
+                                      ? "border-[var(--color-primary)] bg-[var(--color-primary)] text-white"
+                                      : "border-gray-300 bg-white text-gray-700 hover:border-[var(--color-primary)]"
+                                  }`}
+                                >
+                                  {1}
+                                </div>
+                              </label>
+                            </div>
+                          </>
+                        )}
                       </div>
 
                       {/* Ad Height */}
