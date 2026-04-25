@@ -368,6 +368,7 @@ model ad_sections {
   is_available           Boolean?                 @default(true)
   supports_box_ads       Boolean                  @default(false)
   max_boxes              Int?
+  is_single_column       Boolean?                 @default(false)
   ad_section_box_pricing ad_section_box_pricing[]
   ad_section_sizes       ad_section_sizes[]
   ad_types               ad_types                 @relation(fields: [ad_type_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_ad_sections_ad_type")
