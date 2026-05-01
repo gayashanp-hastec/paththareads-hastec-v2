@@ -471,10 +471,9 @@ export async function POST(req: Request) {
       attachments = null,
     } = await req.json();
 
-    const effective_word_count = Math.max(
-      word_count ?? 0,
-      count_first_words ?? 0,
-    );
+    const effective_word_count = casual_ad
+      ? ""
+      : Math.max(word_count ?? 0, count_first_words ?? 0);
 
     // Find agency for newspaper
     const agency = newspaper_id
@@ -492,7 +491,10 @@ export async function POST(req: Request) {
     // Load PDF template
     const pdfFileName =
       agency.publisher_name === "associated_newspapers" &&
-      (ad_type === "marriage" || ad_type === "name_notice")
+      (ad_type === "marriage" ||
+        ad_type === "name_notice" ||
+        ad_type === "casual" ||
+        ad_type === "death_notice")
         ? `${agency.publisher_name}_classified_2.pdf`
         : ad_type === "classified"
           ? `${agency.publisher_name}_classified.pdf`
@@ -552,6 +554,15 @@ export async function POST(req: Request) {
           font,
         });
       }
+    }
+
+    let finalAdvertisementText = advertisement_text;
+
+    if (
+      attachments?.changedText &&
+      advertisement_text !== attachments.changedText
+    ) {
+      finalAdvertisementText = attachments.changedText;
     }
 
     if (publisherName === "wijeya_newspapers") {
@@ -1028,7 +1039,7 @@ export async function POST(req: Request) {
       if (ad_type.key !== "casual") {
         // Normalize ad text
         const normalizedText = normalizeAdText(
-          advertisement_text,
+          finalAdvertisementText,
           agency.ad_text_type,
         );
         const { COLUMN_X, ROW_Y } = getCoordinates(agency.publisher_name);
@@ -1069,8 +1080,13 @@ export async function POST(req: Request) {
       }
     }
     if (publisherName === "associated_newspapers") {
-      if (ad_type === "name_notice" || ad_type === "marriage") {
-        //admin notes
+      if (
+        ad_type === "name_notice" ||
+        ad_type === "marriage" ||
+        ad_type === "casual" ||
+        ad_type === "death_notice"
+      ) {
+        //admin notes - attachments
         page.drawText(String(attachments.classification2 ?? ""), {
           x: 290,
           y: 531,
@@ -1098,23 +1114,6 @@ export async function POST(req: Request) {
             : englishFont,
           color: rgb(0, 0.5, 0.9),
         });
-        if (!classified_ad?.is_co_paper) {
-          if (attachments.isCO) {
-            page.drawLine({
-              start: { x: 333 - CROSS_SIZE_SMALL, y: 624 - CROSS_SIZE_SMALL },
-              end: { x: 333 + CROSS_SIZE_SMALL, y: 624 + CROSS_SIZE_SMALL },
-              thickness: 1,
-              color: rgb(0, 0.5, 0.9),
-            });
-
-            page.drawLine({
-              start: { x: 333 - CROSS_SIZE_SMALL, y: 624 + CROSS_SIZE_SMALL },
-              end: { x: 333 + CROSS_SIZE_SMALL, y: 624 - CROSS_SIZE_SMALL },
-              thickness: 1,
-              color: rgb(0, 0.5, 0.9),
-            });
-          }
-        }
 
         const text = String(attachments.adminNotes ?? "");
 
@@ -1157,7 +1156,7 @@ export async function POST(req: Request) {
             : englishFont,
         });
 
-        // Draw category
+        // Draw category -  associated
         page.drawText(String(subcategory ?? ""), {
           x: 312,
           y: 534,
@@ -1197,6 +1196,24 @@ export async function POST(req: Request) {
             end: { x: 333 + CROSS_SIZE, y: 624 - CROSS_SIZE },
             thickness: 1,
           });
+        } else {
+          if (!classified_ad?.is_co_paper) {
+            if (attachments.isCO) {
+              page.drawLine({
+                start: { x: 333 - CROSS_SIZE_SMALL, y: 624 - CROSS_SIZE_SMALL },
+                end: { x: 333 + CROSS_SIZE_SMALL, y: 624 + CROSS_SIZE_SMALL },
+                thickness: 1,
+                color: rgb(0, 0.5, 0.9),
+              });
+
+              page.drawLine({
+                start: { x: 333 - CROSS_SIZE_SMALL, y: 624 + CROSS_SIZE_SMALL },
+                end: { x: 333 + CROSS_SIZE_SMALL, y: 624 - CROSS_SIZE_SMALL },
+                thickness: 1,
+                color: rgb(0, 0.5, 0.9),
+              });
+            }
+          }
         }
 
         if (
@@ -1205,17 +1222,26 @@ export async function POST(req: Request) {
           classified_ad?.is_int_highlight
         ) {
           page.drawLine({
-            start: { x: 450 - CROSS_SIZE, y: 627 - CROSS_SIZE },
-            end: { x: 450 + CROSS_SIZE, y: 627 + CROSS_SIZE },
+            start: { x: 432 - CROSS_SIZE, y: 622 - CROSS_SIZE },
+            end: { x: 432 + CROSS_SIZE, y: 622 + CROSS_SIZE },
             thickness: 1,
           });
 
           page.drawLine({
-            start: { x: 450 - CROSS_SIZE, y: 627 + CROSS_SIZE },
-            end: { x: 450 + CROSS_SIZE, y: 627 - CROSS_SIZE },
+            start: { x: 432 - CROSS_SIZE, y: 622 + CROSS_SIZE },
+            end: { x: 432 + CROSS_SIZE, y: 622 - CROSS_SIZE },
             thickness: 1,
           });
         }
+        // word_count
+        page.drawText(String(effective_word_count) ?? "", {
+          x: 240,
+          y: 532,
+          size: 10,
+          font: SINHALA_REGEX.test(String(effective_word_count) ?? "")
+            ? sinhalaFont
+            : englishFont,
+        });
 
         // Draw advertiser details
         const formattedName = formatAdvertiserName(advertiser_name);
@@ -1224,10 +1250,10 @@ export async function POST(req: Request) {
           pdfDoc,
           String(formattedName),
           128,
-          151,
+          145,
           englishFont,
           sinhalaFont,
-          10,
+          11,
         );
 
         await drawTextOrSinhalaImage(
@@ -1235,10 +1261,10 @@ export async function POST(req: Request) {
           pdfDoc,
           String(advertiser_address ?? ""),
           89,
-          121,
+          115,
           englishFont,
           sinhalaFont,
-          10,
+          11,
         );
 
         const PHONE_X = [95, 113, 129, 146, 163, 180, 196, 213, 230, 247];
@@ -1290,7 +1316,7 @@ export async function POST(req: Request) {
           pdfDoc,
           String(signature),
           439,
-          77,
+          73,
           englishFont,
           sinhalaFont,
           9,
@@ -1298,26 +1324,28 @@ export async function POST(req: Request) {
 
         page.drawText(todayDate, {
           x: 434,
-          y: 36,
+          y: 31,
           size: 9,
           font: englishFont, // date is always English digits
         });
 
-        await drawAdTextBlock(
-          page,
-          pdfDoc,
-          advertisement_text,
-          45, // x position
-          448, // starting Y
-          17, // line gap (adjust this to increase/decrease vertical spacing)
-          375, // column width in points (adjust to fit your PDF layout)
-          sinhalaFont,
-          englishFont,
-          10.5, // font size
-          15, // max lines
-        );
+        if (ad_type !== "casual") {
+          await drawAdTextBlock(
+            page,
+            pdfDoc,
+            finalAdvertisementText,
+            45, // x position
+            435, // starting Y
+            17, // line gap (adjust this to increase/decrease vertical spacing)
+            375, // column width in points (adjust to fit your PDF layout)
+            sinhalaFont,
+            englishFont,
+            10.5, // font size
+            15, // max lines
+          );
+        }
       } else {
-        //admin notes - associated papers - except marriage and name notice
+        //admin notes - associated papers - except marriage and name notice and death notice
         page.drawText(String(attachments.classfication ?? ""), {
           x: 197,
           y: 353,
@@ -1717,24 +1745,53 @@ export async function POST(req: Request) {
         if (classified_ad?.is_co_paper) {
           page.drawLine({
             start: {
-              x: 356 - CROSS_SIZE_SMALL,
-              y: 433 - CROSS_SIZE_SMALL,
+              x: 350 - CROSS_SIZE_SMALL,
+              y: 425 - CROSS_SIZE_SMALL,
             },
             end: {
-              x: 356 + CROSS_SIZE_SMALL,
-              y: 433 + CROSS_SIZE_SMALL,
+              x: 350 + CROSS_SIZE_SMALL,
+              y: 425 + CROSS_SIZE_SMALL,
             },
             thickness: 1,
           });
 
           page.drawLine({
             start: {
-              x: 356 - CROSS_SIZE_SMALL,
-              y: 433 + CROSS_SIZE_SMALL,
+              x: 350 - CROSS_SIZE_SMALL,
+              y: 425 + CROSS_SIZE_SMALL,
             },
             end: {
-              x: 356 + CROSS_SIZE_SMALL,
-              y: 433 - CROSS_SIZE_SMALL,
+              x: 350 + CROSS_SIZE_SMALL,
+              y: 425 - CROSS_SIZE_SMALL,
+            },
+            thickness: 1,
+          });
+        }
+        if (
+          classified_ad?.is_int_bw ||
+          classified_ad?.is_int_fc ||
+          classified_ad?.is_int_highlight
+        ) {
+          page.drawLine({
+            start: {
+              x: 490 - CROSS_SIZE_SMALL,
+              y: 425 - CROSS_SIZE_SMALL,
+            },
+            end: {
+              x: 490 + CROSS_SIZE_SMALL,
+              y: 425 + CROSS_SIZE_SMALL,
+            },
+            thickness: 1,
+          });
+
+          page.drawLine({
+            start: {
+              x: 490 - CROSS_SIZE_SMALL,
+              y: 425 + CROSS_SIZE_SMALL,
+            },
+            end: {
+              x: 490 + CROSS_SIZE_SMALL,
+              y: 425 - CROSS_SIZE_SMALL,
             },
             thickness: 1,
           });
@@ -1749,10 +1806,10 @@ export async function POST(req: Request) {
             : englishFont,
         });
 
-        if (ad_type.key !== "casual") {
+        if (ad_type !== "casual") {
           // Normalize ad text
           const normalizedText = normalizeAdText(
-            advertisement_text,
+            finalAdvertisementText,
             agency.ad_text_type,
           );
           const { COLUMN_X, ROW_Y } = getCoordinates(agency.publisher_name);
@@ -1805,6 +1862,54 @@ export async function POST(req: Request) {
         //     font: SINHALA_REGEX.test(cat[i]) ? sinhalaFont : englishFont,
         //   });
         // }
+      }
+
+      //Draw sizes for casual and marriage
+
+      //casual
+      if (ad_type === "casual") {
+        if (casual_ad?.ad_size === "custom") {
+          page.drawText(String(casual_ad?.ad_height ?? ""), {
+            x: 232,
+            y: 532,
+            size: 10,
+            font: SINHALA_REGEX.test(String(casual_ad?.ad_height))
+              ? sinhalaFont
+              : englishFont,
+          });
+
+          page.drawText(" x ", {
+            x: 240,
+            y: 532,
+            size: 10,
+            font: SINHALA_REGEX.test(" x ") ? sinhalaFont : englishFont,
+          });
+
+          page.drawText(String(casual_ad?.no_of_columns ?? ""), {
+            x: 250,
+            y: 532,
+            size: 10,
+            font: SINHALA_REGEX.test(String(casual_ad?.no_of_columns))
+              ? sinhalaFont
+              : englishFont,
+          });
+        } else {
+          page.drawText(String(casual_ad?.ad_size ?? ""), {
+            x: 232,
+            y: 532,
+            size: 10,
+            font: SINHALA_REGEX.test(String(casual_ad?.ad_size))
+              ? sinhalaFont
+              : englishFont,
+          });
+        }
+      } else if (ad_type === "marriage") {
+        page.drawText("2col x 6 cm", {
+          x: 232,
+          y: 515,
+          size: 10,
+          font: SINHALA_REGEX.test("2col x 6 cm") ? sinhalaFont : englishFont,
+        });
       }
     }
     if (publisherName === "liberty_publishers") {
@@ -2000,7 +2105,7 @@ export async function POST(req: Request) {
       if (ad_type.key !== "casual") {
         // Normalize ad text
         const normalizedText = normalizeAdText(
-          advertisement_text,
+          finalAdvertisementText,
           agency.ad_text_type,
         );
         const { COLUMN_X, ROW_Y } = getCoordinates(agency.publisher_name);
@@ -2334,7 +2439,7 @@ export async function POST(req: Request) {
       if (ad_type.key !== "casual") {
         // Normalize ad text
         const normalizedText = normalizeAdText(
-          advertisement_text,
+          finalAdvertisementText,
           agency.ad_text_type,
         );
         const { COLUMN_X, ROW_Y } = getCoordinates(agency.publisher_name);
@@ -2527,7 +2632,7 @@ export async function POST(req: Request) {
         await drawAdTextBlock(
           page,
           pdfDoc,
-          advertisement_text,
+          finalAdvertisementText,
           45, // x position
           384, // starting Y
           17, // line gap (adjust this to increase/decrease vertical spacing)

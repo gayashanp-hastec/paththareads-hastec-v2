@@ -390,10 +390,14 @@ export default function StepSelectAdType({
     const words = inputText.split(/\s+/).filter(Boolean);
 
     // If priority ad, enforce leading 0
-    if (formData.priorityPrice) {
-      if (!inputText.startsWith("0")) {
-        inputText = "0 " + inputText.replace(/^0+/, "");
-      }
+    // if (formData.priorityPrice) {
+    //   if (!inputText.startsWith("0 ")) {
+    //     inputText = "0 " + inputText.replace(/^0+/, "");
+    //   }
+    // }
+
+    if (formData.priorityPrice && !inputText.startsWith("0 ")) {
+      inputText = "0 " + inputText.replace(/^0+\s*/, "");
     }
 
     if (words.length > selectedAdType.max_words) {
@@ -1470,9 +1474,26 @@ export default function StepSelectAdType({
                     <input
                       type="checkbox"
                       checked={formData.priorityPrice}
-                      onChange={(e) =>
-                        updateFormData({ priorityPrice: e.target.checked })
-                      }
+                      onChange={(e) => {
+                        const isChecked = e.target.checked;
+                        let updatedText = formData.adText || "";
+
+                        if (isChecked) {
+                          // Add "0 " if not already there
+                          if (!updatedText.startsWith("0 ")) {
+                            updatedText =
+                              "0 " + updatedText.replace(/^0+\s*/, "");
+                          }
+                        } else {
+                          // Remove leading "0 " when unchecked
+                          updatedText = updatedText.replace(/^0\s*/, "");
+                        }
+
+                        updateFormData({
+                          priorityPrice: isChecked,
+                          adText: updatedText,
+                        });
+                      }}
                     />
                     <span>
                       Priority{" "}
@@ -1760,7 +1781,8 @@ export default function StepSelectAdType({
                 </div>
               )}
             {/* English and Tamil Language checkboxes */}
-            {selectedAdType.key === "classified" &&
+            {(selectedAdType.key === "classified" ||
+              selectedAdType.key === "marriage") &&
               formData.userLangCombineSelected && (
                 <div className="my-8 grid md:grid-cols-3 lg:grid-cols-3 grid-cols-1">
                   {languageOptions

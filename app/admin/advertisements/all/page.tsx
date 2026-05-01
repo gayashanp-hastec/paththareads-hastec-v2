@@ -210,6 +210,8 @@ export default function AdminAdvertisements() {
     page: string;
     position: string;
     hasPhoto: boolean;
+
+    changedText: string;
   };
 
   const [attachments, setAttachments] = useState<AttachmentData>({
@@ -233,6 +235,7 @@ export default function AdminAdvertisements() {
     page: "",
     position: "",
     hasPhoto: false,
+    changedText: "",
   });
 
   const ACTION_BTN_CLASS =
@@ -474,7 +477,9 @@ export default function AdminAdvertisements() {
     // Trim + split by ONE OR MORE SPACES
     const words = editableAd.advertisement_text.trim().split(/\s+/); // space-separated words
 
-    const wordCount = words.length;
+    const wordCount = editableAd.classified_ad?.is_priority
+      ? words.length - 1
+      : words.length;
 
     const res = await fetch("/api/ads/print", {
       method: "POST",
@@ -631,6 +636,15 @@ export default function AdminAdvertisements() {
     setIsProcessing(false);
     setAlertMessage("PDF Printed");
   };
+
+  useEffect(() => {
+    if (showAttachmentView && editedText) {
+      setAttachments((prev) => ({
+        ...prev,
+        changedText: editedText,
+      }));
+    }
+  }, [showAttachmentView]);
 
   const handlePrint2 = async (extraData?: AttachmentData) => {
     // console.log(selectedAd);
@@ -1294,6 +1308,34 @@ export default function AdminAdvertisements() {
                             </>
                           )}
 
+                          {selectedAd.classified_ad?.is_priority && (
+                            <span className="inline-block rounded-full px-3 py-1 text-xs font-medium bg-red-500/20 text-red-500">
+                              Priority
+                            </span>
+                          )}
+
+                          {selectedAd.classified_ad?.is_int_bw && (
+                            <span className="inline-block rounded-full px-3 py-1 text-xs font-medium bg-fuchsia-400/40 text-amber-950">
+                              Internet Black & White
+                            </span>
+                          )}
+
+                          {selectedAd.classified_ad?.is_int_fc && (
+                            <span className="inline-block rounded-full px-3 py-1 text-xs font-medium bg-fuchsia-400/40 text-amber-950">
+                              Internet Full Color
+                            </span>
+                          )}
+                          {selectedAd.classified_ad?.is_int_highlight && (
+                            <span className="inline-block rounded-full px-3 py-1 text-xs font-medium bg-fuchsia-400/40 text-amber-950">
+                              Internet Highlight
+                            </span>
+                          )}
+                          {selectedAd.classified_ad?.is_co_paper && (
+                            <span className="inline-block rounded-full px-3 py-1 text-xs font-medium bg-fuchsia-400/40 text-amber-950">
+                              CO Paper
+                            </span>
+                          )}
+
                           {selectedAd.price && (
                             <InfoRow
                               label="Price"
@@ -1371,12 +1413,6 @@ export default function AdminAdvertisements() {
                               </button>
                             )}
 
-                          {selectedAd.classified_ad?.is_priority && (
-                            <span className="inline-block rounded-full px-3 py-1 text-xs font-medium bg-red-500/20 text-red-500">
-                              Priority
-                            </span>
-                          )}
-
                           {selectedAd.special_notes && (
                             <div>
                               <p className="font-medium text-[var(--color-text-dark-highlight)]">
@@ -1404,6 +1440,8 @@ export default function AdminAdvertisements() {
                               "Declined",
                               "Cancelled",
                               "PaymentPending",
+                              "PaymentDone",
+                              "AdProcessed",
                             ].includes(selectedAd.status || "")}
                             className={`w-full h-56 rounded-xl border p-4 text-gray-800 resize-none focus:ring-2 focus:ring-[var(--color-primary)] outline-none ${
                               [
@@ -1412,6 +1450,8 @@ export default function AdminAdvertisements() {
                                 "Declined",
                                 "Cancelled",
                                 "PaymentPending",
+                                "PaymentDone",
+                                "AdProcessed",
                               ].includes(selectedAd.status || "")
                                 ? "bg-gray-100 cursor-not-allowed"
                                 : ""
@@ -1720,8 +1760,7 @@ export default function AdminAdvertisements() {
               <h2 className="text-lg font-semibold mb-2">
                 <h4>Processing...</h4>
                 {editableAd?.status === "Print" && "Printing Ad..."}
-                {editableAd?.status === "AdProcessed" &&
-                  "Sending Email to Publisher..."}
+                {editableAd?.status === "AdProcessed" && "Printing Ad..."}
                 {/* {currentStep === 2 && "Preparing advertiser form..."}
               {currentStep === 3 && "Your advertisement is saving..."} */}
               </h2>
@@ -2188,7 +2227,8 @@ export default function AdminAdvertisements() {
                 {publisherName === "associated_newspapers" && (
                   <>
                     {editableAd.ad_type !== "marriage" &&
-                      editableAd.ad_type !== "name_notice" && (
+                      editableAd.ad_type !== "name_notice" &&
+                      editableAd.ad_type !== "casual" && (
                         <>
                           <label className="font-semibold mb-2">
                             Classification
@@ -2209,7 +2249,8 @@ export default function AdminAdvertisements() {
                       )}
 
                     {(editableAd.ad_type === "name_notice" ||
-                      editableAd.ad_type === "marriage") && (
+                      editableAd.ad_type === "marriage" ||
+                      editableAd.ad_type === "casual") && (
                       <>
                         <label className="flex items-center gap-2 text-sm font-semibold">
                           <input
@@ -2387,6 +2428,16 @@ export default function AdminAdvertisements() {
                     />
                   </>
                 )}
+                <textarea
+                  value={attachments.changedText}
+                  onChange={(e) =>
+                    setAttachments({
+                      ...attachments,
+                      changedText: e.target.value,
+                    })
+                  }
+                  className={`w-full h-56 rounded-xl border p-4 text-gray-800 resize-none focus:ring-2 focus:ring-[var(--color-primary)] outline-none`}
+                />
               </div>
 
               {/* FOOTER (fixed) */}
