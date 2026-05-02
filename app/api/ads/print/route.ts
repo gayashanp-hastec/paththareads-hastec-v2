@@ -494,7 +494,8 @@ export async function POST(req: Request) {
       (ad_type === "marriage" ||
         ad_type === "name_notice" ||
         ad_type === "casual" ||
-        ad_type === "death_notice")
+        ad_type === "death_notice" ||
+        ad_type === "photo_classified")
         ? `${agency.publisher_name}_classified_2.pdf`
         : ad_type === "classified"
           ? `${agency.publisher_name}_classified.pdf`
@@ -1084,7 +1085,8 @@ export async function POST(req: Request) {
         ad_type === "name_notice" ||
         ad_type === "marriage" ||
         ad_type === "casual" ||
-        ad_type === "death_notice"
+        ad_type === "death_notice" ||
+        ad_type === "photo_classified"
       ) {
         //admin notes - attachments
         page.drawText(String(attachments.classification2 ?? ""), {
@@ -1345,12 +1347,22 @@ export async function POST(req: Request) {
           );
         }
       } else {
-        //admin notes - associated papers - except marriage and name notice and death notice
+        //admin notes - associated papers - except marriage, name notice, casual, photo_classified and death notice
         page.drawText(String(attachments.classfication ?? ""), {
           x: 197,
           y: 353,
           size: 10,
           font: SINHALA_REGEX.test(String(attachments.classfication ?? ""))
+            ? sinhalaFont
+            : englishFont,
+          color: rgb(0, 0.5, 0.9),
+        });
+
+        page.drawText(String(attachments.noInsertions ?? ""), {
+          x: 426,
+          y: 450,
+          size: 10,
+          font: SINHALA_REGEX.test(String(attachments.noInsertions ?? ""))
             ? sinhalaFont
             : englishFont,
           color: rgb(0, 0.5, 0.9),
@@ -1906,7 +1918,7 @@ export async function POST(req: Request) {
       } else if (ad_type === "marriage") {
         page.drawText("2col x 6 cm", {
           x: 232,
-          y: 515,
+          y: 512,
           size: 10,
           font: SINHALA_REGEX.test("2col x 6 cm") ? sinhalaFont : englishFont,
         });

@@ -2228,7 +2228,8 @@ export default function AdminAdvertisements() {
                   <>
                     {editableAd.ad_type !== "marriage" &&
                       editableAd.ad_type !== "name_notice" &&
-                      editableAd.ad_type !== "casual" && (
+                      editableAd.ad_type !== "casual" &&
+                      editableAd.ad_type !== "photo_classified" && (
                         <>
                           <label className="font-semibold mb-2">
                             Classification
@@ -2245,12 +2246,28 @@ export default function AdminAdvertisements() {
                             }
                             className="w-full border rounded-lg p-2 text-sm"
                           />
+                          <label className="font-semibold mb-2">
+                            No of Insertions
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="Number of Insertions"
+                            value={attachments.noInsertions}
+                            onChange={(e) =>
+                              setAttachments({
+                                ...attachments,
+                                noInsertions: e.target.value,
+                              })
+                            }
+                            className="w-full border rounded-lg p-2 text-sm"
+                          />
                         </>
                       )}
 
                     {(editableAd.ad_type === "name_notice" ||
                       editableAd.ad_type === "marriage" ||
-                      editableAd.ad_type === "casual") && (
+                      editableAd.ad_type === "casual" ||
+                      editableAd.ad_type === "photo_classified") && (
                       <>
                         <label className="flex items-center gap-2 text-sm font-semibold">
                           <input
@@ -2428,6 +2445,13 @@ export default function AdminAdvertisements() {
                     />
                   </>
                 )}
+                <label className="font-semibold mb-2">
+                  Advertisement text{" "}
+                  <span className="text-xs">
+                    (This will be the text that will appear in the printing
+                    form)
+                  </span>{" "}
+                </label>
                 <textarea
                   value={attachments.changedText}
                   onChange={(e) =>
