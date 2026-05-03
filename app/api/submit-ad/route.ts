@@ -20,27 +20,28 @@ export async function POST(req: Request) {
         { error: "Missing advertiser or advertisement data" },
         { status: 400 },
       );
+    } else {
     }
 
     // ✅ Step 1: Create or find advertiser
-    let advertiserRecord = await prisma.advertisers.findFirst({
-      where: {
-        email: advertiser.email,
+    // let advertiserRecord = await prisma.advertisers.findFirst({
+    //   where: {
+    //     email: advertiser.email,
+    //     nic: advertiser.nic,
+    //   },
+    // });
+
+    // if (!advertiserRecord) {
+    let advertiserRecord = await prisma.advertisers.create({
+      data: {
+        name: advertiser.name,
         nic: advertiser.nic,
+        phone: advertiser.phone,
+        email: advertiser.email,
+        address: advertiser.address,
       },
     });
-
-    if (!advertiserRecord) {
-      advertiserRecord = await prisma.advertisers.create({
-        data: {
-          name: advertiser.name,
-          nic: advertiser.nic,
-          phone: advertiser.phone,
-          email: advertiser.email,
-          address: advertiser.address,
-        },
-      });
-    }
+    // }
 
     async function generateAdReferenceNumber(
       prisma: PrismaClient,
