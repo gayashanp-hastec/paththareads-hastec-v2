@@ -386,34 +386,24 @@ export default function StepSelectAdType({
 
     let inputText = e.target.value;
 
-    // Count words without trimming spaces
-    const words = inputText.split(/\s+/).filter(Boolean);
-
-    // If priority ad, enforce leading 0
-    // if (formData.priorityPrice) {
-    //   if (!inputText.startsWith("0 ")) {
-    //     inputText = "0 " + inputText.replace(/^0+/, "");
-    //   }
-    // }
-
+    // Enforce leading "0 " for priority ads
     if (formData.priorityPrice && !inputText.startsWith("0 ")) {
       inputText = "0 " + inputText.replace(/^0+\s*/, "");
     }
 
-    if (words.length > selectedAdType.max_words) {
-      // Limit the text to max_words
-      const limitedWords = formData.priorityPrice
-        ? words.slice(0, selectedAdType.max_words + 1)
-        : words.slice(0, selectedAdType.max_words);
-      const newText = limitedWords.join(" ");
+    const words = inputText.trim().split(/\s+/).filter(Boolean);
 
-      setWordCount(limitedWords.length);
-      updateFormData({ adText: newText });
-    } else {
-      // Normal typing
-      setWordCount(words.length);
-      updateFormData({ adText: inputText });
+    const maxWords = formData.priorityPrice
+      ? selectedAdType.max_words + 1
+      : selectedAdType.max_words;
+
+    // 🚫 If exceeding limit AND user is adding text → block it
+    if (words.length > maxWords) {
+      return; // <- this is the key fix
     }
+
+    setWordCount(words.length);
+    updateFormData({ adText: inputText });
   };
 
   // price matrix - hook
