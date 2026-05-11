@@ -1073,7 +1073,7 @@ export async function POST(req: Request) {
             page.drawText(text, {
               x: COLUMN_X[col],
               y: ROW_Y[row],
-              size: 9,
+              size: 10,
               font: englishFont,
             });
           }
@@ -1089,55 +1089,57 @@ export async function POST(req: Request) {
         ad_type === "photo_classified"
       ) {
         //admin notes - attachments
-        page.drawText(String(attachments.classification2 ?? ""), {
-          x: 290,
-          y: 531,
-          size: 10,
-          font: SINHALA_REGEX.test(String(attachments.classification2 ?? ""))
-            ? sinhalaFont
-            : englishFont,
-          color: rgb(0, 0.5, 0.9),
-        });
-        page.drawText(String(attachments.page ?? ""), {
-          x: 290,
-          y: 514,
-          size: 10,
-          font: SINHALA_REGEX.test(String(attachments.page ?? ""))
-            ? sinhalaFont
-            : englishFont,
-          color: rgb(0, 0.5, 0.9),
-        });
-        page.drawText(String(attachments.position ?? ""), {
-          x: 290,
-          y: 496,
-          size: 10,
-          font: SINHALA_REGEX.test(String(attachments.position ?? ""))
-            ? sinhalaFont
-            : englishFont,
-          color: rgb(0, 0.5, 0.9),
-        });
-
-        const text = String(attachments.adminNotes ?? "");
-
-        // split into words
-        const words = text.split(" ");
-
-        const lines: string[] = [];
-
-        for (let i = 0; i < words.length; i += 15) {
-          lines.push(words.slice(i, i + 7).join(" "));
-        }
-
-        // draw lines
-        lines.forEach((line, index) => {
-          page.drawText(line, {
-            x: 30,
-            y: 185 - index * 12,
+        {
+          page.drawText(String(attachments.classification2 ?? ""), {
+            x: 290,
+            y: 531,
             size: 10,
-            font: SINHALA_REGEX.test(line) ? sinhalaFont : englishFont,
+            font: SINHALA_REGEX.test(String(attachments.classification2 ?? ""))
+              ? sinhalaFont
+              : englishFont,
             color: rgb(0, 0.5, 0.9),
           });
-        });
+          page.drawText(String(attachments.page ?? ""), {
+            x: 290,
+            y: 514,
+            size: 10,
+            font: SINHALA_REGEX.test(String(attachments.page ?? ""))
+              ? sinhalaFont
+              : englishFont,
+            color: rgb(0, 0.5, 0.9),
+          });
+          page.drawText(String(attachments.position ?? ""), {
+            x: 290,
+            y: 496,
+            size: 10,
+            font: SINHALA_REGEX.test(String(attachments.position ?? ""))
+              ? sinhalaFont
+              : englishFont,
+            color: rgb(0, 0.5, 0.9),
+          });
+
+          const text = String(attachments.adminNotes ?? "");
+
+          // split into words
+          const words = text.split(" ");
+
+          const lines: string[] = [];
+
+          for (let i = 0; i < words.length; i += 15) {
+            lines.push(words.slice(i, i + 7).join(" "));
+          }
+
+          // draw lines
+          lines.forEach((line, index) => {
+            page.drawText(line, {
+              x: 30,
+              y: 185 - index * 12,
+              size: 10,
+              font: SINHALA_REGEX.test(line) ? sinhalaFont : englishFont,
+              color: rgb(0, 0.5, 0.9),
+            });
+          });
+        }
 
         const displayName = shortenNewspaperName(newspaper_name);
         page.drawText(String(displayName ?? ""), {
@@ -1174,6 +1176,15 @@ export async function POST(req: Request) {
         //   size: 10,
         //   font: SINHALA_REGEX.test(String(price)) ? sinhalaFont : englishFont,
         // });
+
+        page.drawText(String(reference_number) ?? "", {
+          x: 298,
+          y: 724,
+          size: 8,
+          font: SINHALA_REGEX.test(String(reference_number) ?? "")
+            ? sinhalaFont
+            : englishFont,
+        });
 
         // Draw date
         const todayDate = getTodayYMD();
@@ -1376,6 +1387,15 @@ export async function POST(req: Request) {
             ? sinhalaFont
             : englishFont,
           color: rgb(0, 0.5, 0.9),
+        });
+
+        page.drawText(String(reference_number) ?? "", {
+          x: 487,
+          y: 593,
+          size: 9,
+          font: SINHALA_REGEX.test(String(reference_number) ?? "")
+            ? sinhalaFont
+            : englishFont,
         });
 
         // Drawing Advertiser Details
