@@ -218,7 +218,7 @@ export default function AdminAdvertisements() {
     customizeType: false,
     customizeColor: false,
     customizeSize: false,
-    noInsertions: "1",
+    noInsertions: "0",
     size: "",
     color: "",
     isPhotoClassified: false,
@@ -1884,6 +1884,22 @@ export default function AdminAdvertisements() {
                         setAttachments({
                           ...attachments,
                           classification: e.target.value,
+                        })
+                      }
+                      className="w-full border rounded-lg p-2 text-sm"
+                    />
+
+                    <label className="font-semibold mb-2">
+                      No of Insertions
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Number of Insertions"
+                      value={attachments.noInsertions}
+                      onChange={(e) =>
+                        setAttachments({
+                          ...attachments,
+                          noInsertions: e.target.value,
                         })
                       }
                       className="w-full border rounded-lg p-2 text-sm"
